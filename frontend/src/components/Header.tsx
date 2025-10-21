@@ -8,13 +8,6 @@ import { DinamicHeaderSide } from "@/components/DinamicHeaderSide"
 
 
 export function Header() {
-  const getLevelColor = (level: number) => {
-    if (level >= 20) return "bg-xp-platinum";
-    if (level >= 15) return "bg-xp-gold";
-    if (level >= 10) return "bg-xp-silver";
-    return "bg-xp-bronze";
-  };
-
 
   return (
     <header className="bg-card/95 backdrop-blur-sm border-b sticky top-0 z-50">

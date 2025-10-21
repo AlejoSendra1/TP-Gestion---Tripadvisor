@@ -5,31 +5,23 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import {useAuth} from "@/hooks/use-auth"
+
 
 export function DinamicHeaderSide() {
 
-  const getLevelColor = (level: number) => {
+    const { user, logout } = useAuth();
+
+    const getLevelColor = (level: number) => {
     if (level >= 20) return "bg-xp-platinum";
     if (level >= 15) return "bg-xp-gold";
     if (level >= 10) return "bg-xp-silver";
     return "bg-xp-bronze";
-  };
-
-    const [, setRefresh] = useState(0);
-
-    useEffect(() => {
-      const handleAuthChange = () => {
-        setRefresh(prev => prev + 1);
-      };
-
-      window.addEventListener('authChange', handleAuthChange);
-      return () => window.removeEventListener('authChange', handleAuthChange);
-    }, []);
-
+    };
 
     return (
       <>
-        {sessionStorage.getItem('isLoggedIn') == 'true'? (
+        {user? (
           /* --- LOGGED-IN: User Profile --- */
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center space-x-3">

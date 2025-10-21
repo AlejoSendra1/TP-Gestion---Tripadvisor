@@ -3,8 +3,7 @@ import React, {
     useEffect
 } from 'react';
 
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate , Link} from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +11,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Plane, Building2 } from "lucide-react";
+import {useAuth} from "@/hooks/use-auth"
 
 const Register = () => {
+  const { login, signup } = useAuth();
+
   const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
   const [formData, setFormData] = useState({
     firstName: "",
@@ -50,17 +52,17 @@ const Register = () => {
     .then(response => response.json())
     .then(data => {
             console.log("seteando data");
-            console.log(data);
             sessionStorage.setItem('accessToken',data.accessToken);
             sessionStorage.setItem('refreshToken',data.refreshToken);
             sessionStorage.setItem('isLoggedIn', 'true')
             sessionStorage.setItem('firstName',data.firstName);
             sessionStorage.setItem('userXP',data.userXP);
             sessionStorage.setItem('userLevel',data.userLevel);
+            signup(data)
             }
         )
     .catch(error => console.error('Error:', error));
-    window.dispatchEvent(new Event('authChange'));
+    
 
     navigate('/');
   };
