@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Plane } from "lucide-react";
 
 const Login = () => {
+
+  const { login } = useAuth();
   const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
   const [formData, setFormData] = useState({
     email: "",
@@ -23,8 +25,14 @@ const handleSubmit = (e: React.FormEvent) => {
         body: JSON.stringify(formData),
     })
     .then(response => response.json())
-    .then(data => console.log(data))
+    .then(data => {
+        console.log(data)
+        login(data)
+        }
+    )
     .catch(error => console.error('Error:', error));
+
+    navigate('/');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

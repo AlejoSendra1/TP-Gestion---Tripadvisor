@@ -14,8 +14,8 @@ import { MapPin, Plane, Building2 } from "lucide-react";
 import {useAuth} from "@/hooks/use-auth"
 
 const Register = () => {
-  const { login, signup } = useAuth();
-
+  const { signup } = useAuth();
+  
   const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
   const [formData, setFormData] = useState({
     firstName: "",
@@ -52,6 +52,7 @@ const Register = () => {
     .then(response => response.json())
     .then(data => {
             console.log("seteando data");
+            console.log(data);
             sessionStorage.setItem('accessToken',data.accessToken);
             sessionStorage.setItem('refreshToken',data.refreshToken);
             sessionStorage.setItem('isLoggedIn', 'true')

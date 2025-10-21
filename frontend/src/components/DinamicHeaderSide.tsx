@@ -24,6 +24,12 @@ export function DinamicHeaderSide() {
         {user? (
           /* --- LOGGED-IN: User Profile --- */
           <div className="flex items-center space-x-4">
+
+            <div>
+              <Link to="/" >
+                Log out
+              </Link>
+            </div>
             <div className="hidden md:flex items-center space-x-3">
               <div className="text-right">
                 <div className="text-sm font-medium">Explorer Level {sessionStorage.getItem('userLevel')}</div>
