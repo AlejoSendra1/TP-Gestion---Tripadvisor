@@ -1,4 +1,9 @@
-import { useState } from "react";
+import React, {
+    useState,
+    useEffect
+} from 'react';
+
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +26,8 @@ const Register = () => {
     agreeToTerms: false
   });
 
+  const navigate = useNavigate();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -31,9 +38,33 @@ const Register = () => {
       alert("Please agree to the terms and conditions");
       return;
     }
-    console.log("Registration attempt:", { ...formData, userType });
-    // Handle registration logic here
+    console.log("Registration attempt:", JSON.stringify({formData}));
+
+    fetch("http://localhost:30002/users", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => response.json())
+    .then(data => {
+            console.log("seteando data");
+            console.log(data);
+            sessionStorage.setItem('accessToken',data.accessToken);
+            sessionStorage.setItem('refreshToken',data.refreshToken);
+            sessionStorage.setItem('isLoggedIn', 'true')
+            sessionStorage.setItem('firstName',data.firstName);
+            sessionStorage.setItem('userXP',data.userXP);
+            sessionStorage.setItem('userLevel',data.userLevel);
+            }
+        )
+    .catch(error => console.error('Error:', error));
+    window.dispatchEvent(new Event('authChange'));
+
+    navigate('/');
   };
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -99,7 +130,7 @@ const Register = () => {
                 <div className="space-y-1">
                   <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
                   <p className="text-sm text-muted-foreground">
-                    Book experiences, write reviews, earn XP and unlock achievements
+                    Book experiences, write reviews, earn XP and unlock achievements and discounts
                   </p>
                 </div>
               ) : (

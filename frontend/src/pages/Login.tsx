@@ -14,10 +14,17 @@ const Login = () => {
     password: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login attempt:", { ...formData, userType });
-    // Handle login logic here
+const handleSubmit = (e: React.FormEvent) => {
+    fetch("http://localhost:30002/sessions", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

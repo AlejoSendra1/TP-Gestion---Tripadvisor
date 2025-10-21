@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-
 import Index from "./pages/Index";
 import Search from "./pages/Search";
 import Profile from "./pages/Profile";
@@ -14,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import ExperienceDetails from "./pages/ExperienceDetails";
 
 const queryClient = new QueryClient();
+sessionStorage.setItem('isLoggedIn','false')
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

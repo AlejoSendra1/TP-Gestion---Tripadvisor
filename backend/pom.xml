@@ -14,7 +14,7 @@
 			<url>https://repo1.maven.org/maven2/</url>
 		</repository>
 	</repositories>
-	<groupId>ar.uba.fi.ingsoft1</groupId>
+	<groupId>ar.uba.fi.gestion</groupId>
 	<artifactId>todo-template</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>todo-template</name>
