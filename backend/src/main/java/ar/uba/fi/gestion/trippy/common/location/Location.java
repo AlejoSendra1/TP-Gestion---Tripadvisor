@@ -1,24 +1,74 @@
-package ar.uba.fi.gestion.trippy.common.location; // o ...trippy.publication
+package ar.uba.fi.gestion.trippy.common.location;
 
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
-@Embeddable // <-- Le dice a JPA que esta clase puede ser "incrustada"
+
+/**
+ * Representa una ubicación física como un "Value Object" incrustable.
+ * Se usa para agrupar campos de dirección dentro de otras entidades (ej. Publication).
+ * * Esta clase no tiene tabla propia, sus campos se "aplanan" en la tabla
+ * de la entidad que la contenga.
+ */
+@Embeddable
 public class Location {
 
     private String streetAddress;
     private String city;
-    private String state;
+    private String state; // Provincia o Estado
     private String country;
+    @Column(name = "zip_code")
     private String zipCode;
 
-    // Opcional pero recomendado para mapas:
-    // private double latitude;
-    // private double longitude;
-
-    // --- IMPORTANTE ---
-    // JPA necesita un constructor vacío
     public Location() {
     }
 
-    // ... constructor con parámetros, getters y setters ...
+    public Location(String streetAddress, String city, String state, String country, String zipCode) {
+        this.streetAddress = streetAddress;
+        this.city = city;
+        this.state = state;
+        this.country = country;
+        this.zipCode = zipCode;
+    }
+
+    public String getStreetAddress() {
+        return streetAddress;
+    }
+
+    public void setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getZipCode() {
+        return zipCode;
+    }
+
+    public void setZipCode(String zipCode) {
+        this.zipCode = zipCode;
+    }
 }

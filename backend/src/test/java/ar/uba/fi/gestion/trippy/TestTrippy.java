@@ -1,11 +1,8 @@
 package ar.uba.fi.gestion.trippy;
 
 import ar.uba.fi.gestion.trippy.field.*;
-import ar.uba.fi.gestion.trippy.match.TestMatch;
-import ar.uba.fi.gestion.trippy.user.TestUserCreateDTO;
-import ar.uba.fi.gestion.trippy.user.TestUserLoginDTO;
-import ar.uba.fi.gestion.trippy.match.matchOrganizer.TestMatchOrganizer;
 
+import ar.uba.fi.gestion.trippy.publication.PublicationServiceTest;
 import org.junit.platform.launcher.*;
 import org.junit.platform.launcher.core.*;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
@@ -19,15 +16,7 @@ public class TestTrippy {
 
 		LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
 				.selectors(
-						DiscoverySelectors.selectClass(TestField.class),
-						DiscoverySelectors.selectClass(TestFieldCreateDTO.class),
-						DiscoverySelectors.selectClass(TestFieldSchedule.class),
-						DiscoverySelectors.selectClass(TestReservationCreateDTO.class),
-						DiscoverySelectors.selectClass(TestReviewCreateDTO.class),
-						DiscoverySelectors.selectClass(TestMatchOrganizer.class),
-						DiscoverySelectors.selectClass(TestMatch.class),
-						DiscoverySelectors.selectClass(TestUserCreateDTO.class),
-						DiscoverySelectors.selectClass(TestUserLoginDTO.class)
+						DiscoverySelectors.selectClass(PublicationServiceTest.class)
 				)
 				.build();
 

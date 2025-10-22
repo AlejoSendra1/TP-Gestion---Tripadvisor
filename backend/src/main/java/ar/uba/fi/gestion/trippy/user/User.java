@@ -27,7 +27,7 @@ public class User {
     @Column(name = "token-verified")
     private String tokenVerified;
 
-    private String role = "USER";
+    private String role;
 
     public User() {}
 

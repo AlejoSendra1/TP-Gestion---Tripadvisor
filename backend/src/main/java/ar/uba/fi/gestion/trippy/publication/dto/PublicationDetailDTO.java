@@ -29,7 +29,7 @@ public record PublicationDetailDTO(
             String photoUrl // Incluimos el campo aunque no esté en User.java
             // Tu servicio lo pasará como 'null' por ahora,
             // ¡pero el frontend ya puede esperar este campo!
-    )
+    ){}
 }
 
 // --- DTOs de ayuda que necesitarás crear ---

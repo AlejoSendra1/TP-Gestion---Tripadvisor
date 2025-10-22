@@ -1,16 +1,16 @@
 package ar.uba.fi.gestion.trippy.publication;
 
-import jakarta.persistence.*;
 
+import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @Entity
 @DiscriminatorValue("COWORKING")
 public class Coworking extends Publication {
 
-    // --- Campos específicos ---
     private double pricePerDay;
     private double pricePerMonth;
 
@@ -19,7 +19,6 @@ public class Coworking extends Publication {
     @Column(name = "service")
     private List<String> services; // "servicios (ej. Wi-Fi...)"
 
-    // ... constructores, getters y setters ...
     @Override
     public Map<String, Object> fetchSpecificDetails() {
         Map<String, Object> details = new HashMap<>();
