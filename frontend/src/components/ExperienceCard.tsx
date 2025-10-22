@@ -8,12 +8,12 @@ interface ExperienceCardProps {
   id: string;
   title: string;
   image: string;
-  rating: number;
-  reviewCount: number;
+  rating?: number;
+  reviewCount?: number;
   location: string;
   price: string;
-  category: "hotel" | "restaurant" | "tour";
-  xpReward: number;
+  category: string;
+  xpReward?: number;
   isPopular?: boolean;
 }
 
@@ -84,18 +84,20 @@ export function ExperienceCard({
           {location}
         </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center">
-            <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
-            <span className="font-medium">{rating}</span>
-            <span className="text-muted-foreground ml-1">({reviewCount})</span>
+        {(rating && reviewCount && xpReward) && (
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
+              <span className="font-medium">{rating}</span>
+              <span className="text-muted-foreground ml-1">({reviewCount})</span>
+            </div>
+
+            <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
+              <Trophy className="h-4 w-4 mr-1 text-experience" />
+              +{xpReward} XP
+            </div>
           </div>
-          
-          <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
-            <Trophy className="h-4 w-4 mr-1 text-experience" />
-            +{xpReward} XP
-          </div>
-        </div>
+        )}
 
         <Button variant="experience" className="w-full">
           View Details
