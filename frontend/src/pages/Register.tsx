@@ -53,6 +53,12 @@ const Register = () => {
     .then(data => {
             console.log("seteando data");
             console.log(data);
+            sessionStorage.setItem('accessToken',data.accessToken);
+            sessionStorage.setItem('refreshToken',data.refreshToken);
+            sessionStorage.setItem('isLoggedIn', 'true')
+            sessionStorage.setItem('firstName',data.firstName);
+            sessionStorage.setItem('userXP',data.userXP);
+            sessionStorage.setItem('userLevel',data.userLevel);
             signup(data)
             }
         )

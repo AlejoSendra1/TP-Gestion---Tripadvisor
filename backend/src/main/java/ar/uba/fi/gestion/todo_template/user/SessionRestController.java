@@ -11,9 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import java.util.Optional;
-import java.util.Map;
 
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/sessions")
@@ -31,11 +34,12 @@ class SessionRestController {
     @Operation(summary = "Log in, creating a new session")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponse(responseCode = "401", description = "Invalid username or password supplied", content = @Content)
-    public ResponseEntity<UserDTO> login(
+    public TokenDTO login(
             @Valid @NonNull @RequestBody UserLoginDTO data
     ) {
-        UserDTO loginResponse = userService.loginUser(data).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));// cambiar http status
-        return ResponseEntity.status(HttpStatus.CREATED).body(loginResponse);
+        return userService
+                .loginUser(data)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
     }
 
     @PutMapping(produces = "application/json")
