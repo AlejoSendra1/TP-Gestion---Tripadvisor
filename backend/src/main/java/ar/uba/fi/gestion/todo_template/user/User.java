@@ -51,19 +51,18 @@ public class User implements UserCredentials {
         this.emailVerified = false;
     }
 
-    @Override
+
     public String password() {
         return this.password;
     }
 
-    @Override
+    public String getEmail() {return this.email;}
+
     public String email() {return this.email;}
 
     public String getFirstname() { return this.firstname;}
 
     public String getLastname() { return this.lastname;}
-
-    public String getEmail() { return this.email;}
 
     public String getPassword() { return this.password;}
 
@@ -74,6 +73,10 @@ public class User implements UserCredentials {
     public boolean isEmailVerified() { return this.emailVerified;}
 
     public String getTokenVerified() { return this.tokenVerified;}
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified;}
 
