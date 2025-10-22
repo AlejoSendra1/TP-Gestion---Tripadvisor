@@ -59,6 +59,7 @@ const Register = () => {
                 console.error(`HTTP error! Status: ${response.status}`);
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
+            navigate('/');
             return response.json();
         })
         .then(data => {

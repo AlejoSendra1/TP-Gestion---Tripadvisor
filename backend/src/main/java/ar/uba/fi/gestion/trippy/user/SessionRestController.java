@@ -16,7 +16,7 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/api/v1/sessions")
+@RequestMapping("/sessions")
 @Tag(name = "2 - Sessions")
 class SessionRestController {
 
