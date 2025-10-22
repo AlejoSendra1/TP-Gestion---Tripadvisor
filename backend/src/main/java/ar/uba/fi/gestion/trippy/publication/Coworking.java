@@ -2,6 +2,8 @@ package ar.uba.fi.gestion.trippy.publication;
 
 
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,9 @@ public class Coworking extends Publication {
 
         details.put("pricePerDay", this.pricePerDay);
         details.put("pricePerMonth", this.pricePerMonth);
-        details.put("services", this.services); // La lista completa de servicios
+
+        List<String> serviceList = new ArrayList<>(this.services);
+        details.put("services", serviceList);
 
         return details;
     }

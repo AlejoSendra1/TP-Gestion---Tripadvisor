@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +79,8 @@ public class PublicationService {
             hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getName(), null); // Foto no disponible en User.java
         }
 
+        List<String> imageGallery = new ArrayList<>(p.getImageUrls());
+
         return new PublicationDetailDTO(
                 p.getId(),
                 p.getTitle(),
@@ -84,7 +88,7 @@ public class PublicationService {
                 p.getPrice(),
                 p.getLocation(),
                 hostDTO,
-                p.getImageUrls(),
+                imageGallery,
                 Collections.emptyList(), // (Aún no implementamos reseñas)
                 p.getClass().getSimpleName(),
                 p.fetchSpecificDetails() // <-- ¡LA LLAMADA POLIMÓRFICA!
