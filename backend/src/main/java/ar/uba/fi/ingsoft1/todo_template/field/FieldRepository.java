@@ -12,4 +12,6 @@ public interface FieldRepository extends JpaRepository<Field, Long> {
     List<Field> findByName(String name);
     List<Field> findByZone(UserZones zone);
     List<Field> findByFeaturesContaining(FieldFeatures feature);
+    // Este método busca canchas cuyo nombre contenga el texto 'name', ignorando mayúsculas/minúsculas.
+    List<Field> findByNameContainingIgnoreCase(String name);
 }

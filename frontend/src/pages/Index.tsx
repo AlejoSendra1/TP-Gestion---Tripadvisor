@@ -1,35 +1,25 @@
 import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
 import { Categories } from "@/components/Categories";
 import { FeaturedExperiences } from "@/components/FeaturedExperiences";
+import SearchBar from "@/components/SearchBar";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      {/* Este Header ya no necesita props de búsqueda */}
       <Header userXP={2450} userLevel={12} />
-      <Hero />
-      <Categories />
-      <FeaturedExperiences />
-      
-      {/* Footer */}
-      <footer className="bg-card border-t py-12">
+      {/* Sección "Hero" con la barra de búsqueda principal */}
+      <section className="py-20 text-center bg-gradient-hero">
         <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4 bg-gradient-hero bg-clip-text text-transparent">
-              QuestEscapes
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Discover amazing places, share your experiences, and earn XP rewards
-            </p>
-            <div className="flex justify-center space-x-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-primary transition-colors">About</a>
-              <a href="#" className="hover:text-primary transition-colors">Help</a>
-              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-              <a href="#" className="hover:text-primary transition-colors">Terms</a>
-            </div>
+          <h1 className="text-4xl font-bold text-white mb-4">Encuentra tu próxima cancha</h1>
+          <p className="text-lg text-white/80 mb-8">Busca por nombre y reserva en segundos.</p>
+          <div className="max-w-2xl mx-auto">
+            <SearchBar />
           </div>
         </div>
-      </footer>
+      </section>
+      <Categories />
+      <FeaturedExperiences />
     </div>
   );
 };

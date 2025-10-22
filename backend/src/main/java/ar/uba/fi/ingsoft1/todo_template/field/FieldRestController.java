@@ -87,7 +87,14 @@ public class FieldRestController {
     @Operation(summary = "Get all fields by name. This is a case-sensitive search and match the full name.")
     @ApiResponse(responseCode = "200", description = "Fields found", content = @Content(mediaType = "application/json"))
     public List<FieldDTO> getFieldByName(@PathVariable String name) {
-        return fieldService.getFieldByName(name).stream().toList();
+        return fieldService.getFieldByExactName(name);
+    }
+
+    @GetMapping(value = "/search", produces = "application/json")
+    @Operation(summary = "Search fields by name (case-insensitive).")
+    @ApiResponse(responseCode = "200", description = "Fields found", content = @Content(mediaType = "application/json"))
+    public List<FieldDTO> searchFieldsByName(@RequestParam String name) {
+        return fieldService.findByName(name);
     }
 
     @GetMapping(value = "/feature/{feature}", produces = "application/json")

@@ -110,8 +110,19 @@ public class FieldService {
         return fieldRepository.findByZone(zone).stream().map(FieldDTO::new).collect(Collectors.toList());
     }
 
-    public List<FieldDTO> getFieldByName(String name) {
+    // Renombramos este método para evitar conflictos. Busca por nombre exacto.
+    public List<FieldDTO> getFieldByExactName(String name) {
         return fieldRepository.findByName(name).stream().map(FieldDTO::new).collect(Collectors.toList());
+    }
+
+    /**
+     * Busca canchas por nombre (búsqueda parcial, no sensible a mayúsculas).
+     * Este es el método que usará nuestro nuevo endpoint /search.
+     * @param name El texto a buscar en el nombre de la cancha.
+     * @return Una lista de canchas que coinciden.
+     */
+    public List<FieldDTO> findByName(String name) {
+        return fieldRepository.findByNameContainingIgnoreCase(name).stream().map(FieldDTO::new).collect(Collectors.toList());
     }
 
     public List<FieldDTO> getFieldsByFeature(FieldFeatures feature) {
