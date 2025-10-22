@@ -14,10 +14,10 @@
 			<url>https://repo1.maven.org/maven2/</url>
 		</repository>
 	</repositories>
-	<groupId>ar.uba.fi.ingsoft1</groupId>
-	<artifactId>todo-template</artifactId>
+	<groupId>ar.uba.fi.gestion</groupId>
+	<artifactId>trippy</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>todo-template</name>
+	<name>trippy</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
