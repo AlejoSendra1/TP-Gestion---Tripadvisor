@@ -18,7 +18,11 @@ public class User implements UserCredentials {
 
     @Column(unique= true, nullable = false)
     private String email;
+    /*
+    private int userXP;
 
+    private int userLevel;
+    */
     @Column(nullable = false)
     private String password;
 

@@ -68,12 +68,23 @@ public class UserService {
         return Optional.of(generateTokens(user));
     }
 
-    public Optional<TokenDTO> loginUser(UserCredentials data) {
-        Optional<User> maybeUser = userRepository.findByEmail(data.email());
-        return maybeUser
-                .filter(user -> passwordEncoder.matches(data.password(), user.getPassword()))
-                .filter(User::isEmailVerified)
-                .map(this::generateTokens);
+    public Optional<UserDTO> loginUser(UserCredentials data) {
+
+        Optional<User> maybeUser = userRepository.findByEmail(data.email())
+                .filter(user -> passwordEncoder.matches(data.password(), user.getPassword()));
+
+        // .filter(User::isEmailVerified); PARA VERIFICACION DE MAILS
+        // .map(this::generateTokens); POR SI QUEREMOS TOKENS ?
+
+        return maybeUser.map(user -> {
+            TokenDTO tokenDTO = generateTokens(user); // Your token generation method
+            return new UserDTO(
+                    user.getFirstname(),
+                    0, // userXP - you'll need to get this from somewhere
+                    1, // userLevel - you'll need to get this from somewhere
+                    tokenDTO
+            );
+        });
     }
 
     Optional<TokenDTO> refresh(RefreshDTO data) {

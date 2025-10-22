@@ -42,30 +42,33 @@ const Register = () => {
     }
     console.log("Registration attempt:", JSON.stringify({formData}));
 
-    fetch("http://localhost:30002/users", {
+    fetch(import.meta.env.VITE_BACKEND_API_URL+"/users", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
     })
-    .then(response => response.json())
-    .then(data => {
-            console.log("seteando data");
-            console.log(data);
-            sessionStorage.setItem('accessToken',data.accessToken);
-            sessionStorage.setItem('refreshToken',data.refreshToken);
-            sessionStorage.setItem('isLoggedIn', 'true')
-            sessionStorage.setItem('firstName',data.firstName);
-            sessionStorage.setItem('userXP',data.userXP);
-            sessionStorage.setItem('userLevel',data.userLevel);
-            signup(data)
+        .then(response => {
+            if (!response.ok) {
+                // Check for non-successful HTTP status codes
+                if (response.status === 401) {
+                    console.error('Login Failed: Unauthorized (401)');
+                    throw new Error('Unauthorized');
+                }
+                console.error(`HTTP error! Status: ${response.status}`);
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
-        )
-    .catch(error => console.error('Error:', error));
-    
-
-    navigate('/');
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            signup(data);
+            navigate('/');
+        })
+        .catch(error => {
+            console.error('Fetch or Login Error:', error.message);
+        });
   };
 
 

@@ -26,9 +26,9 @@ export function DinamicHeaderSide() {
           <div className="flex items-center space-x-4">
 
             <div>
-              <Link to="/" >
-                Log out
-              </Link>
+              <button onClick={() => logout()} >
+                  Log out
+              </button>
             </div>
             <div className="hidden md:flex items-center space-x-3">
               <div className="text-right">
