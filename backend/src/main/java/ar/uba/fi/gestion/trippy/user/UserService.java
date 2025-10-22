@@ -54,25 +54,40 @@ public class UserService {
     }
 
     public Optional<TokenDTO> createUser(UserCreateDTO data) {
+        System.out.println("se esta creando el user");
         if (userRepository.findByEmail(data.email()).isPresent()) {
             throw new DuplicateEntityException("User", "email");
         }
 
         var user = data.asUser(passwordEncoder::encode);
+
+        user.setRole("OWNER");
+
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);
         user.setEmailVerified(false);
         userRepository.save(user);
-        emailService.sendValidationEmail(user.getEmail(), verificationToken);
+        //emailService.sendValidationEmail(user.getEmail(), verificationToken);
         return Optional.of(generateTokens(user));
     }
 
-    public Optional<TokenDTO> loginUser(UserCredentials data) {
-        Optional<User> maybeUser = userRepository.findByEmail(data.email());
-        return maybeUser
-                .filter(user -> passwordEncoder.matches(data.password(), user.getPassword()))
-                .filter(User::isEmailVerified)
-                .map(this::generateTokens);
+    public Optional<UserDTO> loginUser(UserCredentials data) {
+
+        Optional<User> maybeUser = userRepository.findByEmail(data.email())
+                .filter(user -> passwordEncoder.matches(data.password(), user.getPassword()));
+
+        // .filter(User::isEmailVerified); PARA VERIFICACION DE MAILS
+        // .map(this::generateTokens); POR SI QUEREMOS TOKENS ?
+
+        return maybeUser.map(user -> {
+            TokenDTO tokenDTO = generateTokens(user); // Your token generation method
+            return new UserDTO(
+                    user.getFirstname(),
+                    0, // userXP - you'll need to get this from somewhere
+                    1, // userLevel - you'll need to get this from somewhere
+                    tokenDTO
+            );
+        });
     }
 
     Optional<TokenDTO> refresh(RefreshDTO data) {
@@ -112,7 +127,7 @@ public class UserService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JwtUserDetails userDetails = (JwtUserDetails) principal;
         User currentUser = getUserByEmail(userDetails.username());
-        return currentUser.getName();
+        return currentUser.getFirstname();
     }
     public UserProfileDTO getCurrentUserProfile() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

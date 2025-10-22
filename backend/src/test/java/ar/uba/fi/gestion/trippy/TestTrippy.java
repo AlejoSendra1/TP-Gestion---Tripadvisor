@@ -1,7 +1,5 @@
 package ar.uba.fi.gestion.trippy;
 
-import ar.uba.fi.gestion.trippy.field.*;
-
 import ar.uba.fi.gestion.trippy.publication.PublicationServiceTest;
 import org.junit.platform.launcher.*;
 import org.junit.platform.launcher.core.*;

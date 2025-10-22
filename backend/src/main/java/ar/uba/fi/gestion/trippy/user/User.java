@@ -10,7 +10,7 @@ public class User {
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String firstname;
 
     @Column(nullable = false)
     private String lastname;
@@ -27,12 +27,14 @@ public class User {
     @Column(name = "token-verified")
     private String tokenVerified;
 
+    private String photo;
+
     private String role;
 
     public User() {}
 
     public User(String name, String lastname, String email, String password) {
-        this.name = name;
+        this.firstname = name;
         this.lastname = lastname;
         this.email = email;
         this.password = password;
@@ -45,7 +47,7 @@ public class User {
 
     public String email() {return this.email;}
 
-    public String getName() { return this.name;}
+    public String getFirstname() { return this.firstname;}
 
     public String getLastname() { return this.lastname;}
 
@@ -53,7 +55,11 @@ public class User {
 
     public String getPassword() { return this.password;}
 
+    public String getPhoto() { return this.photo;}
+
     public String getRole() { return this.role;}
+
+    public void setRole(String role) { this.role = role;}
 
     public boolean isEmailVerified() { return this.emailVerified;}
 

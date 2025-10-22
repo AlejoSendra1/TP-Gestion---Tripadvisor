@@ -1,5 +1,5 @@
 -- Host (Usuario) de prueba
-INSERT INTO users (id, name, lastname, email, password, role, "email-verified")
+INSERT INTO users (id, firstname, lastname, email, password, role, "email-verified")
 VALUES (100, 'Host', 'de Prueba', 'host@trippy.com', 'password-hash', 'HOST', true)
 ON CONFLICT (id) DO NOTHING;
 

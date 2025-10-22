@@ -16,10 +16,10 @@ export function Header() {
              {/* Logo */}
               <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <div className="w-10 h-10 flex items-center justify-center">
-                    <img src="frontend/src/assets/logo_alternativo.png"/>
+                    <img src="/src/assets/naranjita.png"/>
                 </div>
                 <h1 className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                  Trippynet
+                  Trippy
                 </h1>
               </Link>
 

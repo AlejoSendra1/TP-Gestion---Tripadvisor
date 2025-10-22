@@ -12,7 +12,6 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,7 +75,7 @@ public class PublicationService {
         PublicationDetailDTO.HostDTO hostDTO = null;
         if (p.getHost() != null) {
             User host = p.getHost();
-            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getName(), null); // Foto no disponible en User.java
+            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getFirstname(), null); // Foto no disponible en User.java
         }
 
         List<String> imageGallery = new ArrayList<>(p.getImageUrls());

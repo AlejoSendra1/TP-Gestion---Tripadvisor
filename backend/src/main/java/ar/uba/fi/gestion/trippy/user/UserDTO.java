@@ -1,4 +1,4 @@
-package ar.uba.fi.gestion.todo_template.user;
+package ar.uba.fi.gestion.trippy.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

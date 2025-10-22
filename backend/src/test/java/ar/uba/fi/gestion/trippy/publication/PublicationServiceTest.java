@@ -136,7 +136,7 @@ public class PublicationServiceTest {
     void whenGetPublicationById_withValidId_shouldReturnDetailDTO() {
         // --- 1. Arrange (Given) ---
         when(testHost.getId()).thenReturn(100L);
-        when(testHost.getName()).thenReturn("Test Host");
+        when(testHost.getFirstname()).thenReturn("Test Host");
         when(publicationRepositoryMock.findById(1L)).thenReturn(Optional.of(testHotel));
 
         // --- 2. Act (When) ---

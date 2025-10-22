@@ -12,14 +12,11 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
 
 @RestController
-@RequestMapping("/sessions")
+@RequestMapping("/api/v1/sessions")
 @Tag(name = "2 - Sessions")
 class SessionRestController {
 
@@ -34,12 +31,11 @@ class SessionRestController {
     @Operation(summary = "Log in, creating a new session")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponse(responseCode = "401", description = "Invalid username or password supplied", content = @Content)
-    public TokenDTO login(
+    public ResponseEntity<UserDTO> login(
             @Valid @NonNull @RequestBody UserLoginDTO data
     ) {
-        return userService
-                .loginUser(data)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        UserDTO loginResponse = userService.loginUser(data).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));// cambiar http status
+        return ResponseEntity.status(HttpStatus.CREATED).body(loginResponse);
     }
 
     @PutMapping(produces = "application/json")
@@ -72,13 +68,5 @@ class SessionRestController {
         return ResponseEntity.ok(userProfile);
     }
 
-
-    @GetMapping(value = "/user-zones", produces = "application/json")
-    @Operation(summary =  "Get zones")
-        public List<String> getAllUserZones() {
-            return Arrays.stream(UserZones.values())
-                    .map(Enum::name) // Gets the enum name (e.g., "VICENTE_LOPEZ")
-                    .collect(Collectors.toList());
-        }
 
 }

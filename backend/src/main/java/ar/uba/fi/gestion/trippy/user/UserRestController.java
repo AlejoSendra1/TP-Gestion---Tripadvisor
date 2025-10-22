@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 @Tag(name = "1 - Users")
 class UserRestController {
   
@@ -29,9 +29,10 @@ class UserRestController {
     @ApiResponse(responseCode = "400", description = "Invalid request")
     @PostMapping(produces = "application/json")
     @Operation(summary = "Create a new user")
-    public ResponseEntity<TokenDTO> createUser(@Valid @RequestBody UserCreateDTO data) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserCreateDTO data) {
         TokenDTO tokens = userService.createUser(data).orElseThrow();
-        return ResponseEntity.status(HttpStatus.CREATED).body(tokens);
+        UserDTO userDTO = new UserDTO(data.firstName(),0,1,tokens); //todo evitar harcodeo
+        return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 
 }
