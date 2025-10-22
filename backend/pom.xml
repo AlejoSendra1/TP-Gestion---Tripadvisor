@@ -15,9 +15,9 @@
 		</repository>
 	</repositories>
 	<groupId>ar.uba.fi.gestion</groupId>
-	<artifactId>todo-template</artifactId>
+	<artifactId>trippy</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>todo-template</name>
+	<name>trippy</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
