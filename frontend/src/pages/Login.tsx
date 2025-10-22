@@ -1,24 +1,54 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Plane } from "lucide-react";
+import { useNavigate , Link } from "react-router-dom";
+import {useAuth} from "@/hooks/use-auth";
 
 const Login = () => {
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login attempt:", { ...formData, userType });
-    // Handle login logic here
-  };
+const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // prevent default form submission
+
+    fetch(import.meta.env.VITE_BACKEND_API_URL + "/sessions", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => {
+        if (!response.ok) {
+            // Check for non-successful HTTP status codes
+            if (response.status === 401) {
+                console.error('Login Failed: Unauthorized (401)');
+                throw new Error('Unauthorized');
+            }
+            console.error(`HTTP error! Status: ${response.status}`);
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json(); // Only proceed to parse JSON if the response is OK
+    })
+    .then(data => {
+        console.log(data);
+        login(data);
+        navigate('/');
+    })
+    .catch(error => {
+        console.error('Fetch or Login Error:', error.message);
+    });
+};
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
