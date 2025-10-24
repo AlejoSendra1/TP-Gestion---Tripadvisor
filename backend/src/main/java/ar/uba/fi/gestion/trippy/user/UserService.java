@@ -61,7 +61,7 @@ public class UserService {
 
         var user = data.asUser(passwordEncoder::encode);
 
-        user.setRole("OWNER");
+        user.setRole("HOST");
 
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);

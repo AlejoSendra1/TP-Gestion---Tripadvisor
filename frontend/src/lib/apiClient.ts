@@ -5,7 +5,7 @@ import axios from 'axios';
 // 1. Creamos la instancia de Axios
 export const apiClient = axios.create({
     // 2. Definimos la URL base de tu backend
-    baseURL: '/api/v1',
+    // baseURL: '/api/v1',
     timeout: 10000, // (Opcional) 10 segundos antes de fallar
 });
 
