@@ -85,6 +85,7 @@ public class UserService {
                     user.getFirstname(),
                     0, // userXP - you'll need to get this from somewhere
                     1, // userLevel - you'll need to get this from somewhere
+                    user.getRole(),
                     tokenDTO
             );
         });

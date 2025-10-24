@@ -12,6 +12,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ExperienceDetails from "./pages/ExperienceDetails";
+import {ProtectedRoute} from "@/components/ProtectedRoute.tsx";
+import CreatePublication from "@/pages/CreatePublication.tsx";
 
 const queryClient = new QueryClient();
 sessionStorage.setItem('isLoggedIn','false')
@@ -30,6 +32,10 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/experience/:id" element={<ExperienceDetails />} />
+            <Route element={<ProtectedRoute allowedRoles={['HOST']} />}>
+              <Route path="/create-publication" element={<CreatePublication />} />
+              {/* Aquí irían otras rutas de Host, ej: /dashboard, /mis-publicaciones */}
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -14,6 +14,8 @@ public record UserDTO (
 
         int userLevel,
 
+        String role,
+
         @NotBlank(message = "Token is needed for security")
         TokenDTO tokenDTO
 ) {}
