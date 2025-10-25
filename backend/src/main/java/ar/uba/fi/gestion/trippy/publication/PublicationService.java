@@ -2,6 +2,7 @@ package ar.uba.fi.gestion.trippy.publication;
 
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationDetailDTO;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationListDTO;
+import ar.uba.fi.gestion.trippy.user.BusinessOwner;
 import ar.uba.fi.gestion.trippy.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -69,13 +70,14 @@ public class PublicationService {
     /**
      * Helper para convertir una Entidad en un DTO de Detalle.
      */
+
     private PublicationDetailDTO convertToDetailDTO(Publication p) {
 
         // Crea el DTO del Host
         PublicationDetailDTO.HostDTO hostDTO = null;
         if (p.getHost() != null) {
-            User host = p.getHost();
-            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getFirstname(), null); // Foto no disponible en User.java
+            BusinessOwner host = p.getHost();
+            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getBusinessName(), null); // Foto no disponible en User.java
         }
 
         List<String> imageGallery = new ArrayList<>(p.getImageUrls());

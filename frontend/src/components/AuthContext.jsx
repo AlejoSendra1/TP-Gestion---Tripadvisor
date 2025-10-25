@@ -24,6 +24,7 @@ export function AuthProvider({ children }) {
     setIsLoading(false);
   }, []);
 
+  //3- iplementar polimorfismo aca puede ser owner o traveler
   const login = (userData) => {
     localStorage.setItem("firstName", userData.firstName);
     localStorage.setItem("userXP", userData.userXP);

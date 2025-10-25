@@ -29,9 +29,8 @@ class UserRestController {
     @ApiResponse(responseCode = "400", description = "Invalid request")
     @PostMapping(produces = "application/json")
     @Operation(summary = "Create a new user")
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserCreateDTO data) {
-        TokenDTO tokens = userService.createUser(data).orElseThrow();
-        UserDTO userDTO = new UserDTO(data.firstName(),0,1,tokens); //todo evitar harcodeo
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody RegistrationRequestDTO data) {
+        UserDTO userDTO = userService.createUser(data).orElseThrow(); // 2- hacer q devuelva un userDTO y userDTO interface
         return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 

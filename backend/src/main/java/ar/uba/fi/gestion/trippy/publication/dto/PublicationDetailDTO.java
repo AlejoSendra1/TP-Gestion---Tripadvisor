@@ -1,6 +1,8 @@
 package ar.uba.fi.gestion.trippy.publication.dto;
 
 import ar.uba.fi.gestion.trippy.common.location.Location;
+import ar.uba.fi.gestion.trippy.user.BusinessOwnerDTO;
+
 import java.util.List;
 import java.util.Map;
 

@@ -1,6 +1,7 @@
 package ar.uba.fi.gestion.trippy.publication;
 
 import ar.uba.fi.gestion.trippy.common.location.Location;
+import ar.uba.fi.gestion.trippy.user.BusinessOwner;
 import ar.uba.fi.gestion.trippy.user.User;
 import jakarta.persistence.*;
 import java.util.List;
@@ -25,7 +26,7 @@ public abstract class Publication {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_user_id")
-    private User host; // El Anfitrión (dueño)
+    private BusinessOwner host; // El Anfitrión (dueño)
 
     // --- Campos para DTOs ---
 
@@ -71,10 +72,10 @@ public abstract class Publication {
     public void setLocation(Location location) {
         this.location = location;
     }
-    public User getHost() {
+    public BusinessOwner getHost() {
         return host;
     }
-    public void setHost(User host) {
+    public void setHost(BusinessOwner host) {
         this.host = host;
     }
     public String getMainImageUrl() {

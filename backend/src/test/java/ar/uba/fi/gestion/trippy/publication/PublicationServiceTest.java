@@ -1,6 +1,7 @@
 package ar.uba.fi.gestion.trippy.publication;
 
 
+import ar.uba.fi.gestion.trippy.user.BusinessOwner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +44,7 @@ public class PublicationServiceTest {
      * solo un mock que simulará ser un anfitrión.
      */
     @Mock
-    private User testHost; // <-- ¡Es un Mock!
+    private BusinessOwner testHost; // <-- ¡Es un Mock!
 
     /**
      * @InjectMocks: Crea una instancia real de PublicationService
@@ -136,7 +137,7 @@ public class PublicationServiceTest {
     void whenGetPublicationById_withValidId_shouldReturnDetailDTO() {
         // --- 1. Arrange (Given) ---
         when(testHost.getId()).thenReturn(100L);
-        when(testHost.getFirstname()).thenReturn("Test Host");
+        when(testHost.getBusinessName()).thenReturn("Test Host");
         when(publicationRepositoryMock.findById(1L)).thenReturn(Optional.of(testHotel));
 
         // --- 2. Act (When) ---

@@ -32,7 +32,7 @@ public class PasswordChangeService {
             throw new IllegalArgumentException("Invalid token");
         }
         User user = passwordResetToken.getUser();
-        user.setPassword(passwordEncoder.encode(newPassword));
+        //user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
        passwordResetTokenRepository.delete(passwordResetToken);
 

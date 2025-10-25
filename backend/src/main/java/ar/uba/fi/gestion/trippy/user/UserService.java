@@ -3,10 +3,6 @@ package ar.uba.fi.gestion.trippy.user;
 import ar.uba.fi.gestion.trippy.common.exception.DuplicateEntityException;
 import ar.uba.fi.gestion.trippy.config.security.JwtService;
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
-import ar.uba.fi.gestion.trippy.user.email_validation.EmailService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordChangeService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordResetService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordResetTokenRepository;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshToken;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshTokenService;
 
@@ -22,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
+import static ar.uba.fi.gestion.trippy.user.UserDTOFactory.fromUser;
+
 @Service
 @Transactional
 public class UserService {
@@ -30,45 +28,33 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
-    private final EmailService emailService;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final PasswordResetService passwordResetService;
-    private final PasswordChangeService passwordChangeService;
-
 
     @Autowired
     UserService(
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
             UserRepository userRepository,
-            RefreshTokenService refreshTokenService,
-            EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, PasswordResetService passwordResetService, PasswordChangeService passwordChangeService) {
+            RefreshTokenService refreshTokenService) {
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
-        this.emailService = emailService;
-        this.passwordResetTokenRepository = passwordResetTokenRepository;
-        this.passwordResetService = passwordResetService;
-        this.passwordChangeService = passwordChangeService;
     }
 
-    public Optional<TokenDTO> createUser(UserCreateDTO data) {
+    public Optional<UserDTO> createUser(RegistrationRequestDTO data) {
         System.out.println("se esta creando el user");
         if (userRepository.findByEmail(data.email()).isPresent()) {
             throw new DuplicateEntityException("User", "email");
         }
 
         var user = data.asUser(passwordEncoder::encode);
-
-        user.setRole("OWNER");
-
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);
-        user.setEmailVerified(false);
         userRepository.save(user);
         //emailService.sendValidationEmail(user.getEmail(), verificationToken);
-        return Optional.of(generateTokens(user));
+        TokenDTO tokens = Optional.of(generateTokens(user)).orElseThrow();
+
+        return Optional.of(UserDTOFactory.fromUser(user,tokens));
     }
 
     public Optional<UserDTO> loginUser(UserCredentials data) {
@@ -81,12 +67,16 @@ public class UserService {
 
         return maybeUser.map(user -> {
             TokenDTO tokenDTO = generateTokens(user); // Your token generation method
+            /* TODO
             return new UserDTO(
                     user.getFirstname(),
                     0, // userXP - you'll need to get this from somewhere
                     1, // userLevel - you'll need to get this from somewhere
                     tokenDTO
             );
+
+             */
+            return null;
         });
     }
 
@@ -107,7 +97,7 @@ public class UserService {
 
     public boolean verifyEmailToken(String token) {
         return userRepository.findByTokenVerified(token).map(user->{
-            user.setEmailVerified(true);
+            //user.setEmailVerified(true);
             user.setTokenVerified(null);
             userRepository.save(user);
             return true;
@@ -127,14 +117,16 @@ public class UserService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JwtUserDetails userDetails = (JwtUserDetails) principal;
         User currentUser = getUserByEmail(userDetails.username());
-        return currentUser.getFirstname();
+        //return currentUser.getFirstname();
+        return "TODO -> getCurrentUserName - UserService";
     }
     public UserProfileDTO getCurrentUserProfile() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof JwtUserDetails userDetails) {
             User user = getUserByEmail(userDetails.username());
-            return UserProfileDTO.fromUser(user);
+            //return UserProfileDTO.fromUser(user);
+            return new UserProfileDTO(0L,"todo","todo","todo@todo","todo.png");
         }
         throw new AccessDeniedException("User not authenticated or principal type is incorrect");
     }

@@ -15,9 +15,10 @@ import {useAuth} from "@/hooks/use-auth"
 
 const Register = () => {
   const { signup } = useAuth();
-  
-  const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
+
+  //const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
   const [formData, setFormData] = useState({
+    userType: "TRAVELER",
     firstName: "",
     lastName: "",
     email: "",
@@ -59,7 +60,6 @@ const Register = () => {
                 console.error(`HTTP error! Status: ${response.status}`);
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            navigate('/');
             return response.json();
         })
         .then(data => {
@@ -79,6 +79,13 @@ const Register = () => {
       [e.target.name]: e.target.value
     }));
   };
+
+    const handleFieldChange = (name: string, value: any) => {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    };
 
   const handleCheckboxChange = (checked: boolean) => {
     setFormData(prev => ({
@@ -111,9 +118,9 @@ const Register = () => {
             <div className="flex gap-2 p-1 bg-muted rounded-lg">
               <Button
                 type="button"
-                variant={userType === "traveler" ? "default" : "ghost"}
+                variant={formData.userType === "TRAVELER" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setUserType("traveler")}
+                onClick={() => handleFieldChange("userType","traveler")}
                 className="flex-1 gap-2"
               >
                 <Plane className="h-4 w-4" />
@@ -121,9 +128,9 @@ const Register = () => {
               </Button>
               <Button
                 type="button"
-                variant={userType === "owner" ? "default" : "ghost"}
+                variant={formData.userType === "OWNER" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setUserType("owner")}
+                onClick={() => handleFieldChange("userType","owner")}
                 className="flex-1 gap-2"
               >
                 <Building2 className="h-4 w-4" />
@@ -133,7 +140,7 @@ const Register = () => {
             
             {/* User Type Description */}
             <div className="text-center p-3 bg-muted/50 rounded-lg">
-              {userType === "traveler" ? (
+              {formData.userType === "traveler" ? (
                 <div className="space-y-1">
                   <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
                   <p className="text-sm text-muted-foreground">
@@ -192,7 +199,7 @@ const Register = () => {
               </div>
 
               {/* Business-specific fields */}
-              {userType === "owner" && (
+              {formData.userType === "owner" && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="businessName">Business Name</Label>
@@ -264,7 +271,7 @@ const Register = () => {
               </div>
 
               <Button type="submit" className="w-full">
-                Create {userType === "traveler" ? "Traveler" : "Business"} Account
+                Create {formData.userType === "traveler" ? "Traveler" : "Business"} Account
               </Button>
             </form>
 
