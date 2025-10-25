@@ -7,35 +7,63 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+// NUEVO: Importamos el componente Select de shadcn/ui
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiClient } from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
 import axios, { AxiosError } from "axios";
 
-// Este es el "molde" de nuestro DTO del backend
+// MODIFICADO: El "molde" ahora incluye TODOS los campos posibles
 const initialState = {
+    // --- Campos Comunes ---
     title: "",
     description: "",
-    price: 0,
+    price: 0, // Precio base
     location: {
         streetAddress: "",
         city: "",
-        state: "",
+        state: "", // Estos no los usas en el form, pero los dejo
         country: "",
-        zipCode: "",
+        zipCode: "", // Estos no los usas en el form, pero los dejo
     },
     mainImageUrl: "",
-    imageUrls: [], // Por ahora simple, luego podemos mejorarlo
+    imageUrls: [], // Se arma en el submit
+
+    // --- Hotel ---
     roomCount: 0,
     capacity: 0,
+
+    // --- Activity ---
+    durationInHours: 0,
+    meetingPoint: "",
+    whatIsIncluded: "",
+    activityLevel: "",
+    language: "",
+
+    // --- Coworking ---
+    pricePerDay: 0,
+    pricePerMonth: 0,
+    services: "", // Usaremos un string simple "Wifi, Cafe, Impresora"
+
+    // --- Restaurant ---
+    cuisineType: "",
+    priceRange: "", // Ej: "$$"
+    openingHours: "",
+    menuUrl: "",
 };
+
+// NUEVO: Un tipo para manejar el endpoint y el título
+type PublicationType = "hotel" | "activity" | "coworking" | "restaurant";
 
 const CreatePublication = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
     const [formData, setFormData] = useState(initialState);
     const [isLoading, setIsLoading] = useState(false);
+    // NUEVO: Estado para el tipo de publicación
+    const [publicationType, setPublicationType] = useState<PublicationType>("hotel");
 
-    // Handler para campos simples
+    // Handler para campos simples (sin cambios)
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -44,7 +72,7 @@ const CreatePublication = () => {
         }));
     };
 
-    // Handler para el objeto anidado 'location'
+    // Handler para 'location' (sin cambios)
     const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -56,39 +84,83 @@ const CreatePublication = () => {
         }));
     };
 
-    // Handler para el submit
+    // NUEVO: Handler para el Select
+    const handleTypeChange = (value: string) => {
+        // Reiniciamos el formulario al cambiar de tipo
+        setFormData(initialState);
+        setPublicationType(value as PublicationType);
+    };
+
+    // MODIFICADO: El Submit ahora es dinámico
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Convertimos los campos numéricos
-        const dataToSubmit = {
-            ...formData,
+        // 1. Determinar el endpoint dinámicamente
+        const endpoint = `/publications/${publicationType}`;
+
+        // 2. Construir el DTO de "base"
+        const baseData = {
+            title: formData.title,
+            description: formData.description,
             price: parseFloat(String(formData.price)),
-            roomCount: parseInt(String(formData.roomCount), 10),
-            capacity: parseInt(String(formData.capacity), 10),
-            imageUrls: formData.mainImageUrl ? [formData.mainImageUrl] : [],
+            location: formData.location,
+            mainImageUrl: formData.mainImageUrl,
+            imageUrls: formData.mainImageUrl ? [formData.mainImageUrl] : [], // Lógica simple de galería
         };
 
-        console.log("Enviando al backend:", dataToSubmit);
+        // 3. Construir el DTO específico basado en el tipo
+        let specificData = {};
+        if (publicationType === "hotel") {
+            specificData = {
+                roomCount: parseInt(String(formData.roomCount), 10),
+                capacity: parseInt(String(formData.capacity), 10),
+            };
+        } else if (publicationType === "activity") {
+            specificData = {
+                durationInHours: parseInt(String(formData.durationInHours), 10),
+                meetingPoint: formData.meetingPoint,
+                whatIsIncluded: formData.whatIsIncluded,
+                activityLevel: formData.activityLevel,
+                language: formData.language,
+            };
+        } else if (publicationType === "coworking") {
+            specificData = {
+                pricePerDay: parseFloat(String(formData.pricePerDay)),
+                pricePerMonth: parseFloat(String(formData.pricePerMonth)),
+                // Convertimos el string "Wifi, Cafe" en un array ["Wifi", "Cafe"]
+                services: formData.services.split(",").map((s) => s.trim()).filter(s => s.length > 0),
+            };
+        } else if (publicationType === "restaurant") {
+            specificData = {
+                cuisineType: formData.cuisineType,
+                priceRange: formData.priceRange,
+                openingHours: formData.openingHours,
+                menuUrl: formData.menuUrl,
+            };
+        }
+
+        // 4. Combinar y enviar
+        const dataToSubmit = { ...baseData, ...specificData };
+
+        console.log(`Enviando a ${endpoint}:`, dataToSubmit);
 
         try {
-            // Usamos apiClient para llamar al endpoint que creamos
-            const response = await apiClient.post("/publications/hotel", dataToSubmit);
+            // Usamos el endpoint dinámico
+            const response = await apiClient.post(endpoint, dataToSubmit);
 
             // ¡Éxito!
             toast({
                 title: "¡Publicación Creada!",
-                description: "Tu alojamiento ya está visible para los viajeros.",
+                description: "Tu publicación ya está visible para los viajeros.",
             });
-            // Redirigimos a la página del nuevo detalle (que ya tenés)
             navigate(`/experience/${response.data.id}`);
         } catch (err) {
-            // Manejo de errores (similar a tu Login.tsx)
+            // Manejo de errores (sin cambios)
             const error = err as Error | AxiosError;
             console.error("Error al crear publicación:", error.message);
-
-            let title = "Error al publicar";
+            // ... (resto del catch es idéntico)
+            const title = "Error al publicar";
             let description = "Ocurrió un error inesperado.";
 
             if (axios.isAxiosError(error)) {
@@ -104,6 +176,9 @@ const CreatePublication = () => {
         }
     };
 
+    // MODIFICADO: Capitaliza el nombre del tipo para el botón y título
+    const publicationTitle = publicationType.charAt(0).toUpperCase() + publicationType.slice(1);
+
     return (
         <div className="min-h-screen bg-background">
             <Header />
@@ -111,14 +186,32 @@ const CreatePublication = () => {
             <main className="container mx-auto px-4 py-12">
                 <Card className="max-w-3xl mx-auto">
                     <CardHeader>
-                        <CardTitle>Publicar un nuevo alojamiento</CardTitle>
+                        {/* MODIFICADO: Título dinámico */}
+                        <CardTitle>Publicar: {publicationTitle}</CardTitle>
                         <CardDescription>
-                            Completa los datos de tu propiedad para que aparezca en Trippy.
+                            Completa los datos de tu nueva publicación para que aparezca en Trippy.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* --- Datos Principales --- */}
+                            {/* --- Selector de Tipo --- */}
+                            {/* NUEVO: Selector de tipo de publicación */}
+                            <div className="space-y-2">
+                                <Label htmlFor="publicationType">Tipo de Publicación</Label>
+                                <Select value={publicationType} onValueChange={handleTypeChange}>
+                                    <SelectTrigger id="publicationType">
+                                        <SelectValue placeholder="Selecciona un tipo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="hotel">Alojamiento (Hotel)</SelectItem>
+                                        <SelectItem value="activity">Actividad / Experiencia</SelectItem>
+                                        <SelectItem value="coworking">Coworking</SelectItem>
+                                        <SelectItem value="restaurant">Restaurante</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* --- Datos Principales (Comunes) --- */}
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="title">Título de la Publicación</Label>
@@ -138,13 +231,14 @@ const CreatePublication = () => {
                                         name="description"
                                         value={formData.description}
                                         onChange={handleInputChange}
-                                        placeholder="Describe tu propiedad..."
+                                        placeholder="Describe tu publicación..."
                                         required
                                     />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="price">Precio por Noche (USD)</Label>
+                                        {/* MODIFICADO: Label genérica para el precio */}
+                                        <Label htmlFor="price">Precio Base (USD)</Label>
                                         <Input
                                             id="price"
                                             name="price"
@@ -172,7 +266,7 @@ const CreatePublication = () => {
 
                             <Separator />
 
-                            {/* --- Ubicación --- */}
+                            {/* --- Ubicación (Común) --- */}
                             <div className="space-y-4">
                                 <h3 className="text-lg font-medium">Ubicación</h3>
                                 <div className="space-y-2">
@@ -199,40 +293,120 @@ const CreatePublication = () => {
 
                             <Separator />
 
-                            {/* --- Detalles del Hotel --- */}
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Detalles del Alojamiento</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="roomCount">Nro. de Habitaciones</Label>
-                                        <Input
-                                            id="roomCount"
-                                            name="roomCount"
-                                            type="number"
-                                            value={formData.roomCount}
-                                            onChange={handleInputChange}
-                                            placeholder="50"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="capacity">Capacidad (Huéspedes)</Label>
-                                        <Input
-                                            id="capacity"
-                                            name="capacity"
-                                            type="number"
-                                            value={formData.capacity}
-                                            onChange={handleInputChange}
-                                            placeholder="2"
-                                            required
-                                        />
+                            {/* --- Detalles Específicos (DINÁMICO) --- */}
+
+                            {/* MODIFICADO: Renderizado condicional para HOTEL */}
+                            {publicationType === 'hotel' && (
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-medium">Detalles del Alojamiento</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="roomCount">Nro. de Habitaciones</Label>
+                                            <Input
+                                                id="roomCount"
+                                                name="roomCount"
+                                                type="number"
+                                                value={formData.roomCount}
+                                                onChange={handleInputChange}
+                                                placeholder="50"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="capacity">Capacidad (Huéspedes)</Label>
+                                            <Input
+                                                id="capacity"
+                                                name="capacity"
+                                                type="number"
+                                                value={formData.capacity}
+                                                onChange={handleInputChange}
+                                                placeholder="2"
+                                                required
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* NUEVO: Renderizado condicional para ACTIVITY */}
+                            {publicationType === 'activity' && (
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-medium">Detalles de la Actividad</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="durationInHours">Duración (Horas)</Label>
+                                            <Input id="durationInHours" name="durationInHours" type="number" value={formData.durationInHours} onChange={handleInputChange} required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="language">Idioma</Label>
+                                            <Input id="language" name="language" value={formData.language} onChange={handleInputChange} placeholder="Ej: Español, Inglés" required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="meetingPoint">Punto de Encuentro</Label>
+                                            <Input id="meetingPoint" name="meetingPoint" value={formData.meetingPoint} onChange={handleInputChange} placeholder="Ej: Obelisco" required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="activityLevel">Nivel de Actividad</Label>
+                                            <Input id="activityLevel" name="activityLevel" value={formData.activityLevel} onChange={handleInputChange} placeholder="Ej: Moderado, Intenso" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="whatIsIncluded">Qué incluye</Label>
+                                        <Textarea id="whatIsIncluded" name="whatIsIncluded" value={formData.whatIsIncluded} onChange={handleInputChange} placeholder="Ej: Guía, Agua, Entradas" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* NUEVO: Renderizado condicional para COWORKING */}
+                            {publicationType === 'coworking' && (
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-medium">Detalles del Coworking</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="pricePerDay">Precio por Día (USD)</Label>
+                                            <Input id="pricePerDay" name="pricePerDay" type="number" value={formData.pricePerDay} onChange={handleInputChange} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="pricePerMonth">Precio por Mes (USD)</Label>
+                                            <Input id="pricePerMonth" name="pricePerMonth" type="number" value={formData.pricePerMonth} onChange={handleInputChange} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="services">Servicios (separados por coma)</Label>
+                                        <Input id="services" name="services" value={formData.services} onChange={handleInputChange} placeholder="Ej: Wifi, Café, Salas de reunión" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* NUEVO: Renderizado condicional para RESTAURANT */}
+                            {publicationType === 'restaurant' && (
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-medium">Detalles del Restaurante</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="cuisineType">Tipo de Cocina</Label>
+                                            <Input id="cuisineType" name="cuisineType" value={formData.cuisineType} onChange={handleInputChange} placeholder="Ej: Italiana, Mexicana" required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="priceRange">Rango de Precio</Label>
+                                            <Input id="priceRange" name="priceRange" value={formData.priceRange} onChange={handleInputChange} placeholder="Ej: $, $$, $$$" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="openingHours">Horarios</Label>
+                                        <Input id="openingHours" name="openingHours" value={formData.openingHours} onChange={handleInputChange} placeholder="Ej: Lunes a Viernes 9am-10pm" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="menuUrl">URL del Menú (Opcional)</Label>
+                                        <Input id="menuUrl" name="menuUrl" type="url" value={formData.menuUrl} onChange={handleInputChange} placeholder="https://ejemplo.com/menu.pdf" />
+                                    </div>
+                                </div>
+                            )}
 
                             {/* --- Submit --- */}
+                            {/* MODIFICADO: Botón dinámico */}
                             <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? "Publicando..." : "Publicar Alojamiento"}
+                                {isLoading ? "Publicando..." : `Publicar ${publicationTitle}`}
                             </Button>
                         </form>
                     </CardContent>

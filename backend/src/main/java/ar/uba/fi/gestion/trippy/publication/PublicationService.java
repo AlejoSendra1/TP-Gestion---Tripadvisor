@@ -14,7 +14,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 // --- Imports NUEVOS ---
-import ar.uba.fi.gestion.trippy.publication.dto.CreateHotelDTO; // <-- ¡Tu DTO!
+import ar.uba.fi.gestion.trippy.publication.dto.HotelCreateDTO; // <-- ¡Tu DTO!
+import ar.uba.fi.gestion.trippy.publication.dto.ActivityCreateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.CoworkingCreateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.RestaurantCreateDTO;
+
 import ar.uba.fi.gestion.trippy.user.User; // <-- Para la entidad User
 import ar.uba.fi.gestion.trippy.user.UserRepository; // <-- ¡NUEVA dependencia!
 
@@ -65,7 +69,7 @@ public class PublicationService {
      * @return El DTO de detalle de la publicación recién creada.
      */
     @Transactional // ¡Importante! Esta SÍ modifica la DB
-    public PublicationDetailDTO createHotel(CreateHotelDTO dto, String hostEmail) {
+    public PublicationDetailDTO createHotel(HotelCreateDTO dto, String hostEmail) {
 
         // 1. Buscar al Anfitrión (Host) por su email
         User hostUser = userRepository.findByEmail(hostEmail)
@@ -100,6 +104,128 @@ public class PublicationService {
         return convertToDetailDTO(savedHotel);
     }
 
+    /**
+     * (Para US #26)
+     * Crea una nueva publicación de tipo Activity (Experiencia).
+     * @param dto Los datos de la nueva actividad
+     * @param hostEmail El email del usuario (desde el token)
+     * @return El DTO de detalle de la publicación recién creada.
+     */
+    @Transactional
+    public PublicationDetailDTO createActivity(ActivityCreateDTO dto, String hostEmail) {
+
+        // 1. Buscar al Anfitrión (Host)
+        User hostUser = userRepository.findByEmail(hostEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Host no encontrado con email: " + hostEmail));
+
+        // 2. Crear la entidad Activity
+        Activity newActivity = new Activity();
+
+        // 3. Mapear campos comunes
+        newActivity.setTitle(dto.title());
+        newActivity.setDescription(dto.description());
+        newActivity.setPrice(dto.price());
+        newActivity.setLocation(dto.location());
+        newActivity.setMainImageUrl(dto.mainImageUrl());
+        newActivity.setImageUrls(dto.imageUrls() != null ? dto.imageUrls() : Collections.emptyList());
+
+        // 4. Mapear campos específicos (de Activity.java)
+        newActivity.setDurationInHours(dto.durationInHours());
+        newActivity.setMeetingPoint(dto.meetingPoint());
+        newActivity.setWhatIsIncluded(dto.whatIsIncluded());
+        newActivity.setActivityLevel(dto.activityLevel());
+        newActivity.setLanguage(dto.language());
+
+        // 5. Asignar el Host
+        newActivity.setHost(hostUser);
+
+        // 6. Guardar en la DB
+        Activity savedActivity = publicationRepository.save(newActivity);
+
+        // 7. Devolver el DTO de detalle
+        return convertToDetailDTO(savedActivity);
+    }
+
+    /**
+     * (Para US #25)
+     * Crea una nueva publicación de tipo Coworking.
+     * @param dto Los datos del nuevo coworking
+     * @param hostEmail El email del usuario (desde el token)
+     * @return El DTO de detalle de la publicación recién creada.
+     */
+    @Transactional
+    public PublicationDetailDTO createCoworking(CoworkingCreateDTO dto, String hostEmail) {
+
+        // 1. Buscar al Anfitrión (Host)
+        User hostUser = userRepository.findByEmail(hostEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Host no encontrado con email: " + hostEmail));
+
+        // 2. Crear la entidad Coworking
+        Coworking newCoworking = new Coworking();
+
+        // 3. Mapear campos comunes
+        newCoworking.setTitle(dto.title());
+        newCoworking.setDescription(dto.description());
+        newCoworking.setPrice(dto.price()); // Precio base
+        newCoworking.setLocation(dto.location());
+        newCoworking.setMainImageUrl(dto.mainImageUrl());
+        newCoworking.setImageUrls(dto.imageUrls() != null ? dto.imageUrls() : Collections.emptyList());
+
+        // 4. Mapear campos específicos (de Coworking.java)
+        newCoworking.setPricePerDay(dto.pricePerDay());
+        newCoworking.setPricePerMonth(dto.pricePerMonth());
+        newCoworking.setServices(dto.services() != null ? dto.services() : Collections.emptyList());
+
+        // 5. Asignar el Host
+        newCoworking.setHost(hostUser);
+
+        // 6. Guardar en la DB
+        Coworking savedCoworking = publicationRepository.save(newCoworking);
+
+        // 7. Devolver el DTO de detalle
+        return convertToDetailDTO(savedCoworking);
+    }
+
+    /**
+     * (Para US #24)
+     * Crea una nueva publicación de tipo Restaurant.
+     * @param dto Los datos del nuevo restaurant
+     * @param hostEmail El email del usuario (desde el token)
+     * @return El DTO de detalle de la publicación recién creada.
+     */
+    @Transactional
+    public PublicationDetailDTO createRestaurant(RestaurantCreateDTO dto, String hostEmail) {
+
+        // 1. Buscar al Anfitrión (Host)
+        User hostUser = userRepository.findByEmail(hostEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Host no encontrado con email: " + hostEmail));
+
+        // 2. Crear la entidad Restaurant
+        Restaurant newRestaurant = new Restaurant();
+
+        // 3. Mapear campos comunes
+        newRestaurant.setTitle(dto.title());
+        newRestaurant.setDescription(dto.description());
+        newRestaurant.setPrice(dto.price()); // Precio base
+        newRestaurant.setLocation(dto.location());
+        newRestaurant.setMainImageUrl(dto.mainImageUrl());
+        newRestaurant.setImageUrls(dto.imageUrls() != null ? dto.imageUrls() : Collections.emptyList());
+
+        // 4. Mapear campos específicos (de Restaurant.java)
+        newRestaurant.setCuisineType(dto.cuisineType());
+        newRestaurant.setPriceRange(dto.priceRange());
+        newRestaurant.setOpeningHours(dto.openingHours());
+        newRestaurant.setMenuUrl(dto.menuUrl());
+
+        // 5. Asignar el Host
+        newRestaurant.setHost(hostUser);
+
+        // 6. Guardar en la DB
+        Restaurant savedRestaurant = publicationRepository.save(newRestaurant);
+
+        // 7. Devolver el DTO de detalle
+        return convertToDetailDTO(savedRestaurant);
+    }
 
     // --- MÉTODOS PRIVADOS DE CONVERSIÓN (DTOs) ---
     // (Sin cambios, exactamente como los tenías)

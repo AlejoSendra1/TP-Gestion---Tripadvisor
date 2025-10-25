@@ -12,11 +12,16 @@ import java.util.List;
 
 // --- Imports NUEVOS ---
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails; // Para el @AuthenticationPrincipal
-import ar.uba.fi.gestion.trippy.publication.dto.CreateHotelDTO; // El DTO de entrada
 import org.springframework.http.HttpStatus; // Para el 201 CREATED
 import org.springframework.security.core.annotation.AuthenticationPrincipal; // La "magia"
 import org.springframework.web.bind.annotation.PostMapping; // Nueva anotación
 import org.springframework.web.bind.annotation.RequestBody; // Para el JSON
+
+// ¡¡DTOs para las nuevas entidades!!
+import ar.uba.fi.gestion.trippy.publication.dto.HotelCreateDTO; // El que ya tenías
+import ar.uba.fi.gestion.trippy.publication.dto.ActivityCreateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.CoworkingCreateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.RestaurantCreateDTO; // <-- NUEVO
 
 @RestController
 @RequestMapping("/publications")
@@ -44,25 +49,58 @@ public class PublicationRestController {
         return ResponseEntity.ok(publication);
     }
 
-    // --- NUEVO ENDPOINT PARA US #23 ---
+    // --- ENDPOINTS DE CREACIÓN (POST) ---
 
     /**
-     * Endpoint para crear una nueva publicación de tipo "Hotel".
+     * (US #23) Endpoint para crear una nueva publicación de tipo "Hotel".
      * Protegido por SecurityConfig para aceptar solo rol "HOST".
      */
     @PostMapping("/hotel")
     public ResponseEntity<PublicationDetailDTO> createNewHotel(
-            @RequestBody CreateHotelDTO hotelRequest, // 1. Recibe el JSON con los datos del hotel
-            @AuthenticationPrincipal JwtUserDetails authenticatedUser // 2. Recibe el Principal (JwtUserDetails)
+            @RequestBody HotelCreateDTO hotelRequest,
+            @AuthenticationPrincipal JwtUserDetails authenticatedUser
     ) {
-        // 3. Como tu JwtAuthFilter pone JwtUserDetails en el contexto,
-        //    podemos obtener el email (username)
         String hostEmail = authenticatedUser.username();
-
-        // 4. Llamamos al servicio (que modificaremos después)
         PublicationDetailDTO newPublication = publicationService.createHotel(hotelRequest, hostEmail);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newPublication);
+    }
 
-        // 5. Retornamos 201 Created y la publicación recién creada
+    /**
+     * (US #26) Endpoint para crear una nueva publicación de tipo "Activity".
+     */
+    @PostMapping("/activity")
+    public ResponseEntity<PublicationDetailDTO> createNewActivity(
+            @RequestBody ActivityCreateDTO activityRequest,
+            @AuthenticationPrincipal JwtUserDetails authenticatedUser
+    ) {
+        String hostEmail = authenticatedUser.username();
+        PublicationDetailDTO newPublication = publicationService.createActivity(activityRequest, hostEmail);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newPublication);
+    }
+
+    /**
+     * (US #25) Endpoint para crear una nueva publicación de tipo "Coworking".
+     */
+    @PostMapping("/coworking")
+    public ResponseEntity<PublicationDetailDTO> createNewCoworking(
+            @RequestBody CoworkingCreateDTO coworkingRequest,
+            @AuthenticationPrincipal JwtUserDetails authenticatedUser
+    ) {
+        String hostEmail = authenticatedUser.username();
+        PublicationDetailDTO newPublication = publicationService.createCoworking(coworkingRequest, hostEmail);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newPublication);
+    }
+
+    /**
+     * (US #24) Endpoint para crear una nueva publicación de tipo "Restaurant".
+     */
+    @PostMapping("/restaurant")
+    public ResponseEntity<PublicationDetailDTO> createNewRestaurant(
+            @RequestBody RestaurantCreateDTO restaurantRequest,
+            @AuthenticationPrincipal JwtUserDetails authenticatedUser
+    ) {
+        String hostEmail = authenticatedUser.username();
+        PublicationDetailDTO newPublication = publicationService.createRestaurant(restaurantRequest, hostEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(newPublication);
     }
 

@@ -8,19 +8,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ar.uba.fi.gestion.trippy.common.location.Location;
-import ar.uba.fi.gestion.trippy.publication.dto.CreateHotelDTO; // ¡Importamos tu DTO!
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationDetailDTO;
-import ar.uba.fi.gestion.trippy.publication.dto.PublicationListDTO;
 import ar.uba.fi.gestion.trippy.user.User;
 import ar.uba.fi.gestion.trippy.user.UserRepository; // ¡Importamos el repo de User!
 
-import jakarta.persistence.EntityNotFoundException;
+// --- ¡¡NUEVOS IMPORTS!! ---
+import ar.uba.fi.gestion.trippy.publication.dto.HotelCreateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.ActivityCreateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.CoworkingCreateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.RestaurantCreateDTO;
+// --- FIN IMPORTS ---
+
 import java.util.Collections;
-import java.util.List;
+import java.util.List; // Para Coworking
+import java.util.Map; // Para el DTO de respuesta
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,58 +36,84 @@ public class PublicationServiceTest {
     private PublicationRepository publicationRepositoryMock;
 
     @Mock
-    private UserRepository userRepositoryMock; // <-- 1. ¡AGREGAMOS EL MOCK QUE FALTABA!
+    private UserRepository userRepositoryMock; // <-- Mock para el repo de User
 
-    // @InjectMocks ya no se usa para evitar problemas de inyección
     private PublicationService publicationService;
 
-    // Variables de prueba
+    // --- Variables de prueba ---
     private Hotel testHotel;
     private Restaurant testRestaurant;
     private Location testLocation;
-    private User testHost; // <-- Ahora será un objeto REAL para tests
+
+    // Mocks para el Host
+    private User mockHost;
+    private String hostEmail = "host@test.com";
+
+    // --- ¡¡NUEVOS DTOs DE ENTRADA!! ---
+    private HotelCreateDTO hotelCreateDto;
+    private ActivityCreateDTO activityCreateDto;
+    private CoworkingCreateDTO coworkingCreateDto;
+    private RestaurantCreateDTO restaurantCreateDto;
+
 
     @BeforeEach
     void setUp() {
-        // --- 2. INSTANCIAMOS EL SERVICIO MANUALMENTE ---
-        // Ahora le pasamos AMBOS mocks al constructor
+        // Instanciamos el servicio manualmente con sus mocks
         publicationService = new PublicationService(publicationRepositoryMock, userRepositoryMock);
 
-        // --- 3. El Host ahora es un objeto real (no mock) ---
-        testHost = new User("Test", "Host", "host@test.com", "password");
-        // (Simulamos que ya tiene un ID de la base de datos)
-        // Necesitaremos reflection o un setter si queremos setear el ID, pero para el test
-        // de createHotel no es 100% necesario. Para getById sí.
+        // --- Host Mock ---
+        // Usamos un mock para el Host para poder simular su ID y nombre
+        // fácilmente en las respuestas.
+        mockHost = org.mockito.Mockito.mock(User.class);
+        when(mockHost.getId()).thenReturn(100L);
+        when(mockHost.getFirstname()).thenReturn("Host Mockeado");
 
         testLocation = new Location();
         testLocation.setCity("Buenos Aires");
         testLocation.setCountry("Argentina");
 
+        // --- Entidades (para tests GET) ---
         testHotel = new Hotel();
         testHotel.setId(1L);
         testHotel.setTitle("Gran Hotel Test");
-        // ... (resto de campos)
-        testHotel.setHost(testHost); // Le asignamos el User real
+        testHotel.setHost(mockHost);
+        testHotel.setRoomCount(10); // Para specificDetails
 
         testRestaurant = new Restaurant();
         testRestaurant.setId(2L);
-        // ... (resto de campos)
-        testRestaurant.setHost(testHost);
+        testRestaurant.setHost(mockHost);
+
+        // --- ¡¡NUEVO!! Inicializamos los DTOs de creación ---
+        hotelCreateDto = new HotelCreateDTO(
+                "Nuevo Hotel", "Descripción Hotel", 200.0,
+                testLocation, "http://img.com/main.png", Collections.emptyList(),
+                10, 20 // roomCount y capacity
+        );
+
+        activityCreateDto = new ActivityCreateDTO(
+                "Nueva Actividad", "Descripción Actividad", 50.0,
+                testLocation, "http://img.com/act.png", Collections.emptyList(),
+                3, "Obelisco", "Guía y agua", "Moderado", "Español"
+        );
+
+        coworkingCreateDto = new CoworkingCreateDTO(
+                "Nuevo Coworking", "Descripción Coworking", 15.0,
+                testLocation, "http://img.com/co.png", Collections.emptyList(),
+                25.0, 300.0, List.of("Wifi", "Café")
+        );
+
+        restaurantCreateDto = new RestaurantCreateDTO(
+                "Nuevo Restaurant", "Descripción Restaurant", 40.0,
+                testLocation, "http://img.com/resto.png", Collections.emptyList(),
+                "Italiana", "$$$", "12:00-23:00", "http://menu.com"
+        );
     }
 
-    // --- (Los tests GET existentes van aquí, pero OJO) ---
+    // --- (Tests GET existentes) ---
 
     @Test
     void whenGetPublicationById_withValidId_shouldReturnDetailDTO() {
         // Arrange
-        // Como 'testHost' ya no es un mock, no usamos 'when()'.
-        // PERO, necesitamos simular que tiene un ID.
-        // La forma más fácil es usar un mock como antes:
-        User mockHost = org.mockito.Mockito.mock(User.class);
-        when(mockHost.getId()).thenReturn(100L);
-        when(mockHost.getFirstname()).thenReturn("Test Host");
-        testHotel.setHost(mockHost); // Sobreescribimos con el mock para ESTE test
-
         when(publicationRepositoryMock.findById(1L)).thenReturn(Optional.of(testHotel));
 
         // Act
@@ -91,73 +121,134 @@ public class PublicationServiceTest {
 
         // Assert
         assertThat(resultDTO.host().id()).isEqualTo(100L);
-        assertThat(resultDTO.host().name()).isEqualTo("Test Host");
-        // ... (resto de asserts)
+        assertThat(resultDTO.host().name()).isEqualTo("Host Mockeado");
+        assertThat(resultDTO.specificDetails().get("roomCount")).isEqualTo(10);
     }
 
-    // --- ¡NUEVO TEST PARA US #23! ---
+    // --- Tests de CREACIÓN (POST) ---
 
     @Test
     void whenCreateHotel_shouldReturnCreatedHotelDTO() {
         // 1. Arrange (Given)
-        String hostEmail = "host@test.com";
+        // (El DTO ya está en setUp)
 
-        // El DTO de entrada
-        CreateHotelDTO createDto = new CreateHotelDTO(
-                "Nuevo Hotel", "Descripción", 200.0,
-                testLocation, "http://img.com/main.png", Collections.emptyList(),
-                10, 20 // roomCount y capacity
-        );
-
-        // El usuario anfitrión que el repo debe encontrar
-        User foundHost = new User("Host", "Encontrado", hostEmail, "pass");
-        // (Simulamos un ID)
-        // Aquí SÍ necesitamos un ID para el HostDTO de respuesta.
-        // Vamos a mockear el User para este test.
-        User mockHost = org.mockito.Mockito.mock(User.class);
-        when(mockHost.getId()).thenReturn(100L);
-        when(mockHost.getFirstname()).thenReturn("Host Encontrado");
-
-        // Cuando el servicio llame al userRepo, devolvemos el mockHost
+        // Cuando el servicio busque al host por email, lo encuentra
         when(userRepositoryMock.findByEmail(hostEmail)).thenReturn(Optional.of(mockHost));
 
-        // Para capturar el Hotel que el servicio intenta guardar
-        ArgumentCaptor<Hotel> hotelCaptor = ArgumentCaptor.forClass(Hotel.class);
-
-        // Creamos la entidad "guardada" que el repo devolverá
+        // Preparamos la entidad "guardada" que el repo devolverá
         Hotel savedHotel = new Hotel();
-        savedHotel.setId(1L); // El ID que la DB le asignaría
-        savedHotel.setTitle("Nuevo Hotel");
-        savedHotel.setHost(mockHost); // El host asignado
-        savedHotel.setRoomCount(10);
-        savedHotel.setCapacity(20); // ¡Asegúrate que Hotel.java tenga este setter!
+        savedHotel.setId(10L); // ID asignado por la DB
+        savedHotel.setTitle(hotelCreateDto.title());
+        savedHotel.setHost(mockHost);
+        savedHotel.setRoomCount(hotelCreateDto.roomCount());
+        savedHotel.setCapacity(hotelCreateDto.capacity());
 
-        // Cuando el servicio llame a 'save', le devolvemos el 'savedHotel'
-        when(publicationRepositoryMock.save(hotelCaptor.capture())).thenReturn(savedHotel);
+        // Cuando el servicio llame a 'save', devolvemos 'savedHotel'
+        when(publicationRepositoryMock.save(any(Hotel.class))).thenReturn(savedHotel);
 
         // 2. Act (When)
-        PublicationDetailDTO resultDTO = publicationService.createHotel(createDto, hostEmail);
+        PublicationDetailDTO resultDTO = publicationService.createHotel(hotelCreateDto, hostEmail);
 
         // 3. Assert (Then)
         assertThat(resultDTO).isNotNull();
-        assertThat(resultDTO.id()).isEqualTo(1L);
+        assertThat(resultDTO.id()).isEqualTo(10L);
         assertThat(resultDTO.title()).isEqualTo("Nuevo Hotel");
         assertThat(resultDTO.publicationType()).isEqualTo("Hotel");
-
-        // Verificamos el HostDTO de la respuesta
-        assertThat(resultDTO.host()).isNotNull();
         assertThat(resultDTO.host().id()).isEqualTo(100L);
+        assertThat(resultDTO.specificDetails().get("roomCount")).isEqualTo(10);
+        assertThat(resultDTO.specificDetails().get("capacity")).isEqualTo(20);
 
-        // Verificamos que el objeto capturado (el que se mandó a guardar)
-        // tenga los datos correctos
-        Hotel capturedHotel = hotelCaptor.getValue();
-        assertThat(capturedHotel.getTitle()).isEqualTo("Nuevo Hotel");
-        assertThat(capturedHotel.getHost().getFirstname()).isEqualTo("Host Encontrado");
-
-        // Verificamos que los mocks fueron llamados
         verify(userRepositoryMock).findByEmail(hostEmail);
         verify(publicationRepositoryMock).save(any(Hotel.class));
     }
 
-    // ... (resto de tests GET y el de EntityNotFoundException)
+    @Test
+    void whenCreateActivity_shouldReturnCreatedActivityDTO() {
+        // 1. Arrange
+        when(userRepositoryMock.findByEmail(hostEmail)).thenReturn(Optional.of(mockHost));
+
+        Activity savedActivity = new Activity();
+        savedActivity.setId(11L);
+        savedActivity.setTitle(activityCreateDto.title());
+        savedActivity.setHost(mockHost);
+        savedActivity.setDurationInHours(activityCreateDto.durationInHours());
+        savedActivity.setMeetingPoint(activityCreateDto.meetingPoint());
+
+        when(publicationRepositoryMock.save(any(Activity.class))).thenReturn(savedActivity);
+
+        // 2. Act
+        PublicationDetailDTO resultDTO = publicationService.createActivity(activityCreateDto, hostEmail);
+
+        // 3. Assert
+        assertThat(resultDTO).isNotNull();
+        assertThat(resultDTO.id()).isEqualTo(11L);
+        assertThat(resultDTO.title()).isEqualTo("Nueva Actividad");
+        assertThat(resultDTO.publicationType()).isEqualTo("Activity");
+        assertThat(resultDTO.host().id()).isEqualTo(100L);
+        assertThat(resultDTO.specificDetails().get("durationInHours")).isEqualTo(3);
+        assertThat(resultDTO.specificDetails().get("meetingPoint")).isEqualTo("Obelisco");
+
+        verify(userRepositoryMock).findByEmail(hostEmail);
+        verify(publicationRepositoryMock).save(any(Activity.class));
+    }
+
+    @Test
+    void whenCreateCoworking_shouldReturnCreatedCoworkingDTO() {
+        // 1. Arrange
+        when(userRepositoryMock.findByEmail(hostEmail)).thenReturn(Optional.of(mockHost));
+
+        Coworking savedCoworking = new Coworking();
+        savedCoworking.setId(12L);
+        savedCoworking.setTitle(coworkingCreateDto.title());
+        savedCoworking.setHost(mockHost);
+        savedCoworking.setPricePerDay(coworkingCreateDto.pricePerDay());
+        savedCoworking.setServices(coworkingCreateDto.services());
+
+        when(publicationRepositoryMock.save(any(Coworking.class))).thenReturn(savedCoworking);
+
+        // 2. Act
+        PublicationDetailDTO resultDTO = publicationService.createCoworking(coworkingCreateDto, hostEmail);
+
+        // 3. Assert
+        assertThat(resultDTO).isNotNull();
+        assertThat(resultDTO.id()).isEqualTo(12L);
+        assertThat(resultDTO.title()).isEqualTo("Nuevo Coworking");
+        assertThat(resultDTO.publicationType()).isEqualTo("Coworking");
+        assertThat(resultDTO.host().id()).isEqualTo(100L);
+        assertThat(resultDTO.specificDetails().get("pricePerDay")).isEqualTo(25.0);
+        assertThat(resultDTO.specificDetails().get("services")).isEqualTo(List.of("Wifi", "Café"));
+
+        verify(userRepositoryMock).findByEmail(hostEmail);
+        verify(publicationRepositoryMock).save(any(Coworking.class));
+    }
+
+    @Test
+    void whenCreateRestaurant_shouldReturnCreatedRestaurantDTO() {
+        // 1. Arrange
+        when(userRepositoryMock.findByEmail(hostEmail)).thenReturn(Optional.of(mockHost));
+
+        Restaurant savedRestaurant = new Restaurant();
+        savedRestaurant.setId(13L);
+        savedRestaurant.setTitle(restaurantCreateDto.title());
+        savedRestaurant.setHost(mockHost);
+        savedRestaurant.setCuisineType(restaurantCreateDto.cuisineType());
+        savedRestaurant.setMenuUrl(restaurantCreateDto.menuUrl());
+
+        when(publicationRepositoryMock.save(any(Restaurant.class))).thenReturn(savedRestaurant);
+
+        // 2. Act
+        PublicationDetailDTO resultDTO = publicationService.createRestaurant(restaurantCreateDto, hostEmail);
+
+        // 3. Assert
+        assertThat(resultDTO).isNotNull();
+        assertThat(resultDTO.id()).isEqualTo(13L);
+        assertThat(resultDTO.title()).isEqualTo("Nuevo Restaurant");
+        assertThat(resultDTO.publicationType()).isEqualTo("Restaurant");
+        assertThat(resultDTO.host().id()).isEqualTo(100L);
+        assertThat(resultDTO.specificDetails().get("cuisineType")).isEqualTo("Italiana");
+        assertThat(resultDTO.specificDetails().get("menuUrl")).isEqualTo("http://menu.com");
+
+        verify(userRepositoryMock).findByEmail(hostEmail);
+        verify(publicationRepositoryMock).save(any(Restaurant.class));
+    }
 }

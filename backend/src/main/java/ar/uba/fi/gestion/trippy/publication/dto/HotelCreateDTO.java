@@ -5,7 +5,7 @@ import java.util.List;
 
 // Usamos un 'record' para el DTO de entrada.
 // Nota que no pedimos el 'hostId', ¡lo sacaremos del token!
-public record CreateHotelDTO(
+public record HotelCreateDTO(
         String title,
         String description,
         double price,

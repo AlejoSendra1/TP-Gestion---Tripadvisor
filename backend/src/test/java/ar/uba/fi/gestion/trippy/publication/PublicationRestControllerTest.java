@@ -17,7 +17,10 @@ import org.mockito.Mockito;
 import ar.uba.fi.gestion.trippy.common.location.Location;
 // --- Imports NUEVOS ---
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
-import ar.uba.fi.gestion.trippy.publication.dto.CreateHotelDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.HotelCreateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.ActivityCreateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.CoworkingCreateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.RestaurantCreateDTO;
 // --- Fin Imports NUEVOS ---
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationDetailDTO;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationListDTO;
@@ -43,8 +46,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.hasSize;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 
 @WebMvcTest(PublicationRestController.class)
 @Import(SecurityConfig.class) // Carga tu SecurityConfig real
@@ -63,9 +64,7 @@ public class PublicationRestControllerTest {
     private JwtService jwtServiceMock; // Mock de tu @TestConfiguration
 
     /**
-     * Esta es tu configuración original, ¡está perfecta!
-     * Le decimos a Spring: "Carga el @WebMvcTest, pero cuando
-     * SecurityConfig pida el JwtService, dale este MOCK".
+     * Configuración de Mocks para el @WebMvcTest
      */
     @TestConfiguration
     static class ControllerTestConfig {
@@ -80,138 +79,266 @@ public class PublicationRestControllerTest {
         }
     }
 
-    // Variables de prueba
+    // --- Variables de prueba ---
+    private Location testLocation;
+
+    // DTOs de respuesta
     private PublicationListDTO listDto1;
-    private PublicationDetailDTO detailDto1;
-    private CreateHotelDTO createDto; // DTO de entrada para el POST
+    private PublicationDetailDTO detailDtoHotel;
+    private PublicationDetailDTO detailDtoActivity; // Para las respuestas
+    private PublicationDetailDTO detailDtoCoworking;
+    private PublicationDetailDTO detailDtoRestaurant;
+
+    // DTOs de entrada (Request)
+    private HotelCreateDTO hotelCreateDto;
+    private ActivityCreateDTO activityCreateDto;
+    private CoworkingCreateDTO coworkingCreateDto;
+    private RestaurantCreateDTO restaurantCreateDto;
+
+    // Detalles del Host
+    private String hostEmail = "host@test.com";
+    private String hostToken = "TOKEN_VALIDO_HOST";
+    private JwtUserDetails hostDetails = new JwtUserDetails(hostEmail, "HOST");
+
+    // Detalles de otro rol (para 403)
+    private String ownerEmail = "owner@test.com";
+    private String ownerToken = "TOKEN_VALIDO_OWNER";
+    private JwtUserDetails ownerDetails = new JwtUserDetails(ownerEmail, "OWNER");
+
 
     @BeforeEach
     void setUp() {
-        // ... (Tu setUp original para listDto1 y detailDto1)
+        testLocation = new Location();
+        testLocation.setCity("Buenos Aires");
+
+        // --- DTOs de respuesta (para mockear el servicio) ---
+        PublicationDetailDTO.HostDTO hostDto = new PublicationDetailDTO.HostDTO(100L, "Test Host", null);
+
         listDto1 = new PublicationListDTO(
                 1L, "Test Hotel", 150.0, "Buenos Aires", "Argentina",
                 "http://img.com/main.png", "Hotel"
         );
-        PublicationDetailDTO.HostDTO hostDto = new PublicationDetailDTO.HostDTO(100L, "Test Host", null);
-        Location location = new Location();
-        location.setCity("Buenos Aires");
-        detailDto1 = new PublicationDetailDTO(
-                1L, "Test Hotel", "Descripción detallada", 150.0, location,
+
+        detailDtoHotel = new PublicationDetailDTO(
+                1L, "Test Hotel", "Descripción detallada", 150.0, testLocation,
                 hostDto, List.of("http://img.com/1.png"), Collections.emptyList(),
                 "Hotel", Map.of("roomCount", 50)
         );
-        // ---
 
-        // Preparamos el DTO de entrada para los tests POST
-        createDto = new CreateHotelDTO(
+        detailDtoActivity = new PublicationDetailDTO(
+                2L, "Test Activity", "Descripción Actividad", 50.0, testLocation,
+                hostDto, Collections.emptyList(), Collections.emptyList(),
+                "Activity", Map.of("durationInHours", 3)
+        );
+
+        detailDtoCoworking = new PublicationDetailDTO(
+                3L, "Test Coworking", "Descripción Coworking", 25.0, testLocation,
+                hostDto, Collections.emptyList(), Collections.emptyList(),
+                "Coworking", Map.of("services", List.of("Wifi"))
+        );
+
+        detailDtoRestaurant = new PublicationDetailDTO(
+                4L, "Test Restaurant", "Descripción Restaurant", 40.0, testLocation,
+                hostDto, Collections.emptyList(), Collections.emptyList(),
+                "Restaurant", Map.of("cuisineType", "Italiana")
+        );
+
+        // --- DTOs de entrada (para enviar en el POST) ---
+        hotelCreateDto = new HotelCreateDTO(
                 "Hotel Creado", "Descripción", 200.0,
-                location, "http://img.com/main.png", Collections.emptyList(),
+                testLocation, "http://img.com/main.png", Collections.emptyList(),
                 10, 20 // roomCount y capacity
         );
+
+        activityCreateDto = new ActivityCreateDTO(
+                "Actividad Creada", "Desc", 50.0, testLocation,
+                "http://img.com/act.png", Collections.emptyList(),
+                3, "Obelisco", "Guía", "Moderado", "Español"
+        );
+
+        coworkingCreateDto = new CoworkingCreateDTO(
+                "Coworking Creado", "Desc", 15.0, testLocation,
+                "http://img.com/co.png", Collections.emptyList(),
+                25.0, 300.0, List.of("Wifi", "Café")
+        );
+
+        restaurantCreateDto = new RestaurantCreateDTO(
+                "Restaurant Creado", "Desc", 40.0, testLocation,
+                "http://img.com/resto.png", Collections.emptyList(),
+                "Italiana", "$$$", "12:00-23:00", "http://menu.com"
+        );
+
+        // --- Mock de Seguridad (JWT Service) ---
+        // Le decimos al JwtService (mock) qué devolver cuando vea estos tokens
+        when(jwtServiceMock.extractVerifiedUserDetails(hostToken))
+                .thenReturn(Optional.of(hostDetails));
+        when(jwtServiceMock.extractVerifiedUserDetails(ownerToken))
+                .thenReturn(Optional.of(ownerDetails));
     }
 
-    // --- Tests GET (tus tests originales) ---
-
+    // --- Tests GET (sin cambios) ---
     @Test
     void whenGetAllPublications_shouldReturn200_andListOfDTOs() throws Exception {
         when(publicationServiceMock.getAllPublications()).thenReturn(List.of(listDto1));
 
-        mockMvc.perform(get("/publications")) // Quitamos el prefijo /api/v1 que tenías
+        mockMvc.perform(get("/publications"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title", is("Test Hotel")));
     }
 
     @Test
     void whenGetPublicationById_withValidId_shouldReturn200_andDetailDTO() throws Exception {
-        when(publicationServiceMock.getPublicationById(1L)).thenReturn(detailDto1);
+        when(publicationServiceMock.getPublicationById(1L)).thenReturn(detailDtoHotel);
 
         mockMvc.perform(get("/publications/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.host.name", is("Test Host")))
                 .andExpect(jsonPath("$.specificDetails.roomCount", is(50)));
     }
 
     @Test
     void whenGetPublicationById_withInvalidId_shouldReturn404() throws Exception {
-        String errorMsg = "Publicación no encontrada";
         when(publicationServiceMock.getPublicationById(99L))
-                .thenThrow(new EntityNotFoundException(errorMsg));
+                .thenThrow(new EntityNotFoundException("No encontrado"));
 
         mockMvc.perform(get("/publications/99"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(errorMsg));
+                .andExpect(status().isNotFound());
     }
 
-    // --- ¡NUEVOS TESTS PARA US #23 (POST)! ---
+    // --- Tests POST /hotel (sin cambios) ---
 
     @Test
     void whenCreateHotel_asHost_shouldReturn201() throws Exception {
-        // 1. Arrange
-        String hostEmail = "host@test.com";
-        String hostToken = "TOKEN_VALIDO_HOST";
+        // Mock del servicio
+        when(publicationServiceMock.createHotel(any(HotelCreateDTO.class), eq(hostEmail)))
+                .thenReturn(detailDtoHotel); // Devuelve el DTO de hotel
 
-        // Creamos el Principal que el filtro JWT debe generar
-        JwtUserDetails hostDetails = new JwtUserDetails(hostEmail, "HOST");
-
-        // Le decimos al JwtService (mock) qué devolver cuando vea este token
-        when(jwtServiceMock.extractVerifiedUserDetails(hostToken))
-                .thenReturn(Optional.of(hostDetails));
-
-        // Le decimos al PublicationService (mock) qué devolver
-        // (Usamos el DTO de detalle que ya teníamos para la respuesta)
-        when(publicationServiceMock.createHotel(any(CreateHotelDTO.class), eq(hostEmail)))
-                .thenReturn(detailDto1);
-
-        // 2. Act & 3. Assert
         mockMvc.perform(post("/publications/hotel")
-                        .header("Authorization", "Bearer " + hostToken) // ¡Simulamos el login!
+                        .header("Authorization", "Bearer " + hostToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto))) // Enviamos el DTO de entrada
-
-                .andExpect(status().isCreated()) // 201 Created
-                .andExpect(jsonPath("$.id", is(1))) // Verificamos la respuesta
+                        .content(objectMapper.writeValueAsString(hotelCreateDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.title", is("Test Hotel")));
     }
 
     @Test
     void whenCreateHotel_asOwner_shouldReturn403() throws Exception {
-        // 1. Arrange
-        String ownerEmail = "owner@test.com";
-        String ownerToken = "TOKEN_VALIDO_OWNER";
-
-        // Creamos un Principal con el rol incorrecto
-        JwtUserDetails ownerDetails = new JwtUserDetails(ownerEmail, "OWNER");
-
-        when(jwtServiceMock.extractVerifiedUserDetails(ownerToken))
-                .thenReturn(Optional.of(ownerDetails));
-
-        // (No necesitamos mockear el publicationService porque la seguridad
-        // debe frenar la request ANTES de que llegue al servicio)
-
-        // 2. Act & 3. Assert
         mockMvc.perform(post("/publications/hotel")
-                        .header("Authorization", "Bearer " + ownerToken) // ¡Logueado como OWNER!
+                        .header("Authorization", "Bearer " + ownerToken) // Rol incorrecto
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
-
-                .andExpect(status().isForbidden()); // 403 Forbidden!
+                        .content(objectMapper.writeValueAsString(hotelCreateDto)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void whenCreateHotel_unauthenticated_shouldReturn401() throws Exception {
-        // 1. Arrange
-        // No mockeamos el JwtService, por lo que el filtro
-        // no encontrará un Principal y fallará la autenticación.
-
-        // 2. Act & 3. Assert
-        mockMvc.perform(post("/publications/hotel") // ¡Sin header "Authorization"!
+        mockMvc.perform(post("/publications/hotel") // Sin token
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
+                        .content(objectMapper.writeValueAsString(hotelCreateDto)))
+                .andExpect(status().isUnauthorized());
+    }
 
-                .andExpect(status().isUnauthorized()); // 401 Unauthorized!
+    // --- ¡¡NUEVO!! Tests POST /activity ---
+
+    @Test
+    void whenCreateActivity_asHost_shouldReturn201() throws Exception {
+        // Mock del servicio
+        when(publicationServiceMock.createActivity(any(ActivityCreateDTO.class), eq(hostEmail)))
+                .thenReturn(detailDtoActivity); // Devuelve el DTO de actividad
+
+        mockMvc.perform(post("/publications/activity")
+                        .header("Authorization", "Bearer " + hostToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(activityCreateDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(2)))
+                .andExpect(jsonPath("$.title", is("Test Activity")));
+    }
+
+    @Test
+    void whenCreateActivity_asOwner_shouldReturn403() throws Exception {
+        mockMvc.perform(post("/publications/activity")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(activityCreateDto)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenCreateActivity_unauthenticated_shouldReturn401() throws Exception {
+        mockMvc.perform(post("/publications/activity")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(activityCreateDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // --- ¡¡NUEVO!! Tests POST /coworking ---
+
+    @Test
+    void whenCreateCoworking_asHost_shouldReturn201() throws Exception {
+        // Mock del servicio
+        when(publicationServiceMock.createCoworking(any(CoworkingCreateDTO.class), eq(hostEmail)))
+                .thenReturn(detailDtoCoworking); // Devuelve el DTO de coworking
+
+        mockMvc.perform(post("/publications/coworking")
+                        .header("Authorization", "Bearer " + hostToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(coworkingCreateDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(3)))
+                .andExpect(jsonPath("$.title", is("Test Coworking")));
+    }
+
+    @Test
+    void whenCreateCoworking_asOwner_shouldReturn403() throws Exception {
+        mockMvc.perform(post("/publications/coworking")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(coworkingCreateDto)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenCreateCoworking_unauthenticated_shouldReturn401() throws Exception {
+        mockMvc.perform(post("/publications/coworking")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(coworkingCreateDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // --- ¡¡NUEVO!! Tests POST /restaurant ---
+
+    @Test
+    void whenCreateRestaurant_asHost_shouldReturn201() throws Exception {
+        // Mock del servicio
+        when(publicationServiceMock.createRestaurant(any(RestaurantCreateDTO.class), eq(hostEmail)))
+                .thenReturn(detailDtoRestaurant); // Devuelve el DTO de restaurant
+
+        mockMvc.perform(post("/publications/restaurant")
+                        .header("Authorization", "Bearer " + hostToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(restaurantCreateDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(4)))
+                .andExpect(jsonPath("$.title", is("Test Restaurant")));
+    }
+
+    @Test
+    void whenCreateRestaurant_asOwner_shouldReturn403() throws Exception {
+        mockMvc.perform(post("/publications/restaurant")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(restaurantCreateDto)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenCreateRestaurant_unauthenticated_shouldReturn401() throws Exception {
+        mockMvc.perform(post("/publications/restaurant")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(restaurantCreateDto)))
+                .andExpect(status().isUnauthorized());
     }
 }

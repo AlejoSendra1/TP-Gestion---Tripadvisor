@@ -29,5 +29,14 @@ public class Restaurant extends Publication {
     public void setCuisineType(String cuisineType) {
         this.cuisineType = cuisineType;
     }
+    public void setPriceRange(String priceRange) {
+        this.priceRange = priceRange;
+    }
+    public void setOpeningHours(String openingHours) {
+        this.openingHours = openingHours;
+    }
+    public void setMenuUrl(String menuUrl) {
+        this.menuUrl = menuUrl;
+    }
 
 }
