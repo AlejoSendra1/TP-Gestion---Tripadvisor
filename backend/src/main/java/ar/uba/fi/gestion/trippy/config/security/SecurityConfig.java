@@ -1,5 +1,6 @@
 package ar.uba.fi.gestion.trippy.config.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,11 +61,23 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/publications/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/publications/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/publications/hotel").hasRole("HOST")
+                        .requestMatchers(HttpMethod.POST, "/publications/activity").hasRole("HOST")
+                        .requestMatchers(HttpMethod.POST, "/publications/coworking").hasRole("HOST")
+                        .requestMatchers(HttpMethod.POST, "/publications/restaurant").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sessions").permitAll()
                         .anyRequest().authenticated()
                 )
+
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling.authenticationEntryPoint(
+                                (request, response, authException) ->
+                                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
+                        )
+                )
+
                 .sessionManagement(sessionManager -> sessionManager
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)

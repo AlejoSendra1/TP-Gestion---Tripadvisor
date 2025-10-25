@@ -31,7 +31,7 @@ class UserRestController {
     @Operation(summary = "Create a new user")
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserCreateDTO data) {
         TokenDTO tokens = userService.createUser(data).orElseThrow();
-        UserDTO userDTO = new UserDTO(data.firstName(),0,1,tokens); //todo evitar harcodeo
+        UserDTO userDTO = new UserDTO(data.firstName(),0,1,"HOST",tokens); //todo evitar harcodeo
         return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 

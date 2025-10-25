@@ -33,4 +33,15 @@ public class Coworking extends Publication {
 
         return details;
     }
+
+    public void setPricePerDay(double pricePerDay) {
+        this.pricePerDay = pricePerDay;
+    }
+    public void setPricePerMonth(double pricePerMonth) {
+        this.pricePerMonth = pricePerMonth;
+    }
+    public void setServices(List<String> services) {
+        this.services = services;
+    }
+
 }

@@ -61,7 +61,7 @@ public class UserService {
 
         var user = data.asUser(passwordEncoder::encode);
 
-        user.setRole("OWNER");
+        user.setRole("HOST");
 
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);
@@ -85,6 +85,7 @@ public class UserService {
                     user.getFirstname(),
                     0, // userXP - you'll need to get this from somewhere
                     1, // userLevel - you'll need to get this from somewhere
+                    user.getRole(),
                     tokenDTO
             );
         });

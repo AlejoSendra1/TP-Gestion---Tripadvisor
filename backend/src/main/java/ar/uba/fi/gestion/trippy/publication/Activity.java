@@ -29,4 +29,21 @@ public class Activity extends Publication {
 
         return details;
     }
+
+    public void setDurationInHours(int durationInHours) {
+        this.durationInHours = durationInHours;
+    }
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
+    }
+    public void setWhatIsIncluded(String whatIsIncluded) {
+        this.whatIsIncluded = whatIsIncluded;
+    }
+    public void setActivityLevel(String activityLevel) {
+        this.activityLevel = activityLevel;
+    }
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
 }
