@@ -1,74 +1,124 @@
-import { Search, User, Trophy, Star } from "lucide-react";
+import { Search, User, Trophy, Star, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import {useAuth} from "@/hooks/use-auth"
-
+import { useAuth } from "@/hooks/use-auth";
 
 export function DinamicHeaderSide() {
+  const { user, logout, isTraveler, isBusinessOwner } = useAuth();
 
-    const { user, logout } = useAuth();
-
-    const getLevelColor = (level: number) => {
+  const getLevelColor = (level: number) => {
     if (level >= 20) return "bg-xp-platinum";
     if (level >= 15) return "bg-xp-gold";
     if (level >= 10) return "bg-xp-silver";
     return "bg-xp-bronze";
-    };
+  };
 
-    return (
-      <>
-        {user? (
-          /* --- LOGGED-IN: User Profile --- */
-          <div className="flex items-center space-x-4">
+  const getUserInitials = () => {
+    if (!user) return "?";
 
-            <div>
-              <button onClick={() => logout()} >
-                  Log out
-              </button>
-            </div>
+    if (isTraveler()) {
+      return `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
+    }
+
+    if (isBusinessOwner()) {
+      return user.businessName?.[0]?.toUpperCase() || "B";
+    }
+
+    return user.email?.[0]?.toUpperCase() || "U";
+  };
+
+  const getUserDisplayName = () => {
+    if (!user) return "";
+
+    if (isTraveler()) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+
+    if (isBusinessOwner()) {
+      return user.businessName;
+    }
+
+    return user.email;
+  };
+
+  return (
+    <>
+      {user ? (
+        /* --- LOGGED-IN: User Profile --- */
+        <div className="flex items-center space-x-4">
+          <div>
+            <button
+              onClick={() => logout()}
+              className="text-sm hover:text-primary transition-colors"
+            >
+              Log out
+            </button>
+          </div>
+
+          {/* Traveler-specific XP and Level */}
+          {isTraveler() && (
             <div className="hidden md:flex items-center space-x-3">
               <div className="text-right">
-                <div className="text-sm font-medium">Explorer Level {sessionStorage.getItem('userLevel')}</div>
+                <div className="text-sm font-medium">
+                  Explorer Level {user.userLevel}
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  {sessionStorage.getItem('userXP')} XP
+                  {user.userXP} XP
                 </div>
               </div>
               <div className="w-20 h-2 bg-secondary rounded-full overflow-hidden">
                 <div
-                  className={`h-full ${getLevelColor(10)} transition-all duration-300`}
+                  className={`h-full ${getLevelColor(user.userLevel)} transition-all duration-300`}
+                  style={{
+                    width: `${Math.min((user.userXP % 1000) / 10, 100)}%`
+                  }}
                 />
               </div>
             </div>
+          )}
 
-            <Link to="/profile">
-              {/* Replace with your actual Avatar component */}
-              <Avatar className="border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
-                <AvatarImage src="/placeholder-avatar.jpg" />
-                <AvatarFallback className="bg-gradient-hero text-white">
-                  <User className="h-4 w-4" /> {/* Replace with your User icon */}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
-          </div>
-        ) : (
-          /* --- LOGGED-OUT: Register & Log In Links --- */
-          <div className="flex">
-            <div>
-              <Link to="/register">
-                Register
-              </Link>
+          {/* Business Owner-specific info */}
+          {isBusinessOwner() && (
+            <div className="hidden md:flex items-center space-x-3">
+              <div className="text-right">
+                <div className="text-sm font-medium">{user.businessName}</div>
+                <div className="text-xs text-muted-foreground">
+                  {user.businessType}
+                </div>
+              </div>
+              <Building2 className="h-5 w-5 text-primary" />
             </div>
-            <div className="mx-8">
-              <Link to="/login">
-                Log in
-              </Link>
-            </div>
-          </div>
-        )}
-      </>
-    );
+          )}
+
+          <Link to="/profile">
+            <Avatar className="border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
+              <AvatarImage src="/placeholder-avatar.jpg" />
+              <AvatarFallback className="bg-gradient-hero text-white">
+                {getUserInitials()}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+        </div>
+      ) : (
+        /* --- LOGGED-OUT: Register & Log In Links --- */
+        <div className="flex items-center space-x-4">
+          <Link
+            to="/register"
+            className="text-sm hover:text-primary transition-colors"
+          >
+            Register
+          </Link>
+          <Link
+            to="/login"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            Log in
+          </Link>
+        </div>
+      )}
+    </>
+  );
 }

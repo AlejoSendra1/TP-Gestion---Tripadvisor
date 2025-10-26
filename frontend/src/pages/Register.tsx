@@ -16,7 +16,6 @@ import {useAuth} from "@/hooks/use-auth"
 const Register = () => {
   const { signup } = useAuth();
 
-  //const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
   const [formData, setFormData] = useState({
     userType: "TRAVELER",
     firstName: "",
@@ -24,9 +23,9 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    agreeToTerms: false,
     businessName: "",
     businessType: "",
-    agreeToTerms: false
   });
 
   const navigate = useNavigate();
@@ -41,7 +40,7 @@ const Register = () => {
       alert("Please agree to the terms and conditions");
       return;
     }
-    console.log("Registration attempt:", JSON.stringify({formData}));
+    console.log("Registration attempt:", JSON.stringify(formData));
 
     fetch(import.meta.env.VITE_BACKEND_API_URL+"/users", {
         method: 'POST',
@@ -120,7 +119,7 @@ const Register = () => {
                 type="button"
                 variant={formData.userType === "TRAVELER" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => handleFieldChange("userType","traveler")}
+                onClick={() => handleFieldChange("userType","TRAVELER")}
                 className="flex-1 gap-2"
               >
                 <Plane className="h-4 w-4" />
@@ -130,7 +129,7 @@ const Register = () => {
                 type="button"
                 variant={formData.userType === "OWNER" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => handleFieldChange("userType","owner")}
+                onClick={() => handleFieldChange("userType","OWNER")}
                 className="flex-1 gap-2"
               >
                 <Building2 className="h-4 w-4" />
@@ -160,30 +159,35 @@ const Register = () => {
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Doe"
-                    required
-                  />
-                </div>
-              </div>
+            {/* Traveler-specific fields */}
+            {formData.userType === "traveler" && (
+              <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        placeholder="John"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        placeholder="Doe"
+                        required
+                      />
+                    </div>
+                  </div>
+              </>
+            )}
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -199,7 +203,7 @@ const Register = () => {
               </div>
 
               {/* Business-specific fields */}
-              {formData.userType === "owner" && (
+              {formData.userType === "OWNER" && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="businessName">Business Name</Label>
@@ -271,7 +275,7 @@ const Register = () => {
               </div>
 
               <Button type="submit" className="w-full">
-                Create {formData.userType === "traveler" ? "Traveler" : "Business"} Account
+                Create {formData.userType === "TRAVELER" ? "Traveler" : "Business"} Account
               </Button>
             </form>
 

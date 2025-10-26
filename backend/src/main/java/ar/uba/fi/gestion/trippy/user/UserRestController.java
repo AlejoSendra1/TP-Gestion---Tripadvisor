@@ -11,12 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-
 @RestController
 @RequestMapping("/users")
 @Tag(name = "1 - Users")
 class UserRestController {
-  
     private final UserService userService;
 
     @Autowired
