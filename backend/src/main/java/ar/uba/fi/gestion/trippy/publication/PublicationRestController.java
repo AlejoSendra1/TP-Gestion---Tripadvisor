@@ -34,6 +34,13 @@ public class PublicationRestController {
         PublicationDetailDTO publication = publicationService.getPublicationById(id);
         return ResponseEntity.ok(publication);
     }
+
+    // Endpoint para eliminar una publicación
+    @DeleteMapping("/{id}")
+    void deletePublication(@PathVariable Long id) {
+        publicationService.deletePublication(id);
+    }
+
     /**
      * Captura la excepción del servicio y la convierte en una
      * respuesta HTTP 404 (Not Found) limpia.

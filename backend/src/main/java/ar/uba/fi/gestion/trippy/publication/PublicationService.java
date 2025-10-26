@@ -1,9 +1,12 @@
 package ar.uba.fi.gestion.trippy.publication;
 
+import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationDetailDTO;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationListDTO;
 import ar.uba.fi.gestion.trippy.user.User;
+import ar.uba.fi.gestion.trippy.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +20,12 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true) // Por defecto, solo lectura
 public class PublicationService {
-
+    private UserService userService;
     private final PublicationRepository publicationRepository;
 
     @Autowired
-    public PublicationService(PublicationRepository publicationRepository) {
+    public PublicationService(PublicationRepository publicationRepository, UserService userService) {
+        this.userService = userService;
         this.publicationRepository = publicationRepository;
     }
 
@@ -92,5 +96,25 @@ public class PublicationService {
                 p.getClass().getSimpleName(),
                 p.fetchSpecificDetails() // <-- ¡LA LLAMADA POLIMÓRFICA!
         );
+    }
+    @Transactional
+    void deletePublication(Long id) {
+        Publication publication = publicationRepository.findById(id).orElse(null);
+        if (publication == null) {
+            throw new EntityNotFoundException("Publicación no encontrada con ID: " + id);
+        }
+
+        User currentUser = userService.getUserByEmail(getUserEmail());
+        if (publication.getHost() != null && publication.getHost().equals(currentUser)) {
+            publicationRepository.deleteById(id);
+            return;
+        }
+
+        throw new EntityNotFoundException("No autorizado para eliminar la publicación con ID: " + id);
+    }
+    private String getUserEmail() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        JwtUserDetails userDetails = (JwtUserDetails) principal;
+        return userDetails.username();
     }
 }
