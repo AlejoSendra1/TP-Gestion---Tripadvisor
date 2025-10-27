@@ -19,6 +19,14 @@ import ar.uba.fi.gestion.trippy.publication.dto.ActivityCreateDTO; // <-- NUEVO
 import ar.uba.fi.gestion.trippy.publication.dto.CoworkingCreateDTO; // <-- NUEVO
 import ar.uba.fi.gestion.trippy.publication.dto.RestaurantCreateDTO;
 
+
+import ar.uba.fi.gestion.trippy.publication.dto.CoworkingUpdateDTO; // <-- ¡Tu DTO!
+import ar.uba.fi.gestion.trippy.publication.dto.ActivityUpdateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.HotelUpdateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.RestaurantUpdateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.PublicationUpdateDTO;
+
+
 import ar.uba.fi.gestion.trippy.user.User; // <-- Para la entidad User
 import ar.uba.fi.gestion.trippy.user.UserRepository; // <-- ¡NUEVA dependencia!
 
@@ -276,5 +284,97 @@ public class PublicationService {
                 p.getClass().getSimpleName(),
                 p.fetchSpecificDetails() // <-- ¡LA LLAMADA POLIMÓRFICA!
         );
+    }
+
+
+// update
+
+    @Transactional
+    public PublicationDetailDTO updateCommonFields(Long id, PublicationUpdateDTO dto, String email) {
+        Publication p = publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + id));
+
+        if (p.getHost() == null || !p.getHost().getEmail().equals(email))
+            throw new IllegalStateException("No tenés permisos para modificar esta publicación.");
+
+        if (dto.title() != null)        p.setTitle(dto.title());
+        if (dto.description() != null)  p.setDescription(dto.description());
+        if (dto.price() != null)        p.setPrice(dto.price());
+        if (dto.location() != null)     p.setLocation(dto.location());
+        if (dto.mainImageUrl() != null) p.setMainImageUrl(dto.mainImageUrl());
+        if (dto.imageUrls() != null)    p.setImageUrls(dto.imageUrls());
+
+        return convertToDetailDTO(publicationRepository.save(p));
+    }
+
+
+
+    @Transactional
+    public PublicationDetailDTO updateHotelFields(Long id, HotelUpdateDTO dto, String email) {
+        Publication base = publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + id));
+        if (base.getHost() == null || !base.getHost().getEmail().equals(email))
+            throw new IllegalStateException("No tenés permisos para modificar esta publicación.");
+        if (!(base instanceof Hotel h))
+            throw new IllegalStateException("El ID no corresponde a un Hotel.");
+
+        if (dto.roomCount() != null) h.setRoomCount(dto.roomCount());
+        if (dto.capacity()   != null) h.setCapacity(dto.capacity());
+        return convertToDetailDTO(publicationRepository.save(h));
+    }
+
+    @Transactional
+    public PublicationDetailDTO updateActivityFields(Long id, ActivityUpdateDTO dto, String email) {
+        Publication base = publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + id));
+        if (base.getHost() == null || !base.getHost().getEmail().equals(email))
+            throw new IllegalStateException("No tenés permisos para modificar esta publicación.");
+        if (!(base instanceof Activity a))
+            throw new IllegalStateException("El ID no corresponde a una Activity.");
+        if (dto.durationInHours() != null) a.setDurationInHours(dto.durationInHours());
+        if (dto.meetingPoint()    != null) a.setMeetingPoint(dto.meetingPoint());
+        if (dto.whatIsIncluded()  != null) a.setWhatIsIncluded(dto.whatIsIncluded());
+        if (dto.activityLevel()   != null) a.setActivityLevel(dto.activityLevel());
+        if (dto.language()        != null) a.setLanguage(dto.language());
+
+        return convertToDetailDTO(publicationRepository.save(a));
+    }
+
+
+
+    @Transactional
+    public PublicationDetailDTO updateCoworkingFields(Long id, CoworkingUpdateDTO dto, String email) {
+        Publication base = publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + id));
+
+        System.out.println("DEBUG tipo entidad con ID " + id + ": " + base.getClass().getSimpleName());
+
+        if (base.getHost() == null || !base.getHost().getEmail().equals(email))
+            throw new IllegalStateException("No tenés permisos para modificar esta publicación.");
+        if (!(base instanceof Coworking c))
+            throw new IllegalStateException("El ID no corresponde a un Coworking.");
+
+        if (dto.pricePerDay()   != null) c.setPricePerDay(dto.pricePerDay());
+        if (dto.pricePerMonth() != null) c.setPricePerMonth(dto.pricePerMonth());
+        if (dto.services()      != null) c.setServices(dto.services());
+
+        return convertToDetailDTO(publicationRepository.save(c));
+    }
+
+    @Transactional
+    public PublicationDetailDTO updateRestaurantFields(Long id, RestaurantUpdateDTO dto, String email) {
+        Publication base = publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + id));
+        if (base.getHost() == null || !base.getHost().getEmail().equals(email))
+            throw new IllegalStateException("No tenés permisos para modificar esta publicación.");
+        if (!(base instanceof Restaurant r))
+            throw new IllegalStateException("El ID no corresponde a un Restaurant.");
+
+        if (dto.cuisineType() != null)  r.setCuisineType(dto.cuisineType());
+        if (dto.priceRange()  != null)  r.setPriceRange(dto.priceRange());
+        if (dto.openingHours()!= null)  r.setOpeningHours(dto.openingHours());
+        if (dto.menuUrl()     != null)  r.setMenuUrl(dto.menuUrl());
+
+        return convertToDetailDTO(publicationRepository.save(r));
     }
 }

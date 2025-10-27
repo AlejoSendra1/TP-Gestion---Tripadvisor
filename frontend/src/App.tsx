@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/components/AuthContext"
+import { AuthProvider } from "@/components/AuthContext";
 
 import Index from "./pages/Index";
 import Search from "./pages/Search";
@@ -12,11 +12,12 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ExperienceDetails from "./pages/ExperienceDetails";
-import {ProtectedRoute} from "@/components/ProtectedRoute.tsx";
-import CreatePublication from "@/pages/CreatePublication.tsx";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import CreatePublication from "@/pages/CreatePublication";
+import EditPublication from "@/pages/EditPublication";
 
 const queryClient = new QueryClient();
-sessionStorage.setItem('isLoggedIn','false')
+sessionStorage.setItem("isLoggedIn", "false");
 
 const App = () => (
   <AuthProvider>
@@ -32,11 +33,14 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/experience/:id" element={<ExperienceDetails />} />
-            <Route element={<ProtectedRoute allowedRoles={['HOST']} />}>
+
+            {/* 🔒 Rutas protegidas para Hosts */}
+            <Route element={<ProtectedRoute allowedRoles={["HOST"]} />}>
+              <Route path="/experience/:id/edit" element={<EditPublication />} />
               <Route path="/create-publication" element={<CreatePublication />} />
-              {/* Aquí irían otras rutas de Host, ej: /dashboard, /mis-publicaciones */}
             </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+            {/* Ruta catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

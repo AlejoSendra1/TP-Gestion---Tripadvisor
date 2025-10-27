@@ -23,6 +23,13 @@ import ar.uba.fi.gestion.trippy.publication.dto.ActivityCreateDTO; // <-- NUEVO
 import ar.uba.fi.gestion.trippy.publication.dto.CoworkingCreateDTO; // <-- NUEVO
 import ar.uba.fi.gestion.trippy.publication.dto.RestaurantCreateDTO; // <-- NUEVO
 
+
+import ar.uba.fi.gestion.trippy.publication.dto.CoworkingUpdateDTO; // <-- ¡Tu DTO!
+import ar.uba.fi.gestion.trippy.publication.dto.ActivityUpdateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.HotelUpdateDTO; // <-- NUEVO
+import ar.uba.fi.gestion.trippy.publication.dto.RestaurantUpdateDTO;
+import ar.uba.fi.gestion.trippy.publication.dto.PublicationUpdateDTO;
+
 @RestController
 @RequestMapping("/publications")
 public class PublicationRestController {
@@ -112,5 +119,62 @@ public class PublicationRestController {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(404).body(ex.getMessage());
+    }
+
+
+
+
+//UPDATE 
+
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<PublicationDetailDTO> patchCommon(
+            @PathVariable Long id,
+            @RequestBody PublicationUpdateDTO dto,
+            @AuthenticationPrincipal JwtUserDetails me
+
+    ) {
+        return ResponseEntity.ok(publicationService.updateCommonFields(id, dto, me.username()));
+    }
+
+    @PatchMapping("/hotel/{id}")
+    public ResponseEntity<PublicationDetailDTO> patchHotel(
+            @PathVariable Long id,
+            @RequestBody HotelUpdateDTO dto,
+            @AuthenticationPrincipal JwtUserDetails me
+
+    ) {
+        return ResponseEntity.ok(publicationService.updateHotelFields(id, dto, me.username()));
+    }
+
+    @PatchMapping("/activity/{id}")
+    public ResponseEntity<PublicationDetailDTO> patchActivity(
+            @PathVariable Long id,
+
+            @RequestBody ActivityUpdateDTO dto,
+            @AuthenticationPrincipal JwtUserDetails me
+    ) {
+        return ResponseEntity.ok(publicationService.updateActivityFields(id, dto, me.username()));
+    }
+
+
+    @PatchMapping("/coworking/{id}")
+    public ResponseEntity<PublicationDetailDTO> patchCoworking(
+            @PathVariable Long id,
+            @RequestBody CoworkingUpdateDTO dto,
+            @AuthenticationPrincipal JwtUserDetails me
+    ) {
+        return ResponseEntity.ok(publicationService.updateCoworkingFields(id, dto, me.username()));
+    }
+
+
+
+    @PatchMapping("/restaurant/{id}")
+    public ResponseEntity<PublicationDetailDTO> patchRestaurant(
+            @PathVariable Long id,
+            @RequestBody RestaurantUpdateDTO dto,
+            @AuthenticationPrincipal JwtUserDetails me
+    ) {
+        return ResponseEntity.ok(publicationService.updateRestaurantFields(id, dto, me.username()));
     }
 }
