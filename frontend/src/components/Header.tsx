@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
+import { DinamicHeaderSide } from "@/components/DinamicHeaderSide"
 
 interface HeaderProps {
   userXP: number;
@@ -40,4 +43,6 @@ export const Header = ({ userXP, userLevel }: HeaderProps) => {
       </div>
     </header>
   );
-};
+  }
+export default Header;
+

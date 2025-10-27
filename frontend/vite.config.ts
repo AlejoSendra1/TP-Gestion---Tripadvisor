@@ -7,7 +7,15 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    // 1. Cambiamos el puerto de VITE (frontend) a 8081
+    port: 8081,
+    proxy: {
+      '/api/v1': {
+        // 2. Apuntamos al backend, que SÍ está en el 8080
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      }
+    }
   },
   plugins: [
     react(),

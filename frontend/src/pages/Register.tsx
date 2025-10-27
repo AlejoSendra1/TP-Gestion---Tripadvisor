@@ -1,5 +1,9 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import React, {
+    useState,
+    useEffect
+} from 'react';
+
+import { useNavigate , Link} from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +11,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Plane, Building2 } from "lucide-react";
+import {useAuth} from "@/hooks/use-auth"
 
 const Register = () => {
+  const { signup } = useAuth();
+  
   const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
   const [formData, setFormData] = useState({
     firstName: "",
@@ -21,6 +28,8 @@ const Register = () => {
     agreeToTerms: false
   });
 
+  const navigate = useNavigate();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -31,9 +40,38 @@ const Register = () => {
       alert("Please agree to the terms and conditions");
       return;
     }
-    console.log("Registration attempt:", { ...formData, userType });
-    // Handle registration logic here
+    console.log("Registration attempt:", JSON.stringify({formData}));
+
+    fetch(import.meta.env.VITE_BACKEND_API_URL+"/users", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    })
+        .then(response => {
+            if (!response.ok) {
+                // Check for non-successful HTTP status codes
+                if (response.status === 401) {
+                    console.error('Login Failed: Unauthorized (401)');
+                    throw new Error('Unauthorized');
+                }
+                console.error(`HTTP error! Status: ${response.status}`);
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            navigate('/');
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            signup(data);
+            navigate('/');
+        })
+        .catch(error => {
+            console.error('Fetch or Login Error:', error.message);
+        });
   };
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -99,7 +137,7 @@ const Register = () => {
                 <div className="space-y-1">
                   <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
                   <p className="text-sm text-muted-foreground">
-                    Book experiences, write reviews, earn XP and unlock achievements
+                    Book experiences, write reviews, earn XP and unlock achievements and discounts
                   </p>
                 </div>
               ) : (
