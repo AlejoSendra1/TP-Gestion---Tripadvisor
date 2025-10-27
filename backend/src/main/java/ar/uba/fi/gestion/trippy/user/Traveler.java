@@ -28,19 +28,25 @@ public class Traveler extends User {
     @Column
     private String preferences;
 
+    public Traveler(){}
+
     public Traveler(String email,String password,String firstName,String lastName){
         super(email,password);
         this.firstName = firstName;
         this.lastName = lastName;
     }
 
-    public String getFirstname() { return this.firstName;}
+    public String getFirstName() { return this.firstName;}
 
-    public String getLastname() { return this.lastName;}
+    public String getLastName() { return this.lastName;}
 
     public Integer getXp() { return this.xp;   }
 
     public Integer getLevel() { return this.level;}
 
     public String getUserType(){ return "TRAVELER"; }
+
+    public Integer getUserXP() { return this.xp; }
+
+    public Integer getUserLevel() { return this.level; }
 }

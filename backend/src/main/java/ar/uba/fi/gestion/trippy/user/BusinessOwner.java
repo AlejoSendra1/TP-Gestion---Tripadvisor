@@ -22,6 +22,8 @@ public class BusinessOwner extends User {
     @Column
     private Boolean verified = false;
 
+    public BusinessOwner(){}
+
     public BusinessOwner(String email,String password,String businessName,String businessType){
         super(email,password);
         this.businessName = businessName;
@@ -35,6 +37,8 @@ public class BusinessOwner extends User {
     public Boolean getVerified() { return this.verified;  }
 
     public String getUserType(){ return "OWNER"; }
+
+    public Boolean isVerified() { return this.verified; }
 }
 
 // como hacer el constructor

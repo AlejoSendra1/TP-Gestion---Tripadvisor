@@ -30,77 +30,74 @@ export function DinamicHeaderSide() {
     return user.email?.[0]?.toUpperCase() || "U";
   };
 
-  const getUserDisplayName = () => {
-    if (!user) return "";
-
-    if (isTraveler()) {
-      return `${user.firstName} ${user.lastName}`;
-    }
-
-    if (isBusinessOwner()) {
-      return user.businessName;
-    }
-
-    return user.email;
-  };
-
   return (
     <>
       {user ? (
         /* --- LOGGED-IN: User Profile --- */
-        <div className="flex items-center space-x-4">
-          <div>
-            <button
-              onClick={() => logout()}
-              className="text-sm hover:text-primary transition-colors"
-            >
-              Log out
-            </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => logout()}
+            className="text-sm hover:text-primary transition-colors px-2 py-1 hover:bg-muted rounded"
+          >
+            Log out
+          </button>
+
+          <div className="flex items-center">
+            {/* Info container that extends from avatar */}
+            <div className="flex items-center bg-primary/10 pl-4 pr-6 py-2 rounded-l-full mr-[-20px] z-0">
+              {/* Traveler-specific XP and Level */}
+              {isTraveler() && (
+                <div className="hidden lg:block mr-4">
+                  <div className="text-right mb-1">
+                    <div className="text-sm font-medium">
+                      Explorer Level {user.userLevel}
+                    </div>
+                  </div>
+                  <div className="w-24">
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden mb-0.5">
+                      <div
+                        className={`h-full ${getLevelColor(user.userLevel)} transition-all duration-300`}
+                        style={{
+                          width: `${Math.min((user.userXP % 1000) / 10, 100)}%`
+                        }}
+                      />
+                    </div>
+                    <div className="text-[10px] text-muted-foreground text-right leading-tight">
+                      {user.userXP} XP
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* User Info (Name for travelers, Business for owners) */}
+              <div className="hidden md:block text-right">
+                {isTraveler() && (
+                  <div className="text-sm font-medium">
+                    {user.firstName} {user.lastName}
+                  </div>
+                )}
+
+                {isBusinessOwner() && (
+                  <>
+                    <div className="text-sm font-medium">{user.businessName}</div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">
+                      {user.businessType}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Avatar on top with higher z-index */}
+            <Link to="/profile" className="relative z-10">
+              <Avatar className="w-12 h-12 border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
+                <AvatarImage src="/placeholder-avatar.jpg" />
+                <AvatarFallback className="bg-gradient-hero text-white">
+                  {getUserInitials()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
           </div>
-
-          {/* Traveler-specific XP and Level */}
-          {isTraveler() && (
-            <div className="hidden md:flex items-center space-x-3">
-              <div className="text-right">
-                <div className="text-sm font-medium">
-                  Explorer Level {user.userLevel}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {user.userXP} XP
-                </div>
-              </div>
-              <div className="w-20 h-2 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${getLevelColor(user.userLevel)} transition-all duration-300`}
-                  style={{
-                    width: `${Math.min((user.userXP % 1000) / 10, 100)}%`
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Business Owner-specific info */}
-          {isBusinessOwner() && (
-            <div className="hidden md:flex items-center space-x-3">
-              <div className="text-right">
-                <div className="text-sm font-medium">{user.businessName}</div>
-                <div className="text-xs text-muted-foreground">
-                  {user.businessType}
-                </div>
-              </div>
-              <Building2 className="h-5 w-5 text-primary" />
-            </div>
-          )}
-
-          <Link to="/profile">
-            <Avatar className="border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
-              <AvatarImage src="/placeholder-avatar.jpg" />
-              <AvatarFallback className="bg-gradient-hero text-white">
-                {getUserInitials()}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
         </div>
       ) : (
         /* --- LOGGED-OUT: Register & Log In Links --- */

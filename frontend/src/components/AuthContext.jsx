@@ -67,7 +67,7 @@ export function AuthProvider({ children }) {
         userXP: userData.userXP,
         userLevel: userData.userLevel,
       };
-    } else if (userData.userType === "BUSINESS_OWNER") {
+    } else if (userData.userType === "OWNER") {
       return {
         ...baseUser,
         businessName: userData.businessName,
@@ -80,7 +80,7 @@ export function AuthProvider({ children }) {
 
   // Helper functions to check user type
   const isTraveler = () => user?.userType === "TRAVELER";
-  const isBusinessOwner = () => user?.userType === "BUSINESS_OWNER";
+  const isBusinessOwner = () => user?.userType === "OWNER";
 
   // Prevent rendering until we check localStorage
   if (isLoading) {

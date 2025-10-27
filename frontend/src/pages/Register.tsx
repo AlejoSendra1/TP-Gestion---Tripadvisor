@@ -160,7 +160,7 @@ const Register = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
             {/* Traveler-specific fields */}
-            {formData.userType === "traveler" && (
+            {formData.userType === "TRAVELER" && (
               <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">

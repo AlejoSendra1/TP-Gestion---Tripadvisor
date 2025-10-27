@@ -36,6 +36,7 @@ const handleSubmit = (e: React.FormEvent) => {
                 throw new Error('Unauthorized');
             }
             console.error(`HTTP error! Status: ${response.status}`);
+            console.error(`HTTP error! Status: ${response.body}`);
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         return response.json(); // Only proceed to parse JSON if the response is OK

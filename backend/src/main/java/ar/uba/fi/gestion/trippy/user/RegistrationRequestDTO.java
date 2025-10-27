@@ -33,9 +33,9 @@ public record RegistrationRequestDTO (
     // TODO despues implementar polimorfismo y verificacion de campos
     public User asUser(Function<String, String> encryptPassword){
         if (this.userType.equals("TRAVELER")) {
-            return new Traveler(this.email,this.password,this.firstName,this.lastName);
+            return new Traveler(this.email, encryptPassword.apply(this.password),this.firstName,this.lastName);
         }
-        return new BusinessOwner(this.email,this.password,this.businessName, this.businessType);
+        return new BusinessOwner(this.email,encryptPassword.apply(this.password),this.businessName, this.businessType);
     }
 }
 

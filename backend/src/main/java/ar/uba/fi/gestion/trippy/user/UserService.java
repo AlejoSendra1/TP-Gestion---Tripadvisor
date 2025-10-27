@@ -9,11 +9,13 @@ import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshTokenService;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -57,27 +59,16 @@ public class UserService {
         return Optional.of(UserDTOFactory.fromUser(user,tokens));
     }
 
-    public Optional<UserDTO> loginUser(UserCredentials data) {
+    public Optional<UserDTO> loginUser(UserLoginDTO data) {
+        System.out.println("el login dto: "+ data.toString());
+        User maybeUser = userRepository.findByEmail(data.getEmail())
+                .filter(user -> passwordEncoder.matches(data.getPassword(), user.getPassword()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
-        Optional<User> maybeUser = userRepository.findByEmail(data.email())
-                .filter(user -> passwordEncoder.matches(data.password(), user.getPassword()));
+        // Generate tokens for the user
+        TokenDTO tokenDTO = generateTokens(maybeUser);
 
-        // .filter(User::isEmailVerified); PARA VERIFICACION DE MAILS
-        // .map(this::generateTokens); POR SI QUEREMOS TOKENS ?
-
-        return maybeUser.map(user -> {
-            TokenDTO tokenDTO = generateTokens(user); // Your token generation method
-            /* TODO
-            return new UserDTO(
-                    user.getFirstname(),
-                    0, // userXP - you'll need to get this from somewhere
-                    1, // userLevel - you'll need to get this from somewhere
-                    tokenDTO
-            );
-
-             */
-            return null;
-        });
+        return Optional.of(UserDTOFactory.fromUser(maybeUser,tokenDTO));
     }
 
     Optional<TokenDTO> refresh(RefreshDTO data) {

@@ -7,8 +7,8 @@ public class UserDTOFactory {
             case Traveler traveler -> new TravelerDTO(
                     tokenDTO,
                     traveler.getEmail(),
-                    traveler.getFirstname(),
-                    traveler.getLastname(),
+                    traveler.getFirstName(),
+                    traveler.getLastName(),
                     traveler.getXp(),
                     traveler.getLevel(),
                     traveler.getUserType()
