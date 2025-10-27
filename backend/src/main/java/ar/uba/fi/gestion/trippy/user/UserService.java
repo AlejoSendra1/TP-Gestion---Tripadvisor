@@ -3,6 +3,7 @@ package ar.uba.fi.gestion.trippy.user;
 import ar.uba.fi.gestion.trippy.common.exception.DuplicateEntityException;
 import ar.uba.fi.gestion.trippy.config.security.JwtService;
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
+import ar.uba.fi.gestion.trippy.user.dto.*;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshToken;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshTokenService;
 
@@ -19,8 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.UUID;
-
-import static ar.uba.fi.gestion.trippy.user.UserDTOFactory.fromUser;
 
 @Service
 @Transactional

@@ -12,10 +12,17 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Plane, Building2 } from "lucide-react";
 import {useAuth} from "@/hooks/use-auth"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 const Register = () => {
   const { signup } = useAuth();
-
   const [formData, setFormData] = useState({
     userType: "TRAVELER",
     firstName: "",
@@ -27,8 +34,13 @@ const Register = () => {
     businessName: "",
     businessType: "",
   });
-
   const navigate = useNavigate();
+  const businessTypeOptions = [
+    { value: "Hotel", label: "Hotel" },
+    { value: "Restaurant", label: "Restaurant" },
+    { value: "Tour", label: "Tour Operator" },
+    { value: "Office", label: "Office Space" },
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,17 +228,24 @@ const Register = () => {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="businessType">Business Type</Label>
-                    <Input
-                      id="businessType"
-                      name="businessType"
-                      value={formData.businessType}
-                      onChange={handleInputChange}
-                      placeholder="Hotel, Restaurant, Tour, etc."
-                      required
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="businessType">Business Type</Label>
+                      <Select
+                        value={formData.businessType}
+                        onValueChange={(value) => handleFieldChange("businessType", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your business type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Hotel">Hotel</SelectItem>
+                          <SelectItem value="Restaurant">Restaurant</SelectItem>
+                          <SelectItem value="Tour">Tour Operator</SelectItem>
+                          <SelectItem value="Office">Office Space</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                 </>
               )}
 

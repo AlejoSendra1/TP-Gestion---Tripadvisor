@@ -1,5 +1,7 @@
 package ar.uba.fi.gestion.trippy.user;
 
+import ar.uba.fi.gestion.trippy.user.dto.RegistrationRequestDTO;
+import ar.uba.fi.gestion.trippy.user.dto.UserDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

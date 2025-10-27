@@ -1,4 +1,4 @@
-package ar.uba.fi.gestion.trippy.user;
+package ar.uba.fi.gestion.trippy.user.dto;
 
 public record TravelerDTO(
         TokenDTO tokenDTO,

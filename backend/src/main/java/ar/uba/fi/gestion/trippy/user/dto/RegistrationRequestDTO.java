@@ -1,4 +1,7 @@
-package ar.uba.fi.gestion.trippy.user;
+package ar.uba.fi.gestion.trippy.user.dto;
+import ar.uba.fi.gestion.trippy.user.BusinessOwner;
+import ar.uba.fi.gestion.trippy.user.Traveler;
+import ar.uba.fi.gestion.trippy.user.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
