@@ -2,7 +2,7 @@
 
 // Importamos 'useEffect' para sincronizar reseñas
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 
 // --- 1. Importamos el hook y los tipos ---
 import {
@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, MapPin, Trophy, ArrowLeft, Calendar, Users, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+
 
 // --- Tipo local para la UI ---
 // Mantenemos esto para poder añadir reseñas localmente
@@ -81,6 +83,19 @@ export default function ExperienceDetails() {
           ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(1)
           : "N/A";
   const reviewCount = comments.length;
+
+
+
+
+ // --- 4.5. Lógica de Edición ---
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Solo el host dueño de la publicación puede editar
+  const canEdit =
+    user && user.role === "HOST" && user.email === publication?.host?.email;
+
+
 
   // --- 5. Manejadores de Eventos (UI) ---
   const handleReserve = () => {
@@ -189,7 +204,15 @@ export default function ExperienceDetails() {
                 </div>
 
                 <h1 className="text-4xl font-bold mb-4">{publication.title}</h1>
-
+                {canEdit && (
+                    <Button
+                      variant="outline"
+                      className="mb-4"
+                      onClick={() => navigate(`/experience/${id}/edit`)}
+                    >
+                      ✏️ Editar publicación
+                    </Button>
+                  )}
                 <div className="flex items-center gap-4 text-muted-foreground mb-4">
                   <div className="flex items-center">
                     <Star className="h-5 w-5 text-yellow-500 fill-current mr-1" />
