@@ -6,8 +6,6 @@ import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
 import ar.uba.fi.gestion.trippy.user.dto.*;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshToken;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshTokenService;
-
-
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -66,7 +64,6 @@ public class UserService {
 
         // Generate tokens for the user
         TokenDTO tokenDTO = generateTokens(maybeUser);
-
         return Optional.of(UserDTOFactory.fromUser(maybeUser,tokenDTO));
     }
 

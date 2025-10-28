@@ -25,6 +25,9 @@ public abstract class User {
     @Column(name = "token-verified")
     private String tokenVerified;
 
+    @Column(name = "Role")
+    private String rol;
+
     public User(){}
 
     public User(String email, String password){

@@ -112,3 +112,7 @@ VALUES
     (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2025-10-20 14:30:00'),
     (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2025-10-21 09:15:00');
 */
+
+-- ACTUALIZA EL CONTADOR DE IDS
+-- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1
+SELECT setval('publication_id_seq', (SELECT MAX(id) FROM publication));

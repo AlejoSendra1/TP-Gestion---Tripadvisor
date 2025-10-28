@@ -15,7 +15,8 @@ public class UserDTOFactory {
                     traveler.getLastName(),
                     traveler.getXp(),
                     traveler.getLevel(),
-                    traveler.getUserType()
+                    traveler.getUserType(),
+                    "USER"
             );
             case BusinessOwner owner -> new BusinessOwnerDTO(
                     tokenDTO,
@@ -23,7 +24,8 @@ public class UserDTOFactory {
                     owner.getBusinessName(),
                     owner.getBusinessType(),
                     owner.getVerified(),
-                    owner.getUserType()
+                    owner.getUserType(),
+                    "HOST"
             );
             default -> throw new IllegalArgumentException("Unknown user type: " + user.getClass());
         };
