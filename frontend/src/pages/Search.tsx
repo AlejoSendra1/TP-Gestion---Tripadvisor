@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { ExperienceCard } from "@/components/ExperienceCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,19 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Search as SearchIcon, Filter, MapPin, Star, DollarSign, Loader2 } from "lucide-react";
+import SearchBar from "@/components/SearchBar";
+import { apiClient } from "@/lib/apiClient";
+import { PublicationList } from "@/components/PublicationList";
 
-interface Experience {
-  id: number;
-  title: string;
-  category: "hotel" | "restaurant" | "tour";
-  location: string;
-  rating: number;
-  reviews: number;
-  price: number;
-  image: string;
-  xp_reward: number;
-  description: string;
-}
+export type PublicationSummary = {
+    id: string; // Es 'Long' en Java, pero en TS/JS lo manejamos como string
+    title: string;
+    price: number; // Es 'double' en Java
+    city: string;
+    country: string;
+    mainImageUrl: string;
+    publicationType: string;
+};
 
 const API_URL = import.meta.env.VITE_BASE_API_URL || 'http://localhost:8080';
 
@@ -35,50 +34,74 @@ const Search = () => {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState("relevance");
   
-  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [publications, setPublications] = useState<PublicationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [locations, setLocations] = useState<string[]>([]);
+  const [query, setQuery] = useState('');
+  const handleSearch = (searchQuery) => {
+    setQuery(searchQuery);
+  };
 
-  // Cargar experiencias desde el backend
   useEffect(() => {
-    const fetchExperiences = async () => {
-      setLoading(true);
-      setError(null);
+    if (query) {
+      fetchSearchResults();
+    }
+  }, [query]);
+
+  const fetchSearchResults = async () => {
+    setLoading(true);
+    try {
+      // Aquí usas la query junto con otros parámetros que necesites
+      //const otherParams = obtenerOtrosParametros(); // tu lógica aquí
       
-      try {
-        const params = new URLSearchParams();
-        if (searchTerm) params.append('q', searchTerm);
-        if (selectedCategory !== 'all') params.append('category', selectedCategory);
-        if (selectedLocation !== 'all') params.append('location', selectedLocation);
-        params.append('minPrice', priceRange[0].toString());
-        params.append('maxPrice', priceRange[1].toString());
-        if (minRating > 0) params.append('minRating', minRating.toString());
+      const response = await apiClient.get<PublicationSummary[]>(`/publications/search?q=${query.toString()}`);
+      setPublications(response.results);
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // Cargar publications desde el backend
+  // useEffect(() => {
+  //   const fetchPublications = async () => {
+  //     setLoading(true);
+  //     setError(null);
+      
+  //     try {
+  //       const params = new URLSearchParams();
+  //       if (searchTerm) params.append('q', searchTerm);
+  //       if (selectedCategory !== 'all') params.append('category', selectedCategory);
+  //       if (selectedLocation !== 'all') params.append('location', selectedLocation);
+  //       params.append('minPrice', priceRange[0].toString());
+  //       params.append('maxPrice', priceRange[1].toString());
+  //       if (minRating > 0) params.append('minRating', minRating.toString());
 
-        const response = await fetch(`${API_URL}/api/experiences/search?${params}`);
+  //       const response = await apiClient.get<PublicationSummary[]>(`/publications/search?${params.toString()}`);
         
-        if (!response.ok) {
-          throw new Error('Error al buscar experiencias');
-        }
+  //       if (!response.ok) {
+  //         throw new Error('Error al buscar experiencias');
+  //       }
         
-        const data = await response.json();
-        setExperiences(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
-        console.error('Error fetching experiences:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       const data = await response.json();
+  //       setPublications(data);
+  //     } catch (err) {
+  //       setError(err instanceof Error ? err.message : 'Error desconocido');
+  //       console.error('Error fetching experiences:', err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchExperiences();
-  }, [searchTerm, selectedCategory, selectedLocation, priceRange, minRating]);
+  //   fetchPublications();
+  // }, [searchTerm, selectedCategory, selectedLocation, priceRange, minRating]);
 
   // Cargar ubicaciones disponibles
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/locations`);
+        const response = await apiClient.get<PublicationSummary[]>("/publications");
         if (response.ok) {
           const data = await response.json();
           setLocations(data);
@@ -91,25 +114,21 @@ const Search = () => {
     fetchLocations();
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchTerm) params.set("q", searchTerm);
-    if (selectedCategory !== "all") params.set("category", selectedCategory);
-    if (selectedLocation !== "all") params.set("location", selectedLocation);
-    setSearchParams(params);
-  };
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   const params = new URLSearchParams();
+  //   if (searchTerm) params.set("q", searchTerm);
+  //   if (selectedCategory !== "all") params.set("category", selectedCategory);
+  //   if (selectedLocation !== "all") params.set("location", selectedLocation);
+  //   setSearchParams(params);
+  // };
 
-  const sortedExperiences = [...experiences].sort((a, b) => {
+  const sortedPublications = [...publications].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
         return a.price - b.price;
       case "price-high":
         return b.price - a.price;
-      case "rating":
-        return b.rating - a.rating;
-      case "xp":
-        return b.xp_reward - a.xp_reward;
       default:
         return 0;
     }
@@ -135,18 +154,7 @@ const Search = () => {
           <h1 className="text-3xl font-bold mb-4 bg-gradient-hero bg-clip-text text-transparent">
             Buscar Experiencias
           </h1>
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar hoteles, restaurantes, tours..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button type="submit">Buscar</Button>
-          </form>
+          <SearchBar onSearch={handleSearch} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -258,7 +266,7 @@ const Search = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-semibold">
-                  {loading ? 'Buscando...' : `${sortedExperiences.length} experiencias encontradas`}
+                  {loading ? 'Buscando...' : `${sortedPublications.length} experiencias encontradas`}
                 </h2>
                 {searchTerm && (
                   <p className="text-muted-foreground">
@@ -306,28 +314,15 @@ const Search = () => {
               </div>
             )}
 
-            {/* Experience Grid */}
-            {!loading && !error && sortedExperiences.length > 0 && (
+            {/* Publications Grid */}
+            {!loading && !error && sortedPublications.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {sortedExperiences.map((experience) => (
-                  <ExperienceCard
-                    key={experience.id}
-                    id={experience.id.toString()}
-                    title={experience.title}
-                    category={experience.category}
-                    location={experience.location}
-                    rating={experience.rating}
-                    reviewCount={experience.reviews}
-                    price={experience.price.toString()}
-                    image={experience.image}
-                    xpReward={experience.xp_reward}
-                  />
-                ))}
+                <PublicationList publications={publications} />
               </div>
             )}
 
             {/* No Results */}
-            {!loading && !error && sortedExperiences.length === 0 && (
+            {!loading && !error && sortedPublications.length === 0 && (
               <div className="text-center py-12">
                 <SearchIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No se encontraron experiencias</h3>

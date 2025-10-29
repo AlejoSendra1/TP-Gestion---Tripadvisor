@@ -1,31 +1,35 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const SearchBar = () => {
-  const [query, setQuery] = useState("");
-  const navigate = useNavigate();
+const SearchBar = ({ onSearch }) => {
+  const [searchInput, setSearchInput] = useState('');
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      // Navegamos a la página de resultados con el query en la URL
-      navigate(`/search?query=${encodeURIComponent(query.trim())}`);
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch(searchInput);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
   return (
-    <form onSubmit={handleSearch} className="flex gap-2">
+    <div className="search-bar">
       <input
         type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Buscar cancha por nombre..."
-        className="border p-2 rounded-md flex-grow"
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        onKeyPress={handleKeyPress}
+        placeholder="Buscar..."
+        className="search-input"
       />
-      <button type="submit" className="bg-blue-500 text-white p-2 rounded-md">
-        Buscar
+      <button onClick={handleSearch} className="search-button">
+        Usar
       </button>
-    </form>
+    </div>
   );
 };
 

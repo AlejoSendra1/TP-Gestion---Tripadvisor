@@ -1,6 +1,7 @@
 // src/pages/Index.tsx
 
 import { Header } from "@/components/Header";
+import { Hero } from "@/components/Hero";
 import { Categories } from "@/components/Categories";
 // 1. Importamos tu componente de lista
 import { PublicationList } from "@/components/PublicationList";
@@ -70,7 +71,7 @@ const Index = () => {
                 <div className="container mx-auto px-4">
                     <div className="text-center">
                         <h3 className="text-2xl font-bold mb-4 bg-gradient-hero bg-clip-text text-transparent">
-                            QuestEscapes
+                            Trippy
                         </h3>
                         <p className="text-muted-foreground mb-4">
                             Discover amazing places, share your experiences, and earn XP rewards
