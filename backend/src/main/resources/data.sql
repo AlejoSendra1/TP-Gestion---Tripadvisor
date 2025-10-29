@@ -1,7 +1,14 @@
--- Host (Usuario) de prueba
-INSERT INTO users (id, firstname, lastname, email, password, role, "email-verified")
-VALUES (100, 'Host', 'de Prueba', 'host@trippy.com', 'password-hash', 'HOST', true)
-ON CONFLICT (id) DO NOTHING;
+INSERT INTO users (id, email, password, agree_to_terms, user_type)
+VALUES (100, 'hotel@paradise.com', 'hashed_password_789', TRUE, 'OWNER');
+
+INSERT INTO business_owners (id, business_name, business_type, business_description, verified)
+VALUES (
+    100,
+    'Paradise resorts',
+    'Accommodation',
+    'Luxury beachfront hotel with spa and restaurant',
+    TRUE
+);
 
 -- --- MOCKS DE PUBLICACIONES ---
 
@@ -74,12 +81,30 @@ VALUES
 -- 2. Modifiquen PublicationService.java para que busque reseñas
 
 /*
--- Primero, necesitamos usuarios 'Guest' que dejen reseñas
-INSERT INTO users (id, name, lastname, email, password, role)
-VALUES
-    (201, 'Sarah', 'Johnson', 'sarah@trippy.com', 'hash', 'GUEST'),
-    (202, 'Mike', 'Chen', 'mike@trippy.com', 'hash', 'GUEST')
-ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO users (id, email, password, agree_to_terms, user_type)
+VALUES (2001, 'maria.garcia@example.com', 'hashed_password_456', TRUE, 'TRAVELER');
+
+INSERT INTO travelers (id, first_name, last_name, xp, level)
+VALUES (
+    201,
+    'Maria',
+    'Garcia',
+    200,
+    4
+);
+
+INSERT INTO users (id, email, password, agree_to_terms, user_type)
+VALUES (202, 'mike@trippy.com', 'hashed_password_456', TRUE, 'TRAVELER');
+
+INSERT INTO travelers (id, first_name, last_name, xp, level)
+VALUES (
+    202,
+    'Mike',
+    'Chen',
+    170,
+    3
+);
 
 -- Asumimos que la tabla se llama 'review'
 INSERT INTO review (id, publication_id, user_id, rating, comment, created_at)
@@ -87,3 +112,7 @@ VALUES
     (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2025-10-20 14:30:00'),
     (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2025-10-21 09:15:00');
 */
+
+-- ACTUALIZA EL CONTADOR DE IDS
+-- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1
+SELECT setval('publication_id_seq', (SELECT MAX(id) FROM publication));

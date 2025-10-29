@@ -26,4 +26,6 @@ public class Hotel extends Publication {
         this.roomCount = roomCount;
     }
 
+    public void setCapacity(int capacity) { this.capacity = capacity; }
+
 }

@@ -1,82 +1,71 @@
+
 import { Link } from "react-router-dom";
+
+import { Search, User, Trophy, Star, PlusCircle } from "lucide-react"; // Añadimos PlusCircle
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy } from "lucide-react";
-import { DinamicHeaderSide } from "@/components/DinamicHeaderSide"
-import { Search, User, Star } from "lucide-react";
-import SearchBar from "@/components/SearchBar";
 
-interface HeaderProps {
-  userXP: number;
-  userLevel: number;
+import { Link } from "react-router-dom";
+import { DinamicHeaderSide } from "@/components/DinamicHeaderSide";
+import { useAuth } from "@/hooks/use-auth"; // <-- 1. Importamos el hook de Auth
+
+export function Header() {
+    // 2. Obtenemos el estado del usuario
+    const { user } = useAuth();
+    console.log(user);
+
+    return (
+        <header className="bg-card/95 backdrop-blur-sm border-b sticky top-0 z-50">
+            <div className="container mx-auto px-4 py-4">
+                <div className="flex items-center justify-between">
+                    {/* Logo */}
+                    <Link
+                        to="/"
+                        className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                    >
+                        <div className="w-10 h-10 flex items-center justify-center">
+                            <img src="/trippy_logo.png" />
+                        </div>
+                        <h1 className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+                            Trippy
+                        </h1>
+                    </Link>
+
+                    {/* Search Bar */}
+                    <div className="flex-1 max-w-md mx-8">
+                        <Link to="/search">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input
+                                    placeholder="Search hotels, restaurants, tours..."
+                                    className="pl-10 bg-secondary/50 cursor-pointer"
+                                    readOnly
+                                />
+                            </div>
+                        </Link>
+                    </div>
+
+                    {/* Lado Dinámico (Botones) */}
+                    <div className="flex items-center gap-4">
+                        {/* 3. Botón condicional de "Crear" */}
+                        {user && user.role === "HOST" && (
+                            <Button asChild variant="default">
+                                <Link to="/create-publication">
+                                    <PlusCircle className="h-4 w-4 mr-2" />
+                                    Crear Publicación
+                                </Link>
+                            </Button>
+                        )}
+
+                        {/* 4. Tu componente existente de Login/Perfil */}
+                        <DinamicHeaderSide />
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
 }
-
-export function Header ({ userXP, userLevel }: HeaderProps) {
-  const progressPercentage = ((userXP % 500) / 500) * 100;
-
-  return (
-    <header className="border-b bg-card">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4">
-          {/* Logo */}
-          <Link to="/"className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 flex items-center justify-center">
-              <img src="/src/assets/naranjita.png"/>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Trippy
-            </h1>
-          </Link>
-          
-          {/* Search Bar */}
-          
-          <div className="flex-1 max-w-md mx-8">
-            <Link to="/search">
-              <div className="relative">
-                <SearchBar/>
-              </div>
-            </Link>
-          </div>
-
-          
-          {/*
-          <div className="flex-1 max-w-md mx-8">
-            <Link to="/search">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search hotels, restaurants, tours..."
-                  className="pl-10 bg-secondary/50 cursor-pointer"
-                  readOnly
-                />
-              </div>
-            </Link>
-          </div>
-          */}
-
-          <DinamicHeaderSide />
-
-          {/* User Profile */}
-          <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-3">
-              <Trophy className="h-5 w-5 text-experience" />
-              <div className="w-32">
-                <Progress value={progressPercentage} className="h-1.5" />
-              </div>
-              <Badge variant="outline">Level {userLevel}</Badge>
-            </div>
-            <Avatar>
-              <AvatarImage src="" alt="User" />
-              <AvatarFallback>QE</AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-  }
-export default Header;
-

@@ -3,24 +3,22 @@ package ar.uba.fi.gestion.trippy.user;
 import ar.uba.fi.gestion.trippy.common.exception.DuplicateEntityException;
 import ar.uba.fi.gestion.trippy.config.security.JwtService;
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
-import ar.uba.fi.gestion.trippy.user.email_validation.EmailService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordChangeService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordResetService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordResetTokenRepository;
+import ar.uba.fi.gestion.trippy.user.dto.*;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshToken;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshTokenService;
-
-
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.UUID;
+
 
 @Service
 @Transactional
@@ -30,30 +28,20 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
-    private final EmailService emailService;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final PasswordResetService passwordResetService;
-    private final PasswordChangeService passwordChangeService;
-
 
     @Autowired
     UserService(
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
             UserRepository userRepository,
-            RefreshTokenService refreshTokenService,
-            EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, PasswordResetService passwordResetService, PasswordChangeService passwordChangeService) {
+            RefreshTokenService refreshTokenService) {
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
-        this.emailService = emailService;
-        this.passwordResetTokenRepository = passwordResetTokenRepository;
-        this.passwordResetService = passwordResetService;
-        this.passwordChangeService = passwordChangeService;
     }
 
-    public Optional<TokenDTO> createUser(UserCreateDTO data) {
+    public Optional<UserDTO> createUser(RegistrationRequestDTO data) {
         System.out.println("se esta creando el user");
         if (userRepository.findByEmail(data.email()).isPresent()) {
             throw new DuplicateEntityException("User", "email");
@@ -61,33 +49,26 @@ public class UserService {
 
         var user = data.asUser(passwordEncoder::encode);
 
-        user.setRole("OWNER");
+        user.setRole(user.getRole());
 
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);
-        user.setEmailVerified(false);
         userRepository.save(user);
         //emailService.sendValidationEmail(user.getEmail(), verificationToken);
-        return Optional.of(generateTokens(user));
+        TokenDTO tokens = Optional.of(generateTokens(user)).orElseThrow();
+
+        return Optional.of(UserDTOFactory.fromUser(user,tokens));
     }
 
-    public Optional<UserDTO> loginUser(UserCredentials data) {
+    public Optional<UserDTO> loginUser(UserLoginDTO data) {
+        System.out.println("el login dto: "+ data.toString());
+        User maybeUser = userRepository.findByEmail(data.getEmail())
+                .filter(user -> passwordEncoder.matches(data.getPassword(), user.getPassword()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
-        Optional<User> maybeUser = userRepository.findByEmail(data.email())
-                .filter(user -> passwordEncoder.matches(data.password(), user.getPassword()));
-
-        // .filter(User::isEmailVerified); PARA VERIFICACION DE MAILS
-        // .map(this::generateTokens); POR SI QUEREMOS TOKENS ?
-
-        return maybeUser.map(user -> {
-            TokenDTO tokenDTO = generateTokens(user); // Your token generation method
-            return new UserDTO(
-                    user.getFirstname(),
-                    0, // userXP - you'll need to get this from somewhere
-                    1, // userLevel - you'll need to get this from somewhere
-                    tokenDTO
-            );
-        });
+        // Generate tokens for the user
+        TokenDTO tokenDTO = generateTokens(maybeUser);
+        return Optional.of(UserDTOFactory.fromUser(maybeUser,tokenDTO));
     }
 
     Optional<TokenDTO> refresh(RefreshDTO data) {
@@ -107,7 +88,7 @@ public class UserService {
 
     public boolean verifyEmailToken(String token) {
         return userRepository.findByTokenVerified(token).map(user->{
-            user.setEmailVerified(true);
+            //user.setEmailVerified(true);
             user.setTokenVerified(null);
             userRepository.save(user);
             return true;
@@ -127,14 +108,16 @@ public class UserService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JwtUserDetails userDetails = (JwtUserDetails) principal;
         User currentUser = getUserByEmail(userDetails.username());
-        return currentUser.getFirstname();
+        //return currentUser.getFirstname();
+        return "TODO -> getCurrentUserName - UserService";
     }
     public UserProfileDTO getCurrentUserProfile() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof JwtUserDetails userDetails) {
             User user = getUserByEmail(userDetails.username());
-            return UserProfileDTO.fromUser(user);
+            //return UserProfileDTO.fromUser(user);
+            return new UserProfileDTO(0L,"todo","todo","todo@todo","todo.png");
         }
         throw new AccessDeniedException("User not authenticated or principal type is incorrect");
     }

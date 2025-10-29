@@ -1,5 +1,7 @@
 package ar.uba.fi.gestion.trippy.user;
 
+import ar.uba.fi.gestion.trippy.user.dto.RegistrationRequestDTO;
+import ar.uba.fi.gestion.trippy.user.dto.UserDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,12 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-
 @RestController
 @RequestMapping("/users")
 @Tag(name = "1 - Users")
 class UserRestController {
-  
     private final UserService userService;
 
     @Autowired
@@ -29,9 +29,8 @@ class UserRestController {
     @ApiResponse(responseCode = "400", description = "Invalid request")
     @PostMapping(produces = "application/json")
     @Operation(summary = "Create a new user")
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserCreateDTO data) {
-        TokenDTO tokens = userService.createUser(data).orElseThrow();
-        UserDTO userDTO = new UserDTO(data.firstName(),0,1,tokens); //todo evitar harcodeo
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody RegistrationRequestDTO data) {
+        UserDTO userDTO = userService.createUser(data).orElseThrow(); // 2- hacer q devuelva un userDTO y userDTO interface
         return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 

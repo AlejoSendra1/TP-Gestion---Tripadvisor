@@ -31,7 +31,7 @@ public class PasswordResetService {
     public void requestPasswordReset(String email) {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isEmpty()) { throw new UsernameNotFoundException("User not found");}
-        if (!user.get().isEmailVerified()) {throw new UsernameNotFoundException("User is not verified");}
+        //if (!user.get().isEmailVerified()) {throw new UsernameNotFoundException("User is not verified");}
         Optional<PasswordResetToken> existingToken = passwordResetTokenRepository.findByUser(user.get());
         if (existingToken.isPresent()) { passwordResetTokenRepository.delete(existingToken.get());}
 

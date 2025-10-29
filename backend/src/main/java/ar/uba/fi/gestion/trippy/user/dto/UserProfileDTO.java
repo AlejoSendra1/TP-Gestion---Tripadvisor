@@ -1,4 +1,4 @@
-package ar.uba.fi.gestion.trippy.user;
+package ar.uba.fi.gestion.trippy.user.dto;
 
 public record UserProfileDTO(
         Long id,
@@ -8,6 +8,7 @@ public record UserProfileDTO(
         String photo
 ) {
 
+    /*
     public static UserProfileDTO fromUser(User user) {
 
         UserProfileDTO userProfileDTO = new UserProfileDTO(
@@ -18,4 +19,6 @@ public record UserProfileDTO(
                 user.getPhoto()
                 ); return userProfileDTO;
     }
+
+     */
 }

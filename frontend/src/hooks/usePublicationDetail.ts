@@ -18,6 +18,7 @@ export type LocationDTO = {
 export type HostDTO = {
     id: number;
     name: string;
+    email: string;
     photoUrl: string | null;
 };
 

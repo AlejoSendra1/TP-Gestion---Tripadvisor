@@ -1,27 +1,52 @@
 // src/pages/ExperienceDetails.tsx
 
-// Importamos 'useEffect' para sincronizar reseñas
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 
-// --- 1. Importamos el hook y los tipos ---
+// --- Hooks de datos ---
 import {
   usePublicationDetail,
   type ReviewDTO,
-  type PublicationDetailDTO
 } from "@/hooks/usePublicationDetail";
+import { useDeletePublication } from "@/hooks/useDeletePublication"; // <-- HOOK DE BORRADO
 
-// --- (Todos tus imports de UI) ---
+// --- Hooks de UI y Auth ---
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+
+// --- Componentes de UI (shadcn/ui) ---
 import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, MapPin, Trophy, ArrowLeft, Calendar, Users, Heart } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+// --- Iconos (lucide-react) ---
+import {
+  Star,
+  MapPin,
+  Trophy,
+  ArrowLeft,
+  Calendar,
+  Users,
+  Heart,
+  Trash2, // <-- Icono de Borrar
+  Loader2, // <-- Icono de Carga
+} from "lucide-react";
+
 
 // --- Tipo local para la UI ---
-// Mantenemos esto para poder añadir reseñas localmente
 type DisplayReview = {
   id: number;
   user: string;
@@ -34,66 +59,66 @@ type DisplayReview = {
 
 export default function ExperienceDetails() {
   const { id } = useParams();
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // --- 2. Llamamos al Hook ---
-  // ¡Toda la lógica de fetching se resume en esta línea!
+  // --- Hook para OBTENER datos ---
   const {
     data: publication,
     isLoading,
-    isError
+    isError,
   } = usePublicationDetail(id);
 
-  // --- Estados locales para la UI ---
+  // --- Hook para BORRAR datos ---
+  const { mutate: performDelete, isPending: isDeleting } =
+      useDeletePublication();
+
+  // --- Estados locales para UI (reseñas) ---
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
-  // Este estado guarda las reseñas (las de la API + las nuevas)
   const [comments, setComments] = useState<DisplayReview[]>([]);
 
-  // --- Lógica de Gamificación ---
-  // La definimos localmente ya que no viene en el DTO
+  // Lógica de Gamificación (local)
   const xpReward = 50;
 
-  // --- 3. Sincronizar Reseñas ---
-  // Este Effect carga las reseñas de la API en nuestro estado 'comments'
-  // la primera vez que 'publication' se carga.
+  // --- Sincronizar Reseñas de la API al estado local ---
   useEffect(() => {
     if (publication && publication.reviews) {
-      // Convertimos ReviewDTO en DisplayReview
       const fetchedReviews = publication.reviews.map((review: ReviewDTO) => ({
         id: review.id,
         user: review.authorName,
         avatar: review.authorName.substring(0, 2).toUpperCase(),
         rating: review.rating,
-        date: "Hace un tiempo", // DTO no tiene fecha
+        date: "Hace un tiempo",
         text: review.comment,
-        xpEarned: 30, // Mockeamos XP
+        xpEarned: 30, // Mock
       }));
       setComments(fetchedReviews);
     }
-  }, [publication]); // Se ejecuta solo cuando 'publication' cambia
+  }, [publication]);
 
-  // --- 4. Estados Derivados ---
-  // Calculamos esto desde el *estado* 'comments' para que se
-  // actualice al añadir una nueva reseña localmente.
+  // --- Estados Derivados (para Rating) ---
   const avgRating =
       comments.length > 0
-          ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(1)
+          ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(
+              1
+          )
           : "N/A";
   const reviewCount = comments.length;
 
-  // --- 5. Manejadores de Eventos (UI) ---
+  // --- Lógica de Permisos ---
+  const canEdit =
+      user && user.role === "HOST" && user.email === publication?.host?.email;
+
+  // --- Manejadores de Eventos (UI) ---
   const handleReserve = () => {
-    toast({
-      title: "Reserva Iniciada",
-      description: "Redirigiendo al sistema de reservas...",
-    });
+    // (Esta lógica iría a la página de checkout)
+    alert("Redirigiendo a la reserva...");
   };
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
 
-    // Creamos la nueva reseña para la UI
     const comment: DisplayReview = {
       id: comments.length + 1, // ID local temporal
       user: "Tú",
@@ -104,19 +129,13 @@ export default function ExperienceDetails() {
       xpEarned: xpReward,
     };
 
-    // Actualización optimista: la añadimos al estado local
     setComments([comment, ...comments]);
     setNewComment("");
-    setRating(5); // Reseteamos
-
-    toast({
-      title: `+${xpReward} XP Obtenidos!`,
-      description: "¡Gracias por compartir tu experiencia!",
-    });
-    // Aquí es donde harías un 'POST' al back-end para guardarla
+    setRating(5);
+    // (Aquí iría la llamada al hook 'useCreateReview')
   };
 
-  // --- 6. Renderizado de Carga y Error ---
+  // --- Renderizado de Carga y Error ---
   if (isLoading) {
     return (
         <div className="min-h-screen bg-background">
@@ -133,7 +152,9 @@ export default function ExperienceDetails() {
         <div className="min-h-screen bg-background">
           <Header userXP={2450} userLevel={12} />
           <div className="container mx-auto px-4 py-8 text-center">
-            <h1 className="text-2xl font-bold mb-4">Experiencia no encontrada</h1>
+            <h1 className="text-2xl font-bold mb-4">
+              Experiencia no encontrada
+            </h1>
             <Link to="/">
               <Button variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -145,11 +166,9 @@ export default function ExperienceDetails() {
     );
   }
 
-  // --- 7. Renderizado Principal (JSX) ---
-  // Si llegamos aquí, 'publication' tiene datos.
-
+  // --- Helper de UI (Color de Badge) ---
   const getCategoryColor = (cat: string) => {
-    const lowerCat = cat.toLowerCase(); // 'HOTEL' -> 'hotel'
+    const lowerCat = cat.toLowerCase();
     switch (lowerCat) {
       case "hotel":
         return "bg-primary text-primary-foreground";
@@ -164,12 +183,13 @@ export default function ExperienceDetails() {
     }
   };
 
+  // --- Renderizado Principal (JSX) ---
   return (
       <div className="min-h-screen bg-background">
         <Header userXP={2450} userLevel={12} />
 
         <div className="container mx-auto px-4 py-8">
-          {/* Back Button */}
+          {/* Botón Volver */}
           <Link to="/">
             <Button variant="outline" className="mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -178,9 +198,9 @@ export default function ExperienceDetails() {
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
+            {/* Contenido Principal */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Header */}
+              {/* Encabezado */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <Badge className={getCategoryColor(publication.publicationType)}>
@@ -189,6 +209,56 @@ export default function ExperienceDetails() {
                 </div>
 
                 <h1 className="text-4xl font-bold mb-4">{publication.title}</h1>
+
+                {/* === ZONA DE BOTONES DE HOST === */}
+                {canEdit && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {/* Botón de Editar */}
+                      <Button
+                          variant="outline"
+                          onClick={() => navigate(`/experience/${id}/edit`)}
+                      >
+                        ✏️ Editar publicación
+                      </Button>
+
+                      {/* Botón y Diálogo de Eliminar */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" disabled={isDeleting}>
+                            {isDeleting ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                                <Trash2 className="h-4 w-4 mr-2" />
+                            )}
+                            {isDeleting ? "Eliminando..." : "Eliminar"}
+                          </Button>
+                        </AlertDialogTrigger>
+
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Esto eliminará
+                              permanentemente tu publicación de nuestros servidores.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDeleting}>
+                              Cancelar
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => performDelete(id!)} // <-- Llama al hook
+                                disabled={isDeleting}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {isDeleting ? "Eliminando..." : "Sí, eliminar"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                )}
+                {/* === FIN ZONA DE BOTONES === */}
 
                 <div className="flex items-center gap-4 text-muted-foreground mb-4">
                   <div className="flex items-center">
@@ -203,7 +273,7 @@ export default function ExperienceDetails() {
                 </div>
               </div>
 
-              {/* Images */}
+              {/* Imágenes */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {publication.imageUrls.map((image, index) => (
                     <img
@@ -215,29 +285,36 @@ export default function ExperienceDetails() {
                 ))}
               </div>
 
-              {/* Description */}
+              {/* Descripción */}
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-4">Sobre esta experiencia</h3>
-                  <p className="text-muted-foreground leading-relaxed">{publication.description}</p>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Sobre esta experiencia
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {publication.description}
+                  </p>
                 </CardContent>
               </Card>
 
-              {/* Specific Details */}
+              {/* Detalles Específicos */}
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-4">Qué incluye / Detalles</h3>
-                  {/* Usamos el helper para renderizar el mapa 'specificDetails' */}
+                  <h3 className="text-xl font-semibold mb-4">
+                    Qué incluye / Detalles
+                  </h3>
                   <RenderSpecificDetails details={publication.specificDetails} />
                 </CardContent>
               </Card>
 
-              {/* Comments Section */}
+              {/* Sección de Comentarios */}
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-6">Reseñas y Comentarios</h3>
+                  <h3 className="text-xl font-semibold mb-6">
+                    Reseñas y Comentarios
+                  </h3>
 
-                  {/* Add Comment */}
+                  {/* Añadir Comentario */}
                   <div className="mb-6 p-4 bg-secondary/50 rounded-lg">
                     <h4 className="font-medium mb-3">Comparte tu experiencia</h4>
                     <div className="flex items-center mb-3">
@@ -246,7 +323,9 @@ export default function ExperienceDetails() {
                           <Star
                               key={star}
                               className={`h-5 w-5 cursor-pointer ${
-                                  star <= rating ? "text-yellow-500 fill-current" : "text-gray-300"
+                                  star <= rating
+                                      ? "text-yellow-500 fill-current"
+                                      : "text-gray-300"
                               }`}
                               onClick={() => setRating(star)}
                           />
@@ -258,17 +337,22 @@ export default function ExperienceDetails() {
                         onChange={(e) => setNewComment(e.target.value)}
                         className="mb-3"
                     />
-                    <Button onClick={handleSubmitComment} className="w-full md:w-auto">
+                    <Button
+                        onClick={handleSubmitComment}
+                        className="w-full md:w-auto"
+                    >
                       <Trophy className="h-4 w-4 mr-2" />
                       Enviar Reseña & Gana {xpReward} XP
                     </Button>
                   </div>
 
-                  {/* Comments List */}
+                  {/* Lista de Comentarios */}
                   <div className="space-y-4">
-                    {/* Mapeamos el *estado* 'comments' */}
                     {comments.map((comment) => (
-                        <div key={comment.id} className="border-b pb-4 last:border-b-0">
+                        <div
+                            key={comment.id}
+                            className="border-b pb-4 last:border-b-0"
+                        >
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-medium">
                               {comment.avatar}
@@ -278,15 +362,22 @@ export default function ExperienceDetails() {
                                 <span className="font-medium">{comment.user}</span>
                                 <div className="flex items-center">
                                   {[...Array(comment.rating)].map((_, i) => (
-                                      <Star key={i} className="h-3 w-3 text-yellow-500 fill-current" />
+                                      <Star
+                                          key={i}
+                                          className="h-3 w-3 text-yellow-500 fill-current"
+                                      />
                                   ))}
                                 </div>
-                                <span className="text-sm text-muted-foreground">{comment.date}</span>
+                                <span className="text-sm text-muted-foreground">
+                              {comment.date}
+                            </span>
                                 <Badge variant="outline" className="text-xs">
                                   +{comment.xpEarned} XP
                                 </Badge>
                               </div>
-                              <p className="text-muted-foreground">{comment.text}</p>
+                              <p className="text-muted-foreground">
+                                {comment.text}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -298,21 +389,28 @@ export default function ExperienceDetails() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Booking Card */}
+              {/* Card de Reserva */}
               <Card className="sticky top-6">
                 <CardContent className="p-6">
                   <div className="text-center mb-6">
-                    <div className="text-3xl font-bold text-primary mb-2">${publication.price}</div>
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      ${publication.price}
+                    </div>
                     <div className="text-sm text-muted-foreground">
-                      por {publication.publicationType.toLowerCase() === "hotel" ? "noche" : "persona"}
+                      por{" "}
+                      {publication.publicationType.toLowerCase() === "hotel"
+                          ? "noche"
+                          : "persona"}
                     </div>
                   </div>
 
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Disponibilidad:</span>
-                      {/* Hardcodeado, ya que no viene en el DTO */}
-                      <Badge variant="outline" className="text-green-600 border-green-600">
+                      <Badge
+                          variant="outline"
+                          className="text-green-600 border-green-600"
+                      >
                         Disponible
                       </Badge>
                     </div>
@@ -323,7 +421,11 @@ export default function ExperienceDetails() {
                   </div>
 
                   <div className="space-y-3">
-                    <Button onClick={handleReserve} className="w-full" size="lg">
+                    <Button
+                        onClick={handleReserve}
+                        className="w-full"
+                        size="lg"
+                    >
                       <Calendar className="h-4 w-4 mr-2" />
                       Reservar Ahora
                     </Button>
@@ -339,14 +441,15 @@ export default function ExperienceDetails() {
                 </CardContent>
               </Card>
 
-              {/* XP Reward Info */}
+              {/* Card de Info de XP */}
               <Card>
                 <CardContent className="p-4">
                   <div className="text-center">
                     <Trophy className="h-8 w-8 mx-auto mb-2 text-experience" />
                     <h4 className="font-semibold mb-1">Gana Recompensas XP</h4>
                     <p className="text-sm text-muted-foreground">
-                      ¡Comparte tu experiencia y gana {xpReward} XP para subir de nivel!
+                      ¡Comparte tu experiencia y gana {xpReward} XP para subir
+                      de nivel!
                     </p>
                   </div>
                 </CardContent>
@@ -359,9 +462,11 @@ export default function ExperienceDetails() {
 }
 
 // --- Helper Component para renderizar 'specificDetails' ---
-// Lo mantenemos aquí ya que solo lo usa esta página
-function RenderSpecificDetails({ details }: { details: { [key: string]: unknown } }) {
-
+function RenderSpecificDetails({
+                                 details,
+                               }: {
+  details: { [key: string]: unknown };
+}) {
   const toTitleCase = (str: string) => {
     return str
         .replace(/([A-Z])/g, " $1")
@@ -370,11 +475,8 @@ function RenderSpecificDetails({ details }: { details: { [key: string]: unknown 
 
   return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {/* Mapeamos las entradas del objeto 'details' */}
         {Object.entries(details).map(([key, value]) => {
-
-          // Caso 1: 'services' de Coworking
-          // Hacemos el check de 'unknown'
+          // Caso 1: Array de strings (ej: 'services' de Coworking)
           if (key === "services" && Array.isArray(value)) {
             return value.map((service: string, index: number) => (
                 <div
@@ -386,19 +488,22 @@ function RenderSpecificDetails({ details }: { details: { [key: string]: unknown 
             ));
           }
 
-          // Caso 2: Pares clave-valor simples (ej: "roomCount": 50)
-          // Hacemos el check de 'unknown'
+          // Caso 2: Pares clave-valor simples (string o number)
           if (typeof value === "string" || typeof value === "number") {
             return (
-                <div key={key} className="flex items-center bg-secondary/50 px-3 py-2 rounded-lg">
+                <div
+                    key={key}
+                    className="flex items-center bg-secondary/50 px-3 py-2 rounded-lg"
+                >
               <span className="text-sm">
-                <span className="font-medium">{toTitleCase(key)}:</span> {String(value)}
+                <span className="font-medium">{toTitleCase(key)}:</span>{" "}
+                {String(value)}
               </span>
                 </div>
             );
           }
 
-          // No renderizamos otros tipos (ej: null, undefined)
+          // No renderizar otros tipos (null, undefined, etc.)
           return null;
         })}
       </div>
