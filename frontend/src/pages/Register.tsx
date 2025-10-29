@@ -131,8 +131,8 @@ const Register = () => {
         <div className="w-full max-w-md space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Join Trippy
+            <h1 className="text-3xl font-aileron font-extrabold bg-gradient-hero bg-clip-text text-transparent">
+              join trippy
             </h1>
             <p className="text-muted-foreground">
               Start your adventure or grow your business
@@ -172,14 +172,15 @@ const Register = () => {
 
               {/* User Type Description */}
               <div className="text-center p-3 bg-muted/50 rounded-lg">
-                {formData.userType === "traveler" ? (
+                {formData.userType === "TRAVELER" && (
                   <div className="space-y-1">
                     <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
                     <p className="text-sm text-muted-foreground">
                       Book experiences, write reviews, earn XP and unlock achievements and discounts
                     </p>
                   </div>
-                ) : (
+                )}
+                {formData.userType === "OWNER" && (
                   <div className="space-y-1">
                     <Badge variant="secondary" className="mb-2 bg-experience text-experience-foreground">Business Account</Badge>
                     <p className="text-sm text-muted-foreground">

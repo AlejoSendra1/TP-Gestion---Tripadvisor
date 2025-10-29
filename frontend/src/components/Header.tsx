@@ -1,8 +1,4 @@
-
-import { Link } from "react-router-dom";
-
 import { Search, User, Trophy, Star, PlusCircle } from "lucide-react"; // Añadimos PlusCircle
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -27,12 +23,12 @@ export function Header() {
                         to="/"
                         className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                     >
-                        <div className="w-10 h-10 flex items-center justify-center">
-                            <img src="/trippy_logo.png" />
+                        <div className="w-36 h-20 flex items-center justify-center">
+                            <img src="/letrassinfondo.png" />
                         </div>
-                        <h1 className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                            Trippy
-                        </h1>
+                        {/*<h1 className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">*/}
+                        {/*    Trippy*/}
+                        {/*</h1>*/}
                     </Link>
 
                     {/* Search Bar */}
@@ -56,7 +52,7 @@ export function Header() {
                             <Button asChild variant="default">
                                 <Link to="/create-publication">
                                     <PlusCircle className="h-4 w-4 mr-2" />
-                                    Crear Publicación
+                                    Create Publication
                                 </Link>
                             </Button>
                         )}

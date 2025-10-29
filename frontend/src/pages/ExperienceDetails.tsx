@@ -193,7 +193,7 @@ export default function ExperienceDetails() {
           <Link to="/">
             <Button variant="outline" className="mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver a Experiencias
+              Go Back
             </Button>
           </Link>
 
@@ -289,7 +289,7 @@ export default function ExperienceDetails() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold mb-4">
-                    Sobre esta experiencia
+                    About this Experience
                   </h3>
                   <p className="text-muted-foreground leading-relaxed">
                     {publication.description}
@@ -301,7 +301,7 @@ export default function ExperienceDetails() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold mb-4">
-                    Qué incluye / Detalles
+                    Details
                   </h3>
                   <RenderSpecificDetails details={publication.specificDetails} />
                 </CardContent>
@@ -311,12 +311,12 @@ export default function ExperienceDetails() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold mb-6">
-                    Reseñas y Comentarios
+                    Reviews
                   </h3>
 
                   {/* Añadir Comentario */}
                   <div className="mb-6 p-4 bg-secondary/50 rounded-lg">
-                    <h4 className="font-medium mb-3">Comparte tu experiencia</h4>
+                    <h4 className="font-medium mb-3">Share your experience</h4>
                     <div className="flex items-center mb-3">
                       <span className="mr-2 text-sm">Rating:</span>
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -332,7 +332,7 @@ export default function ExperienceDetails() {
                       ))}
                     </div>
                     <Textarea
-                        placeholder="Cuéntale a otros sobre tu experiencia..."
+                        placeholder="Tell us about your experience..."
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         className="mb-3"
@@ -342,7 +342,7 @@ export default function ExperienceDetails() {
                         className="w-full md:w-auto"
                     >
                       <Trophy className="h-4 w-4 mr-2" />
-                      Enviar Reseña & Gana {xpReward} XP
+                      Submit review and gain {xpReward} XP
                     </Button>
                   </div>
 
@@ -397,26 +397,26 @@ export default function ExperienceDetails() {
                       ${publication.price}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      por{" "}
+                      per{" "}
                       {publication.publicationType.toLowerCase() === "hotel"
-                          ? "noche"
-                          : "persona"}
+                          ? "night"
+                          : "person"}
                     </div>
                   </div>
 
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Disponibilidad:</span>
+                      <span className="text-sm font-medium">Availability:</span>
                       <Badge
                           variant="outline"
                           className="text-green-600 border-green-600"
                       >
-                        Disponible
+                        Available
                       </Badge>
                     </div>
                     <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
                       <Trophy className="h-4 w-4 mr-2 text-experience" />
-                      Gana {xpReward} XP cuando dejes tu reseña
+                      Gain {xpReward} XP by reviewing this experience!
                     </div>
                   </div>
 
@@ -427,15 +427,15 @@ export default function ExperienceDetails() {
                         size="lg"
                     >
                       <Calendar className="h-4 w-4 mr-2" />
-                      Reservar Ahora
+                      Book Now
                     </Button>
                     <Button variant="outline" className="w-full">
                       <Heart className="h-4 w-4 mr-2" />
-                      Guardar
+                      Save to Wishlist
                     </Button>
                     <Button variant="outline" className="w-full">
                       <Users className="h-4 w-4 mr-2" />
-                      Contactar a {publication.host?.name || "Anfitrión"}
+                      Get in touch with {publication.host?.name || "Host"}
                     </Button>
                   </div>
                 </CardContent>
@@ -446,10 +446,9 @@ export default function ExperienceDetails() {
                 <CardContent className="p-4">
                   <div className="text-center">
                     <Trophy className="h-8 w-8 mx-auto mb-2 text-experience" />
-                    <h4 className="font-semibold mb-1">Gana Recompensas XP</h4>
+                    <h4 className="font-semibold mb-1">Gain XP rewards!</h4>
                     <p className="text-sm text-muted-foreground">
-                      ¡Comparte tu experiencia y gana {xpReward} XP para subir
-                      de nivel!
+                      Share your experience and gain {xpReward} XP to level up!
                     </p>
                   </div>
                 </CardContent>

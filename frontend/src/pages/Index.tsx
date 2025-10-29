@@ -59,8 +59,8 @@ const Index = () => {
     return (
         <div className="min-h-screen bg-background">
             <Header userXP={2450} userLevel={12} />
-            <Hero />
-            <Categories />
+            {/*<Hero />*/}
+            {/*<Categories />*/}
 
             {/* 9. Ya no llamamos a <PublicationList /> directamente.
           Llamamos a nuestra función 'renderContent()' que tiene la lógica. */}
@@ -70,9 +70,9 @@ const Index = () => {
             <footer className="bg-card border-t py-12">
                 <div className="container mx-auto px-4">
                     <div className="text-center">
-                        <h3 className="text-2xl font-bold mb-4 bg-gradient-hero bg-clip-text text-transparent">
-                            Trippy
-                        </h3>
+                        <div className="flex items-center justify-center">
+                            <img className="w-48 h-24 " src="/letrassinfondo.png" />
+                        </div>
                         <p className="text-muted-foreground mb-4">
                             Discover amazing places, share your experiences, and earn XP rewards
                         </p>

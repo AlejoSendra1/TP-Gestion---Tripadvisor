@@ -187,9 +187,9 @@ const CreatePublication = () => {
                 <Card className="max-w-3xl mx-auto">
                     <CardHeader>
                         {/* MODIFICADO: Título dinámico */}
-                        <CardTitle>Publicar: {publicationTitle}</CardTitle>
+                        <CardTitle>Create: {publicationTitle}</CardTitle>
                         <CardDescription>
-                            Completa los datos de tu nueva publicación para que aparezca en Trippy.
+                            Fill out the form below to create a new publication in Trippy.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -197,16 +197,16 @@ const CreatePublication = () => {
                             {/* --- Selector de Tipo --- */}
                             {/* NUEVO: Selector de tipo de publicación */}
                             <div className="space-y-2">
-                                <Label htmlFor="publicationType">Tipo de Publicación</Label>
+                                <Label htmlFor="publicationType">Publication Type</Label>
                                 <Select value={publicationType} onValueChange={handleTypeChange}>
                                     <SelectTrigger id="publicationType">
-                                        <SelectValue placeholder="Selecciona un tipo" />
+                                        <SelectValue placeholder="Select a type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="hotel">Alojamiento (Hotel)</SelectItem>
-                                        <SelectItem value="activity">Actividad / Experiencia</SelectItem>
+                                        <SelectItem value="hotel">Hotel</SelectItem>
+                                        <SelectItem value="activity">Activity / Experience</SelectItem>
                                         <SelectItem value="coworking">Coworking</SelectItem>
-                                        <SelectItem value="restaurant">Restaurante</SelectItem>
+                                        <SelectItem value="restaurant">Restaurant</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -214,7 +214,7 @@ const CreatePublication = () => {
                             {/* --- Datos Principales (Comunes) --- */}
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="title">Título de la Publicación</Label>
+                                    <Label htmlFor="title">Title or Name</Label>
                                     <Input
                                         id="title"
                                         name="title"
@@ -225,7 +225,7 @@ const CreatePublication = () => {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="description">Descripción</Label>
+                                    <Label htmlFor="description">Description</Label>
                                     <Textarea
                                         id="description"
                                         name="description"
@@ -238,7 +238,7 @@ const CreatePublication = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         {/* MODIFICADO: Label genérica para el precio */}
-                                        <Label htmlFor="price">Precio Base (USD)</Label>
+                                        <Label htmlFor="price">Base Price (USD)</Label>
                                         <Input
                                             id="price"
                                             name="price"
@@ -250,7 +250,7 @@ const CreatePublication = () => {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="mainImageUrl">URL de Imagen Principal</Label>
+                                        <Label htmlFor="mainImageUrl">Main Image URL</Label>
                                         <Input
                                             id="mainImageUrl"
                                             name="mainImageUrl"
@@ -268,9 +268,9 @@ const CreatePublication = () => {
 
                             {/* --- Ubicación (Común) --- */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Ubicación</h3>
+                                <h3 className="text-lg font-medium">Location</h3>
                                 <div className="space-y-2">
-                                    <Label htmlFor="streetAddress">Dirección</Label>
+                                    <Label htmlFor="streetAddress">Address</Label>
                                     <Input
                                         id="streetAddress"
                                         name="streetAddress"
@@ -281,11 +281,11 @@ const CreatePublication = () => {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="city">Ciudad</Label>
+                                        <Label htmlFor="city">City</Label>
                                         <Input id="city" name="city" value={formData.location.city} onChange={handleLocationChange} required />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="country">País</Label>
+                                        <Label htmlFor="country">Country</Label>
                                         <Input id="country" name="country" value={formData.location.country} onChange={handleLocationChange} required />
                                     </div>
                                 </div>
@@ -298,10 +298,10 @@ const CreatePublication = () => {
                             {/* MODIFICADO: Renderizado condicional para HOTEL */}
                             {publicationType === 'hotel' && (
                                 <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Detalles del Alojamiento</h3>
+                                    <h3 className="text-lg font-medium">Hotel Details</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="roomCount">Nro. de Habitaciones</Label>
+                                            <Label htmlFor="roomCount">Room Count</Label>
                                             <Input
                                                 id="roomCount"
                                                 name="roomCount"
@@ -313,7 +313,7 @@ const CreatePublication = () => {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="capacity">Capacidad (Huéspedes)</Label>
+                                            <Label htmlFor="capacity">Capacity</Label>
                                             <Input
                                                 id="capacity"
                                                 name="capacity"
@@ -331,27 +331,27 @@ const CreatePublication = () => {
                             {/* NUEVO: Renderizado condicional para ACTIVITY */}
                             {publicationType === 'activity' && (
                                 <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Detalles de la Actividad</h3>
+                                    <h3 className="text-lg font-medium">Activity Details</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="durationInHours">Duración (Horas)</Label>
+                                            <Label htmlFor="durationInHours">Duration (Hours)</Label>
                                             <Input id="durationInHours" name="durationInHours" type="number" value={formData.durationInHours} onChange={handleInputChange} required />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="language">Idioma</Label>
+                                            <Label htmlFor="language">Language</Label>
                                             <Input id="language" name="language" value={formData.language} onChange={handleInputChange} placeholder="Ej: Español, Inglés" required />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="meetingPoint">Punto de Encuentro</Label>
+                                            <Label htmlFor="meetingPoint">Meeting Point</Label>
                                             <Input id="meetingPoint" name="meetingPoint" value={formData.meetingPoint} onChange={handleInputChange} placeholder="Ej: Obelisco" required />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="activityLevel">Nivel de Actividad</Label>
+                                            <Label htmlFor="activityLevel">Activity Level</Label>
                                             <Input id="activityLevel" name="activityLevel" value={formData.activityLevel} onChange={handleInputChange} placeholder="Ej: Moderado, Intenso" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="whatIsIncluded">Qué incluye</Label>
+                                        <Label htmlFor="whatIsIncluded">What's Included</Label>
                                         <Textarea id="whatIsIncluded" name="whatIsIncluded" value={formData.whatIsIncluded} onChange={handleInputChange} placeholder="Ej: Guía, Agua, Entradas" />
                                     </div>
                                 </div>
@@ -360,19 +360,19 @@ const CreatePublication = () => {
                             {/* NUEVO: Renderizado condicional para COWORKING */}
                             {publicationType === 'coworking' && (
                                 <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Detalles del Coworking</h3>
+                                    <h3 className="text-lg font-medium">Coworking Details</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="pricePerDay">Precio por Día (USD)</Label>
+                                            <Label htmlFor="pricePerDay">Price per Day (USD)</Label>
                                             <Input id="pricePerDay" name="pricePerDay" type="number" value={formData.pricePerDay} onChange={handleInputChange} />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="pricePerMonth">Precio por Mes (USD)</Label>
+                                            <Label htmlFor="pricePerMonth">Price per Month (USD)</Label>
                                             <Input id="pricePerMonth" name="pricePerMonth" type="number" value={formData.pricePerMonth} onChange={handleInputChange} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="services">Servicios (separados por coma)</Label>
+                                        <Label htmlFor="services">Services (do type separated by comma)</Label>
                                         <Input id="services" name="services" value={formData.services} onChange={handleInputChange} placeholder="Ej: Wifi, Café, Salas de reunión" />
                                     </div>
                                 </div>
@@ -381,23 +381,23 @@ const CreatePublication = () => {
                             {/* NUEVO: Renderizado condicional para RESTAURANT */}
                             {publicationType === 'restaurant' && (
                                 <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Detalles del Restaurante</h3>
+                                    <h3 className="text-lg font-medium">Restaurant Details</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="cuisineType">Tipo de Cocina</Label>
+                                            <Label htmlFor="cuisineType">Cuisine Type</Label>
                                             <Input id="cuisineType" name="cuisineType" value={formData.cuisineType} onChange={handleInputChange} placeholder="Ej: Italiana, Mexicana" required />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="priceRange">Rango de Precio</Label>
+                                            <Label htmlFor="priceRange">Price Range</Label>
                                             <Input id="priceRange" name="priceRange" value={formData.priceRange} onChange={handleInputChange} placeholder="Ej: $, $$, $$$" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="openingHours">Horarios</Label>
+                                        <Label htmlFor="openingHours">Timetables</Label>
                                         <Input id="openingHours" name="openingHours" value={formData.openingHours} onChange={handleInputChange} placeholder="Ej: Lunes a Viernes 9am-10pm" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="menuUrl">URL del Menú (Opcional)</Label>
+                                        <Label htmlFor="menuUrl">Menu URL (Optional)</Label>
                                         <Input id="menuUrl" name="menuUrl" type="url" value={formData.menuUrl} onChange={handleInputChange} placeholder="https://ejemplo.com/menu.pdf" />
                                     </div>
                                 </div>
@@ -406,7 +406,7 @@ const CreatePublication = () => {
                             {/* --- Submit --- */}
                             {/* MODIFICADO: Botón dinámico */}
                             <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? "Publicando..." : `Publicar ${publicationTitle}`}
+                                {isLoading ? "Submitting..." : `Create ${publicationTitle}`}
                             </Button>
                         </form>
                     </CardContent>
