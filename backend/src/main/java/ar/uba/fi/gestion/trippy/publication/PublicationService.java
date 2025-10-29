@@ -1,11 +1,14 @@
 package ar.uba.fi.gestion.trippy.publication;
 
 // --- Imports Originales ---
+import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationDetailDTO;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationListDTO;
 import ar.uba.fi.gestion.trippy.user.BusinessOwner;
 import ar.uba.fi.gestion.trippy.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,6 +34,8 @@ import ar.uba.fi.gestion.trippy.publication.dto.PublicationUpdateDTO;
 
 import ar.uba.fi.gestion.trippy.user.User; // <-- Para la entidad User
 import ar.uba.fi.gestion.trippy.user.UserRepository; // <-- ¡NUEVA dependencia!
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
 @Transactional(readOnly = true) // Por defecto, solo lectura
@@ -380,4 +385,24 @@ public class PublicationService {
 
         return convertToDetailDTO(publicationRepository.save(r));
     }
+
+    @Transactional // ¡MUY importante!
+    public void deletePublication(Long id, String hostEmail) {
+
+        // 1. Buscar la publicación
+        Publication publication = publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + id));
+
+        // 2. Validación de permisos (¡CRÍTICO!)
+        if (publication.getHost() == null || !publication.getHost().getEmail().equals(hostEmail)) {
+            // Usamos IllegalStateException o AccessDeniedException
+            throw new IllegalStateException("No tenés permisos para eliminar esta publicación.");
+        }
+
+        // 3. (VER PRÓXIMA SECCIÓN) Aquí debería ir la validación de reservas activas
+
+        // 4. Eliminar la publicación
+        publicationRepository.delete(publication);
+    }
+
 }

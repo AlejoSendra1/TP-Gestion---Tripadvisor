@@ -66,6 +66,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/publications/activity").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/coworking").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/restaurant").hasRole("HOST")
+                        .requestMatchers(HttpMethod.PATCH, "/publications/**").hasRole("HOST")
+                        .requestMatchers(HttpMethod.DELETE, "/publications/{id}").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sessions").permitAll()
                         .anyRequest().authenticated()

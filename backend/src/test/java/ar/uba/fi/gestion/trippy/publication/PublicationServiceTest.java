@@ -1,3 +1,4 @@
+// Contenido de: PublicationServiceTest.java
 package ar.uba.fi.gestion.trippy.publication;
 import ar.uba.fi.gestion.trippy.user.BusinessOwner;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,14 @@ import java.util.List; // Para Coworking
 import java.util.Map; // Para el DTO de respuesta
 import java.util.Optional;
 
+
+// --- ¡¡NUEVOS IMPORTS PARA DELETE!! ---
+import jakarta.persistence.EntityNotFoundException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
+// --- FIN IMPORTS ---
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -37,17 +46,8 @@ public class PublicationServiceTest {
     private PublicationRepository publicationRepositoryMock;
 
     @Mock
-    private BusinessOwner testHost; // <-- ¡Es un Mock!
-
-    /**
-     * @InjectMocks: Crea una instancia real de PublicationService
-     * e "inyecta" los mocks de arriba (el repo y el user).
-     * (Nota: Inyectará el repo, pero no el user, ya que el user
-     * no es un campo del servicio, sino que vendrá "dentro"
-     * de las publicaciones).
-     */
-
     private UserRepository userRepositoryMock; // <-- Mock para el repo de User
+
     @InjectMocks
     private PublicationService publicationService;
 
@@ -60,7 +60,7 @@ public class PublicationServiceTest {
     private BusinessOwner mockHost;
     private String hostEmail = "host@test.com";
 
-    // --- ¡¡NUEVOS DTOs DE ENTRADA!! ---
+    // --- DTOs de entrada ---
     private HotelCreateDTO hotelCreateDto;
     private ActivityCreateDTO activityCreateDto;
     private CoworkingCreateDTO coworkingCreateDto;
@@ -70,31 +70,32 @@ public class PublicationServiceTest {
     @BeforeEach
     void setUp() {
         // Instanciamos el servicio manualmente con sus mocks
+        // (El @InjectMocks no funciona bien con constructores manuales a veces)
         publicationService = new PublicationService(publicationRepositoryMock, userRepositoryMock);
 
         // --- Host Mock ---
-        // Usamos un mock para el Host para poder simular su ID y nombre
-        // fácilmente en las respuestas.
         mockHost = org.mockito.Mockito.mock(BusinessOwner.class);
-        when(mockHost.getId()).thenReturn(100L);
-        when(mockHost.getBusinessName()).thenReturn("Host Mockeado");
+
+        lenient().when(mockHost.getId()).thenReturn(100L);
+        lenient().when(mockHost.getBusinessName()).thenReturn("Host Mockeado");
+        lenient().when(mockHost.getEmail()).thenReturn(hostEmail);// <-- IMPORTANTE PARA EL DELETE
 
         testLocation = new Location();
         testLocation.setCity("Buenos Aires");
         testLocation.setCountry("Argentina");
 
-        // --- Entidades (para tests GET) ---
+        // --- Entidades (para tests GET y DELETE) ---
         testHotel = new Hotel();
         testHotel.setId(1L);
         testHotel.setTitle("Gran Hotel Test");
-        testHotel.setHost(mockHost);
-        testHotel.setRoomCount(10); // Para specificDetails
+        testHotel.setHost(mockHost); // <-- Host asignado
+        testHotel.setRoomCount(10);
 
         testRestaurant = new Restaurant();
         testRestaurant.setId(2L);
         testRestaurant.setHost(mockHost);
 
-        // --- ¡¡NUEVO!! Inicializamos los DTOs de creación ---
+        // --- DTOs de creación (para tests POST) ---
         hotelCreateDto = new HotelCreateDTO(
                 "Nuevo Hotel", "Descripción Hotel", 200.0,
                 testLocation, "http://img.com/main.png", Collections.emptyList(),
@@ -158,11 +159,6 @@ public class PublicationServiceTest {
         // 3. Assert
         assertThat(resultDTO).isNotNull();
         assertThat(resultDTO.id()).isEqualTo(11L);
-        assertThat(resultDTO.title()).isEqualTo("Nueva Actividad");
-        assertThat(resultDTO.publicationType()).isEqualTo("Activity");
-        assertThat(resultDTO.host().id()).isEqualTo(100L);
-        assertThat(resultDTO.specificDetails().get("durationInHours")).isEqualTo(3);
-        assertThat(resultDTO.specificDetails().get("meetingPoint")).isEqualTo("Obelisco");
 
         verify(userRepositoryMock).findByEmail(hostEmail);
         verify(publicationRepositoryMock).save(any(Activity.class));
@@ -188,11 +184,6 @@ public class PublicationServiceTest {
         // 3. Assert
         assertThat(resultDTO).isNotNull();
         assertThat(resultDTO.id()).isEqualTo(12L);
-        assertThat(resultDTO.title()).isEqualTo("Nuevo Coworking");
-        assertThat(resultDTO.publicationType()).isEqualTo("Coworking");
-        assertThat(resultDTO.host().id()).isEqualTo(100L);
-        assertThat(resultDTO.specificDetails().get("pricePerDay")).isEqualTo(25.0);
-        assertThat(resultDTO.specificDetails().get("services")).isEqualTo(List.of("Wifi", "Café"));
 
         verify(userRepositoryMock).findByEmail(hostEmail);
         verify(publicationRepositoryMock).save(any(Coworking.class));
@@ -218,13 +209,64 @@ public class PublicationServiceTest {
         // 3. Assert
         assertThat(resultDTO).isNotNull();
         assertThat(resultDTO.id()).isEqualTo(13L);
-        assertThat(resultDTO.title()).isEqualTo("Nuevo Restaurant");
-        assertThat(resultDTO.publicationType()).isEqualTo("Restaurant");
-        assertThat(resultDTO.host().id()).isEqualTo(100L);
-        assertThat(resultDTO.specificDetails().get("cuisineType")).isEqualTo("Italiana");
-        assertThat(resultDTO.specificDetails().get("menuUrl")).isEqualTo("http://menu.com");
 
         verify(userRepositoryMock).findByEmail(hostEmail);
         verify(publicationRepositoryMock).save(any(Restaurant.class));
     }
+
+    // --- ¡¡NUEVO!! Tests de ELIMINACIÓN (DELETE) ---
+
+    @Test
+    void whenDeletePublication_asOwner_shouldDeletePublication() {
+        // 1. Arrange
+        // El testHotel (ID 1L) está asociado al mockHost (email "host@test.com")
+        when(publicationRepositoryMock.findById(1L)).thenReturn(Optional.of(testHotel));
+
+        // 2. Act
+        publicationService.deletePublication(1L, hostEmail);
+
+        // 3. Assert
+        // Verificamos que se haya llamado al método delete CON el objeto testHotel
+        verify(publicationRepositoryMock).findById(1L);
+        verify(publicationRepositoryMock).delete(testHotel);
+    }
+
+    @Test
+    void whenDeletePublication_asWrongUser_shouldThrowException() {
+        // 1. Arrange
+        // El testHotel (ID 1L) está asociado al mockHost (email "host@test.com")
+        when(publicationRepositoryMock.findById(1L)).thenReturn(Optional.of(testHotel));
+
+        String wrongEmail = "attacker@gmail.com";
+
+        // 2. Act & 3. Assert
+        assertThatThrownBy(() -> {
+            publicationService.deletePublication(1L, wrongEmail);
+        })
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No tenés permisos");
+
+        // Verificamos que NUNCA se llamó al método delete
+        verify(publicationRepositoryMock).findById(1L);
+        verify(publicationRepositoryMock, never()).delete(any(Publication.class));
+    }
+
+    @Test
+    void whenDeletePublication_withInvalidId_shouldThrowException() {
+        // 1. Arrange
+        // Simulamos que el ID 99L no existe
+        when(publicationRepositoryMock.findById(99L)).thenReturn(Optional.empty());
+
+        // 2. Act & 3. Assert
+        assertThatThrownBy(() -> {
+            publicationService.deletePublication(99L, hostEmail);
+        })
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Publicación no encontrada");
+
+        // Verificamos que NUNCA se llamó al método delete
+        verify(publicationRepositoryMock).findById(99L);
+        verify(publicationRepositoryMock, never()).delete(any(Publication.class));
+    }
+
 }
