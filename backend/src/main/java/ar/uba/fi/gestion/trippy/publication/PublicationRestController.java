@@ -67,6 +67,7 @@ public class PublicationRestController {
             @RequestBody HotelCreateDTO hotelRequest,
             @AuthenticationPrincipal JwtUserDetails authenticatedUser
     ) {
+        System.out.println("jwt User details: "+ authenticatedUser.toString());
         String hostEmail = authenticatedUser.username();
         PublicationDetailDTO newPublication = publicationService.createHotel(hotelRequest, hostEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(newPublication);

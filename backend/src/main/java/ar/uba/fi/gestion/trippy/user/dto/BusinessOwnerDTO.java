@@ -7,5 +7,5 @@ public record BusinessOwnerDTO(
         String businessType,
         Boolean verified,
         String userType,
-        String rol
+        String role
 ) implements UserDTO {}

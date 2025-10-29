@@ -268,7 +268,7 @@ public class PublicationService {
         PublicationDetailDTO.HostDTO hostDTO = null;
         if (p.getHost() != null) {
             BusinessOwner host = p.getHost();
-            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getBusinessName(), null); // Foto no disponible en User.java
+            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getBusinessName(), host.getEmail(),null); // Foto no disponible en User.java
         }
 
         List<String> imageGallery = (p.getImageUrls() != null)

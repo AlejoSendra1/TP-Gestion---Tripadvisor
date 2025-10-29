@@ -26,6 +26,7 @@ public class BusinessOwner extends User {
 
     public BusinessOwner(String email,String password,String businessName,String businessType){
         super(email,password);
+        this.setRole("HOST");
         this.businessName = businessName;
         this.businessType = businessType;
     }

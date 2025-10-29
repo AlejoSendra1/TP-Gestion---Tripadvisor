@@ -32,6 +32,7 @@ public class Traveler extends User {
 
     public Traveler(String email,String password,String firstName,String lastName){
         super(email,password);
+        this.setRole("USER");
         this.firstName = firstName;
         this.lastName = lastName;
     }

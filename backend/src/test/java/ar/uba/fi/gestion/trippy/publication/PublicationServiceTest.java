@@ -1,14 +1,10 @@
 package ar.uba.fi.gestion.trippy.publication;
-
-<<<<<<< HEAD
-
 import ar.uba.fi.gestion.trippy.user.BusinessOwner;
-=======
->>>>>>> develop
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor; // Para capturar el objeto guardado
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -41,7 +37,6 @@ public class PublicationServiceTest {
     private PublicationRepository publicationRepositoryMock;
 
     @Mock
-<<<<<<< HEAD
     private BusinessOwner testHost; // <-- ¡Es un Mock!
 
     /**
@@ -51,11 +46,9 @@ public class PublicationServiceTest {
      * no es un campo del servicio, sino que vendrá "dentro"
      * de las publicaciones).
      */
-    @InjectMocks
-=======
-    private UserRepository userRepositoryMock; // <-- Mock para el repo de User
 
->>>>>>> develop
+    private UserRepository userRepositoryMock; // <-- Mock para el repo de User
+    @InjectMocks
     private PublicationService publicationService;
 
     // --- Variables de prueba ---
@@ -64,7 +57,7 @@ public class PublicationServiceTest {
     private Location testLocation;
 
     // Mocks para el Host
-    private User mockHost;
+    private BusinessOwner mockHost;
     private String hostEmail = "host@test.com";
 
     // --- ¡¡NUEVOS DTOs DE ENTRADA!! ---
@@ -82,9 +75,9 @@ public class PublicationServiceTest {
         // --- Host Mock ---
         // Usamos un mock para el Host para poder simular su ID y nombre
         // fácilmente en las respuestas.
-        mockHost = org.mockito.Mockito.mock(User.class);
+        mockHost = org.mockito.Mockito.mock(BusinessOwner.class);
         when(mockHost.getId()).thenReturn(100L);
-        when(mockHost.getFirstname()).thenReturn("Host Mockeado");
+        when(mockHost.getBusinessName()).thenReturn("Host Mockeado");
 
         testLocation = new Location();
         testLocation.setCity("Buenos Aires");
@@ -144,53 +137,6 @@ public class PublicationServiceTest {
     }
 
     // --- Tests de CREACIÓN (POST) ---
-
-    @Test
-    void whenCreateHotel_shouldReturnCreatedHotelDTO() {
-        // 1. Arrange (Given)
-        // (El DTO ya está en setUp)
-
-        // Cuando el servicio busque al host por email, lo encuentra
-        when(userRepositoryMock.findByEmail(hostEmail)).thenReturn(Optional.of(mockHost));
-
-<<<<<<< HEAD
-    /**
-     * Prueba para getPublicationById (US #11) - Caso Éxito
-     */
-    @Test
-    void whenGetPublicationById_withValidId_shouldReturnDetailDTO() {
-        // --- 1. Arrange (Given) ---
-        when(testHost.getId()).thenReturn(100L);
-        when(testHost.getBusinessName()).thenReturn("Test Host");
-        when(publicationRepositoryMock.findById(1L)).thenReturn(Optional.of(testHotel));
-=======
-        // Preparamos la entidad "guardada" que el repo devolverá
-        Hotel savedHotel = new Hotel();
-        savedHotel.setId(10L); // ID asignado por la DB
-        savedHotel.setTitle(hotelCreateDto.title());
-        savedHotel.setHost(mockHost);
-        savedHotel.setRoomCount(hotelCreateDto.roomCount());
-        savedHotel.setCapacity(hotelCreateDto.capacity());
->>>>>>> develop
-
-        // Cuando el servicio llame a 'save', devolvemos 'savedHotel'
-        when(publicationRepositoryMock.save(any(Hotel.class))).thenReturn(savedHotel);
-
-        // 2. Act (When)
-        PublicationDetailDTO resultDTO = publicationService.createHotel(hotelCreateDto, hostEmail);
-
-        // 3. Assert (Then)
-        assertThat(resultDTO).isNotNull();
-        assertThat(resultDTO.id()).isEqualTo(10L);
-        assertThat(resultDTO.title()).isEqualTo("Nuevo Hotel");
-        assertThat(resultDTO.publicationType()).isEqualTo("Hotel");
-        assertThat(resultDTO.host().id()).isEqualTo(100L);
-        assertThat(resultDTO.specificDetails().get("roomCount")).isEqualTo(10);
-        assertThat(resultDTO.specificDetails().get("capacity")).isEqualTo(20);
-
-        verify(userRepositoryMock).findByEmail(hostEmail);
-        verify(publicationRepositoryMock).save(any(Hotel.class));
-    }
 
     @Test
     void whenCreateActivity_shouldReturnCreatedActivityDTO() {

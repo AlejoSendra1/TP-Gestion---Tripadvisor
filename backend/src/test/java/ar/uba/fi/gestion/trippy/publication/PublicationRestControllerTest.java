@@ -112,7 +112,7 @@ public class PublicationRestControllerTest {
         testLocation.setCity("Buenos Aires");
 
         // --- DTOs de respuesta (para mockear el servicio) ---
-        PublicationDetailDTO.HostDTO hostDto = new PublicationDetailDTO.HostDTO(100L, "Test Host", null);
+        PublicationDetailDTO.HostDTO hostDto = new PublicationDetailDTO.HostDTO(100L, "Test Host","ongoporongo@gmail.com", null);
 
         listDto1 = new PublicationListDTO(
                 1L, "Test Hotel", 150.0, "Buenos Aires", "Argentina",

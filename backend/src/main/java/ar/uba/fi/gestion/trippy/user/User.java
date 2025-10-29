@@ -25,8 +25,7 @@ public abstract class User {
     @Column(name = "token-verified")
     private String tokenVerified;
 
-    @Column(name = "Role")
-    private String rol;
+    private String role;
 
     public User(){}
 
@@ -41,10 +40,10 @@ public abstract class User {
     public String getEmail() { return this.email;}
     public String getPassword() { return this.password;}
     public abstract String getUserType();
-    public String getRole(){return "USER"; }
+
+    public String getRole(){return this.role; }
+    public void setRole(String role) { this.role = role;}
 
     public void setTokenVerified(String tokenVerified) { this.tokenVerified = tokenVerified;}
-
-
 }
 

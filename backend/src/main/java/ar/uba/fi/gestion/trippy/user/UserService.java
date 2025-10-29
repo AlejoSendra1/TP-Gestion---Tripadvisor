@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 import java.util.UUID;
 
+
 @Service
 @Transactional
 public class UserService {
@@ -47,6 +48,9 @@ public class UserService {
         }
 
         var user = data.asUser(passwordEncoder::encode);
+
+        user.setRole(user.getRole());
+
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);
         userRepository.save(user);

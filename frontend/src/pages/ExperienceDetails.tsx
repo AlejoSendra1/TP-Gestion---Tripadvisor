@@ -84,9 +84,6 @@ export default function ExperienceDetails() {
           : "N/A";
   const reviewCount = comments.length;
 
-
-
-
  // --- 4.5. Lógica de Edición ---
   const { user } = useAuth();
   const navigate = useNavigate();

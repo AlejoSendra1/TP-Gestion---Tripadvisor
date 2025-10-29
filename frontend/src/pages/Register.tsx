@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Plane, Building2 } from "lucide-react";
-<<<<<<< HEAD
 import {useAuth} from "@/hooks/use-auth"
 import {
   Select,
@@ -16,12 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-
-const Register = () => {
-  const { signup } = useAuth();
-=======
-import { useAuth } from "@/hooks/use-auth";
 
 // --- Imports nuevos ---
 import { apiClient } from "@/lib/apiClient";
@@ -33,8 +26,6 @@ const Register = () => {
   const { toast } = useToast(); // Hook para notificaciones
   const navigate = useNavigate();
   const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
-
->>>>>>> develop
   const [formData, setFormData] = useState({
     userType: "TRAVELER",
     firstName: "",
@@ -46,8 +37,7 @@ const Register = () => {
     businessName: "",
     businessType: "",
   });
-<<<<<<< HEAD
-  const navigate = useNavigate();
+
   const businessTypeOptions = [
     { value: "Hotel", label: "Hotel" },
     { value: "Restaurant", label: "Restaurant" },
@@ -55,105 +45,65 @@ const Register = () => {
     { value: "Office", label: "Office Space" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-=======
-
   // --- Función handleSubmit (Reescrita) ---
-  const handleSubmit = async (e: React.FormEvent) => {
->>>>>>> develop
-    e.preventDefault();
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    // --- Usamos toast para validaciones ---
-    if (formData.password !== formData.confirmPassword) {
-      toast({ title: "Error", description: "Las contraseñas no coinciden", variant: "destructive" });
-      return;
-    }
-    if (!formData.agreeToTerms) {
-      toast({ title: "Error", description: "Debes aceptar los términos y condiciones", variant: "destructive" });
-      return;
-    }
-<<<<<<< HEAD
-    console.log("Registration attempt:", JSON.stringify(formData));
-
-    fetch(import.meta.env.VITE_BACKEND_API_URL+"/users", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-    })
-        .then(response => {
-            if (!response.ok) {
-                // Check for non-successful HTTP status codes
-                if (response.status === 401) {
-                    console.error('Login Failed: Unauthorized (401)');
-                    throw new Error('Unauthorized');
-                }
-                console.error(`HTTP error! Status: ${response.status}`);
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log(data);
-            signup(data);
-            navigate('/');
-        })
-        .catch(error => {
-            console.error('Fetch or Login Error:', error.message);
-        });
-  };
-=======
-
-    // Este log ahora es correcto, enviamos el objeto plano
-    console.log("Registration attempt:", formData);
->>>>>>> develop
-
-    try {
-      // 1. Usamos apiClient.post. Esto llamará a POST /users
-      //    y el proxy de Vite lo redirigirá a :8080
-      const response = await apiClient.post("/users", formData);
-
-      // 2. Si la petición es exitosa:
-      const data = response.data;
-      console.log("Registro exitoso:", data);
-      signup(data); // Guardamos la sesión
-      toast({ title: "¡Bienvenido!", description: "Tu cuenta ha sido creada." });
-      navigate('/'); // Redirigimos al inicio
-
-    } catch (err) {
-      // 3. Manejo de errores de Axios
-      const error = err as Error | AxiosError;
-      console.error('Error en el registro:', error.message);
-
-      let title = "Error en el registro";
-      let description = "Ocurrió un error inesperado. Intenta de nuevo.";
-
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          // El backend respondió con un error
-          if (error.response.status === 409) { // 409 Conflict (email duplicado)
-            title = "Email en uso";
-            description = "Ese email ya está registrado. Prueba con otro.";
-          } else if (error.response.status === 400) { // 400 Bad Request
-            description = "Datos inválidos. Revisa el formulario.";
-          } else if (error.response.status === 500) {
-            description = "Error interno del servidor. Contacta a soporte.";
-          }
-        } else if (error.request) {
-          // No se pudo conectar (ej. backend caído)
-          description = "No se pudo conectar con el servidor.";
-        }
+      if (formData.password !== formData.confirmPassword) {
+        toast({ title: "Error", description: "Las contraseñas no coinciden", variant: "destructive" });
+        return;
+      }
+      if (!formData.agreeToTerms) {
+        toast({ title: "Error", description: "Debes aceptar los términos y condiciones", variant: "destructive" });
+        return;
       }
 
-      // Mostramos el error
-      toast({
-        title: title,
-        description: description,
-        variant: "destructive",
-      });
-    }
-  };
+      // Este log ahora es correcto, enviamos el objeto plano
+      console.log("Registration attempt:", formData);
+      try {
+        // 1. Usamos apiClient.post. Esto llamará a POST /users
+        //    y el proxy de Vite lo redirigirá a :8080
+        const response = await apiClient.post("/users", formData);
+
+        // 2. Si la petición es exitosa:
+        const data = response.data;
+        console.log("Registro exitoso:", data);
+        signup(data); // Guardamos la sesión
+        toast({ title: "¡Bienvenido!", description: "Tu cuenta ha sido creada." });
+        navigate('/'); // Redirigimos al inicio
+
+      } catch (err) {
+        // 3. Manejo de errores de Axios
+        const error = err as Error | AxiosError;
+        console.error('Error en el registro:', error.message);
+
+        let title = "Error en el registro";
+        let description = "Ocurrió un error inesperado. Intenta de nuevo.";
+
+        if (axios.isAxiosError(error)) {
+          if (error.response) {
+            // El backend respondió con un error
+            if (error.response.status === 409) { // 409 Conflict (email duplicado)
+              title = "Email en uso";
+              description = "Ese email ya está registrado. Prueba con otro.";
+            } else if (error.response.status === 400) { // 400 Bad Request
+              description = "Datos inválidos. Revisa el formulario.";
+            } else if (error.response.status === 500) {
+              description = "Error interno del servidor. Contacta a soporte.";
+            }
+          } else if (error.request) {
+            description = "No se pudo conectar con el servidor.";
+          }
+        }
+
+        // Mostramos el error
+        toast({
+          title: title,
+          description: description,
+          variant: "destructive",
+        });
+      }
+    };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -176,104 +126,19 @@ const Register = () => {
     }));
   };
 
-  // ... El resto de tu JSX (return) no cambia ...
-  return (
+    return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Join QuestEscapes
+              Join Trippy
             </h1>
             <p className="text-muted-foreground">
               Start your adventure or grow your business
             </p>
           </div>
 
-<<<<<<< HEAD
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader className="space-y-4">
-            <CardTitle className="text-center">Create Account</CardTitle>
-            <CardDescription className="text-center">
-              Choose your account type to get started
-            </CardDescription>
-            
-            {/* User Type Toggle */}
-            <div className="flex gap-2 p-1 bg-muted rounded-lg">
-              <Button
-                type="button"
-                variant={formData.userType === "TRAVELER" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => handleFieldChange("userType","TRAVELER")}
-                className="flex-1 gap-2"
-              >
-                <Plane className="h-4 w-4" />
-                Traveler
-              </Button>
-              <Button
-                type="button"
-                variant={formData.userType === "OWNER" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => handleFieldChange("userType","OWNER")}
-                className="flex-1 gap-2"
-              >
-                <Building2 className="h-4 w-4" />
-                Business
-              </Button>
-            </div>
-            
-            {/* User Type Description */}
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              {formData.userType === "traveler" ? (
-                <div className="space-y-1">
-                  <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
-                  <p className="text-sm text-muted-foreground">
-                    Book experiences, write reviews, earn XP and unlock achievements and discounts
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <Badge variant="secondary" className="mb-2 bg-experience text-experience-foreground">Business Account</Badge>
-                  <p className="text-sm text-muted-foreground">
-                    List your properties, manage bookings, and reach more customers
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Traveler-specific fields */}
-            {formData.userType === "TRAVELER" && (
-              <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        placeholder="John"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        placeholder="Doe"
-                        required
-                      />
-                    </div>
-                  </div>
-              </>
-            )}
-=======
           <Card className="bg-gradient-card shadow-card">
             <CardHeader className="space-y-4">
               <CardTitle className="text-center">Create Account</CardTitle>
@@ -284,182 +149,158 @@ const Register = () => {
               {/* User Type Toggle */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg">
                 <Button
-                    type="button"
-                    variant={userType === "traveler" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setUserType("traveler")}
-                    className="flex-1 gap-2"
+                  type="button"
+                  variant={formData.userType === "TRAVELER" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleFieldChange("userType","TRAVELER")}
+                  className="flex-1 gap-2"
                 >
                   <Plane className="h-4 w-4" />
                   Traveler
                 </Button>
                 <Button
-                    type="button"
-                    variant={userType === "owner" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setUserType("owner")}
-                    className="flex-1 gap-2"
+                  type="button"
+                  variant={formData.userType === "OWNER" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleFieldChange("userType","OWNER")}
+                  className="flex-1 gap-2"
                 >
                   <Building2 className="h-4 w-4" />
                   Business
                 </Button>
               </div>
->>>>>>> develop
 
               {/* User Type Description */}
               <div className="text-center p-3 bg-muted/50 rounded-lg">
-                {userType === "traveler" ? (
-                    <div className="space-y-1">
-                      <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
-                      <p className="text-sm text-muted-foreground">
-                        Book experiences, write reviews, earn XP and unlock achievements and discounts
-                      </p>
-                    </div>
+                {formData.userType === "traveler" ? (
+                  <div className="space-y-1">
+                    <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
+                    <p className="text-sm text-muted-foreground">
+                      Book experiences, write reviews, earn XP and unlock achievements and discounts
+                    </p>
+                  </div>
                 ) : (
-                    <div className="space-y-1">
-                      <Badge variant="secondary" className="mb-2 bg-experience text-experience-foreground">Business Account</Badge>
-                      <p className="text-sm text-muted-foreground">
-                        List your properties, manage bookings, and reach more customers
-                      </p>
-                    </div>
+                  <div className="space-y-1">
+                    <Badge variant="secondary" className="mb-2 bg-experience text-experience-foreground">Business Account</Badge>
+                    <p className="text-sm text-muted-foreground">
+                      List your properties, manage bookings, and reach more customers
+                    </p>
+                  </div>
                 )}
               </div>
             </CardHeader>
 
-<<<<<<< HEAD
-              {/* Business-specific fields */}
-              {formData.userType === "OWNER" && (
-                <>
-=======
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
->>>>>>> develop
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        placeholder="John"
-                        required
-                    />
-                  </div>
-<<<<<<< HEAD
-                    <div className="space-y-2">
-                      <Label htmlFor="businessType">Business Type</Label>
-                      <Select
-                        value={formData.businessType}
-                        onValueChange={(value) => handleFieldChange("businessType", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your business type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Hotel">Hotel</SelectItem>
-                          <SelectItem value="Restaurant">Restaurant</SelectItem>
-                          <SelectItem value="Tour">Tour Operator</SelectItem>
-                          <SelectItem value="Office">Office Space</SelectItem>
-                        </SelectContent>
-                      </Select>
+              {/* Traveler-specific fields */}
+              {formData.userType === "TRAVELER" && (
+                <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input
+                          id="firstName"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          placeholder="John"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input
+                          id="lastName"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          placeholder="Doe"
+                          required
+                        />
+                      </div>
                     </div>
-
                 </>
               )}
-=======
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        placeholder="Doe"
-                        required
-                    />
-                  </div>
-                </div>
->>>>>>> develop
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="john@example.com"
-                      required
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="john@example.com"
+                    required
                   />
                 </div>
 
                 {/* Business-specific fields */}
-                {userType === "owner" && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="businessName">Business Name</Label>
-                        <Input
-                            id="businessName"
-                            name="businessName"
-                            value={formData.businessName}
-                            onChange={handleInputChange}
-                            placeholder="Your business name"
-                            required
-                        />
-                      </div>
+                {formData.userType === "OWNER" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="businessName">Business Name</Label>
+                      <Input
+                        id="businessName"
+                        name="businessName"
+                        value={formData.businessName}
+                        onChange={handleInputChange}
+                        placeholder="Your business name"
+                        required
+                      />
+                    </div>
                       <div className="space-y-2">
                         <Label htmlFor="businessType">Business Type</Label>
-                        <Input
-                            id="businessType"
-                            name="businessType"
-                            value={formData.businessType}
-                            onChange={handleInputChange}
-                            placeholder="Hotel, Restaurant, Tour, etc."
-                            required
-                        />
+                        <Select
+                          value={formData.businessType}
+                          onValueChange={(value) => handleFieldChange("businessType", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your business type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Hotel">Hotel</SelectItem>
+                            <SelectItem value="Restaurant">Restaurant</SelectItem>
+                            <SelectItem value="Tour">Tour Operator</SelectItem>
+                            <SelectItem value="Office">Office Space</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    </>
+
+                  </>
                 )}
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      placeholder="Create a strong password"
-                      required
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Create a strong password"
+                    required
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      placeholder="Confirm your password"
-                      required
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Confirm your password"
+                    required
                   />
                 </div>
 
-<<<<<<< HEAD
-              <Button type="submit" className="w-full">
-                Create {formData.userType === "TRAVELER" ? "Traveler" : "Business"} Account
-              </Button>
-            </form>
-=======
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                      id="terms"
-                      checked={formData.agreeToTerms}
-                      onCheckedChange={handleCheckboxChange}
+                    id="terms"
+                    checked={formData.agreeToTerms}
+                    onCheckedChange={handleCheckboxChange}
                   />
                   <Label htmlFor="terms" className="text-sm">
                     I agree to the{" "}
@@ -474,10 +315,9 @@ const Register = () => {
                 </div>
 
                 <Button type="submit" className="w-full">
-                  Create {userType === "traveler" ? "Traveler" : "Business"} Account
+                  Create {formData.userType === "TRAVELER" ? "Traveler" : "Business"} Account
                 </Button>
               </form>
->>>>>>> develop
 
               <div className="mt-6 text-center text-sm">
                 <span className="text-muted-foreground">Already have an account? </span>
@@ -496,7 +336,7 @@ const Register = () => {
           </div>
         </div>
       </div>
-  );
-};
+    );
+  };
 
-export default Register;
+  export default Register;

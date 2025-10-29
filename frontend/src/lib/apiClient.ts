@@ -12,7 +12,7 @@ export const apiClient = axios.create({
 // Descomentamos el interceptor de peticiones
 apiClient.interceptors.request.use((config) => {
     // 3. Leemos el token que guardamos en AuthContext
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (token) {
         // 4. Si existe, lo ponemos en la cabecera 'Authorization'
         config.headers.Authorization = `Bearer ${token}`;
