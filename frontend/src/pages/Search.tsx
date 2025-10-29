@@ -56,7 +56,7 @@ const Search = () => {
       //const otherParams = obtenerOtrosParametros(); // tu lógica aquí
       
       const response = await apiClient.get<PublicationSummary[]>(`/publications/search?q=${query.toString()}`);
-      setPublications(response.results);
+      setPublications(response.data);
     } catch (error) {
       console.error('Error fetching search results:', error);
     } finally {
