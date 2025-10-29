@@ -1,5 +1,6 @@
 package ar.uba.fi.gestion.trippy.user;
 
+import ar.uba.fi.gestion.trippy.user.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

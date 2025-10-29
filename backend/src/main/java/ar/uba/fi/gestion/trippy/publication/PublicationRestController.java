@@ -1,3 +1,4 @@
+// Contenido de: PublicationRestController.java
 package ar.uba.fi.gestion.trippy.publication;
 
 // --- Imports Originales ---
@@ -67,6 +68,7 @@ public class PublicationRestController {
             @RequestBody HotelCreateDTO hotelRequest,
             @AuthenticationPrincipal JwtUserDetails authenticatedUser
     ) {
+        System.out.println("jwt User details: "+ authenticatedUser.toString());
         String hostEmail = authenticatedUser.username();
         PublicationDetailDTO newPublication = publicationService.createHotel(hotelRequest, hostEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(newPublication);
@@ -121,7 +123,16 @@ public class PublicationRestController {
         return ResponseEntity.status(404).body(ex.getMessage());
     }
 
-
+    // --- ¡¡NUEVO MANEJADOR DE EXCEPCIÓN!! ---
+    /**
+     * Captura la excepción de "permisos" del servicio y la convierte
+     * en una respuesta HTTP 403 (Forbidden).
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleForbidden(IllegalStateException ex) {
+        // Para "No tenés permisos..."
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
 
 
 //UPDATE 
@@ -177,4 +188,24 @@ public class PublicationRestController {
     ) {
         return ResponseEntity.ok(publicationService.updateRestaurantFields(id, dto, me.username()));
     }
+
+    // --- ¡¡NUEVO ENDPOINT DELETE!! ---
+
+    /**
+     * (Para US #31, #32, #33, #34)
+     * Elimina una publicación por su ID.
+     * Solo el propietario (Host) puede eliminarla.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePublication(
+            @PathVariable Long id,
+            @AuthenticationPrincipal JwtUserDetails authenticatedUser
+    ) {
+        // El servicio se encargará de la lógica y la validación de permisos
+        publicationService.deletePublication(id, authenticatedUser.username());
+
+        // 204 No Content: Éxito, no hay nada que devolver
+        return ResponseEntity.noContent().build();
+    }
+
 }

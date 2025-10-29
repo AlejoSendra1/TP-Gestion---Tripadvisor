@@ -1,6 +1,7 @@
 package ar.uba.fi.gestion.trippy.publication.dto;
 
 import ar.uba.fi.gestion.trippy.common.location.Location;
+
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +27,12 @@ public record PublicationDetailDTO(
     public record HostDTO(
             Long id,
             String name,
+            String email,
             String photoUrl // Incluimos el campo aunque no esté en User.java
             // Tu servicio lo pasará como 'null' por ahora,
             // ¡pero el frontend ya puede esperar este campo!
     ){}
 }
-
-// --- DTOs de ayuda que necesitarás crear ---
 
 // DTO simple para una reseña
 record ReviewDTO(Long id, String authorName, int rating, String comment) {}

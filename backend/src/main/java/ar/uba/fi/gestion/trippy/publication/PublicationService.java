@@ -1,9 +1,14 @@
 package ar.uba.fi.gestion.trippy.publication;
 
 // --- Imports Originales ---
+import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationDetailDTO;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationListDTO;
+import ar.uba.fi.gestion.trippy.user.BusinessOwner;
+import ar.uba.fi.gestion.trippy.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +34,8 @@ import ar.uba.fi.gestion.trippy.publication.dto.PublicationUpdateDTO;
 
 import ar.uba.fi.gestion.trippy.user.User; // <-- Para la entidad User
 import ar.uba.fi.gestion.trippy.user.UserRepository; // <-- ¡NUEVA dependencia!
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
 @Transactional(readOnly = true) // Por defecto, solo lectura
@@ -103,7 +110,7 @@ public class PublicationService {
         newHotel.setCapacity(dto.capacity());
 
         // 5. ¡Asignar el Host!
-        newHotel.setHost(hostUser);
+        newHotel.setHost((BusinessOwner) hostUser);
 
         // 6. Guardar en la DB
         Hotel savedHotel = publicationRepository.save(newHotel);
@@ -145,7 +152,7 @@ public class PublicationService {
         newActivity.setLanguage(dto.language());
 
         // 5. Asignar el Host
-        newActivity.setHost(hostUser);
+        newActivity.setHost((BusinessOwner) hostUser);
 
         // 6. Guardar en la DB
         Activity savedActivity = publicationRepository.save(newActivity);
@@ -185,7 +192,7 @@ public class PublicationService {
         newCoworking.setServices(dto.services() != null ? dto.services() : Collections.emptyList());
 
         // 5. Asignar el Host
-        newCoworking.setHost(hostUser);
+        newCoworking.setHost((BusinessOwner) hostUser);
 
         // 6. Guardar en la DB
         Coworking savedCoworking = publicationRepository.save(newCoworking);
@@ -226,7 +233,7 @@ public class PublicationService {
         newRestaurant.setMenuUrl(dto.menuUrl());
 
         // 5. Asignar el Host
-        newRestaurant.setHost(hostUser);
+        newRestaurant.setHost((BusinessOwner) hostUser);
 
         // 6. Guardar en la DB
         Restaurant savedRestaurant = publicationRepository.save(newRestaurant);
@@ -259,13 +266,14 @@ public class PublicationService {
     /**
      * Helper para convertir una Entidad en un DTO de Detalle.
      */
+
     private PublicationDetailDTO convertToDetailDTO(Publication p) {
 
         // Crea el DTO del Host
         PublicationDetailDTO.HostDTO hostDTO = null;
         if (p.getHost() != null) {
-            User host = p.getHost();
-            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getFirstname(), null); // Foto no disponible en User.java
+            BusinessOwner host = p.getHost();
+            hostDTO = new PublicationDetailDTO.HostDTO(host.getId(), host.getBusinessName(), host.getEmail(),null); // Foto no disponible en User.java
         }
 
         List<String> imageGallery = (p.getImageUrls() != null)
@@ -377,4 +385,24 @@ public class PublicationService {
 
         return convertToDetailDTO(publicationRepository.save(r));
     }
+
+    @Transactional // ¡MUY importante!
+    public void deletePublication(Long id, String hostEmail) {
+
+        // 1. Buscar la publicación
+        Publication publication = publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + id));
+
+        // 2. Validación de permisos (¡CRÍTICO!)
+        if (publication.getHost() == null || !publication.getHost().getEmail().equals(hostEmail)) {
+            // Usamos IllegalStateException o AccessDeniedException
+            throw new IllegalStateException("No tenés permisos para eliminar esta publicación.");
+        }
+
+        // 3. (VER PRÓXIMA SECCIÓN) Aquí debería ir la validación de reservas activas
+
+        // 4. Eliminar la publicación
+        publicationRepository.delete(publication);
+    }
+
 }

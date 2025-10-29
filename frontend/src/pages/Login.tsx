@@ -59,12 +59,15 @@ const Login = () => {
                 }
             }
 
+            console.error(`HTTP error! Status: ${response.status}`);
+            console.error(`HTTP error! Status: ${response.body}`);
             // Mostramos el error
             toast({
                 title: title,
                 description: description,
                 variant: "destructive",
             });
+
         }
     };
 
@@ -93,51 +96,10 @@ const Login = () => {
                     <CardHeader className="space-y-4">
                         <CardTitle className="text-center">Sign In</CardTitle>
                         <CardDescription className="text-center">
-                            Choose your account type and enter your credentials
+                            Discover and book amazing experiences, leave reviews, and earn XP
+                                                            or
+                            Manage your hotels, restaurants, tours and connect with travelers
                         </CardDescription>
-
-                        {/* User Type Toggle */}
-                        <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                            <Button
-                                type="button"
-                                variant={userType === "traveler" ? "default" : "ghost"}
-                                size="sm"
-                                onClick={() => setUserType("traveler")}
-                                className="flex-1 gap-2"
-                            >
-                                <Plane className="h-4 w-4" />
-                                Traveler
-                            </Button>
-                            <Button
-                                type="button"
-                                variant={userType === "owner" ? "default" : "ghost"}
-                                size="sm"
-                                onClick={() => setUserType("owner")}
-                                className="flex-1 gap-2"
-                            >
-                                <MapPin className="h-4 w-4" />
-                                Owner
-                            </Button>
-                        </div>
-
-                        {/* User Type Description */}
-                        <div className="text-center p-3 bg-muted/50 rounded-lg">
-                            {userType === "traveler" ? (
-                                <div className="space-y-1">
-                                    <Badge variant="secondary" className="mb-2">Traveler Account</Badge>
-                                    <p className="text-sm text-muted-foreground">
-                                        Discover and book amazing experiences, leave reviews, and earn XP
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="space-y-1">
-                                    <Badge variant="secondary" className="mb-2 bg-experience text-experience-foreground">Business Account</Badge>
-                                    <p className="text-sm text-muted-foreground">
-                                        Manage your hotels, restaurants, tours and connect with travelers
-                                    </p>
-                                </div>
-                            )}
-                        </div>
                     </CardHeader>
 
                     <CardContent>

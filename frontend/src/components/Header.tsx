@@ -22,7 +22,7 @@ export function Header() {
                         className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                     >
                         <div className="w-10 h-10 flex items-center justify-center">
-                            <img src="/src/assets/naranjita.png" />
+                            <img src="/trippy_logo.png" />
                         </div>
                         <h1 className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
                             Trippy
