@@ -15,6 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,28 @@ public class PublicationService {
     public List<PublicationListDTO> getAllPublications() {
         return publicationRepository.findAll()
                 .stream()
+                .map(this::convertToListDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<PublicationDetailDTO> searchPublications(
+        String q,
+        String category,
+        String location,
+        BigDecimal minPrice,
+        BigDecimal maxPrice
+    ) {
+        return publicationRepository.searchPublications(
+                q, category, location, minPrice, maxPrice
+        ).stream()
+         .map(this::convertToDetailDTO)
+         .collect(Collectors.toList());
+    }
+
+    public List<PublicationListDTO> findByTitle(String title) {
+        List<Publication> result = publicationRepository.findByTitleContainingIgnoreCase(title);
+        System.out.println("\n\n\n\nFound " + result.size() + " publications with title containing: " + title);
+        return result.stream()
                 .map(this::convertToListDTO)
                 .collect(Collectors.toList());
     }

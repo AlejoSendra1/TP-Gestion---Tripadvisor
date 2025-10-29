@@ -14,9 +14,13 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class Location {
 
+    @Column(columnDefinition = "TEXT")
     private String streetAddress;
+    @Column(columnDefinition = "TEXT")
     private String city;
+    @Column(columnDefinition = "TEXT")
     private String state; // Provincia o Estado
+    @Column(columnDefinition = "TEXT")
     private String country;
     @Column(name = "zip_code")
     private String zipCode;

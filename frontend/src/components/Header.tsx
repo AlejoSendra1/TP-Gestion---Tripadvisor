@@ -1,8 +1,14 @@
+
+import { Link } from "react-router-dom";
+
 import { Search, User, Trophy, Star, PlusCircle } from "lucide-react"; // Añadimos PlusCircle
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+
 import { Link } from "react-router-dom";
 import { DinamicHeaderSide } from "@/components/DinamicHeaderSide";
 import { useAuth } from "@/hooks/use-auth"; // <-- 1. Importamos el hook de Auth

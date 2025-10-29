@@ -17,7 +17,9 @@ public abstract class Publication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String description;
     private double price; // Precio base (ej. por noche, por persona, etc.)
 

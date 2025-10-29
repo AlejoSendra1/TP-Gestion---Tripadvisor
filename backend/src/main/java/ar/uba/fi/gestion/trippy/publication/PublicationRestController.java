@@ -8,7 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.math.BigDecimal;
 import java.util.List;
 
 // --- Imports NUEVOS ---
@@ -56,6 +56,32 @@ public class PublicationRestController {
         PublicationDetailDTO publication = publicationService.getPublicationById(id);
         return ResponseEntity.ok(publication);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<PublicationListDTO>> searchPublications(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) BigDecimal minRating
+    ) {
+        /*
+        // Si category o location son "all", los convertimos a null
+        String categoryFilter = (category != null && category.equals("all")) ? null : category;
+        String locationFilter = (location != null && location.equals("all")) ? null : location;
+        
+        // Implementación del endpoint de búsqueda
+        List<PublicationDetailDTO> results = publicationService.searchPublications(
+            q, categoryFilter, locationFilter, minPrice, maxPrice
+        );
+        */
+        System.out.println("\n\n\n\n\nReceived search request with query: " + q);
+        List<PublicationListDTO> results = publicationService.findByTitle(q);
+
+        return ResponseEntity.ok(results);
+    }
+
 
     // --- ENDPOINTS DE CREACIÓN (POST) ---
 
@@ -112,8 +138,7 @@ public class PublicationRestController {
         PublicationDetailDTO newPublication = publicationService.createRestaurant(restaurantRequest, hostEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(newPublication);
     }
-
-
+  
     /**
      * Captura la excepción del servicio y la convierte en una
      * respuesta HTTP 404 (Not Found) limpia. (Ya lo tenías)

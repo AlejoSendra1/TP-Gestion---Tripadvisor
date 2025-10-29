@@ -9,6 +9,7 @@ import { PublicationList } from "@/components/PublicationList";
 import { usePublications } from "@/hooks/usePublications";
 // 3. (Opcional pero recomendado) Importamos el Skeleton
 import { Skeleton } from "@/components/ui/skeleton";
+import SearchBar from "@/components/SearchBar";
 
 const Index = () => {
     // 4. ¡AQUÍ ESTÁ LA MAGIA!
@@ -70,7 +71,7 @@ const Index = () => {
                 <div className="container mx-auto px-4">
                     <div className="text-center">
                         <h3 className="text-2xl font-bold mb-4 bg-gradient-hero bg-clip-text text-transparent">
-                            QuestEscapes
+                            Trippy
                         </h3>
                         <p className="text-muted-foreground mb-4">
                             Discover amazing places, share your experiences, and earn XP rewards

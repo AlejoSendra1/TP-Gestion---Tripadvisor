@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { ExperienceCard } from "@/components/ExperienceCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,86 +8,22 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Search as SearchIcon, Filter, MapPin, Star, DollarSign } from "lucide-react";
+import { Search as SearchIcon, Filter, MapPin, Star, DollarSign, Loader2 } from "lucide-react";
+import SearchBar from "@/components/SearchBar";
+import { apiClient } from "@/lib/apiClient";
+import { PublicationList } from "@/components/PublicationList";
 
-import hotelExample from "@/assets/hotel-example.jpg";
-import restaurantExample from "@/assets/restaurant-example.jpg";
-import tourExample from "@/assets/tour-example.jpg";
+export type PublicationSummary = {
+    id: string; // Es 'Long' en Java, pero en TS/JS lo manejamos como string
+    title: string;
+    price: number; // Es 'double' en Java
+    city: string;
+    country: string;
+    mainImageUrl: string;
+    publicationType: string;
+};
 
-const allExperiences = [
-  {
-    id: 1,
-    title: "Grand Hotel Paradise",
-    category: "hotel",
-    location: "Bali, Indonesia",
-    rating: 4.8,
-    reviews: 324,
-    price: 150,
-    image: hotelExample,
-    xpReward: 50,
-    description: "Luxury beachfront resort with stunning ocean views"
-  },
-  {
-    id: 2,
-    title: "Sakura Sushi Bar",
-    category: "restaurant",
-    location: "Tokyo, Japan",
-    rating: 4.9,
-    reviews: 156,
-    price: 80,
-    image: restaurantExample,
-    xpReward: 30,
-    description: "Authentic Japanese cuisine in the heart of Tokyo"
-  },
-  {
-    id: 3,
-    title: "Machu Picchu Adventure",
-    category: "tour",
-    location: "Cusco, Peru",
-    rating: 4.7,
-    reviews: 89,
-    price: 200,
-    image: tourExample,
-    xpReward: 100,
-    description: "Guided hiking tour to the ancient Inca citadel"
-  },
-  {
-    id: 4,
-    title: "Ocean Breeze Hotel",
-    category: "hotel",
-    location: "Maldives",
-    rating: 4.9,
-    reviews: 245,
-    price: 300,
-    image: hotelExample,
-    xpReward: 60,
-    description: "Overwater bungalows in paradise"
-  },
-  {
-    id: 5,
-    title: "Pasta & Co",
-    category: "restaurant",
-    location: "Rome, Italy",
-    rating: 4.6,
-    reviews: 198,
-    price: 45,
-    image: restaurantExample,
-    xpReward: 25,
-    description: "Traditional Italian pasta in cozy setting"
-  },
-  {
-    id: 6,
-    title: "Safari Adventure",
-    category: "tour",
-    location: "Serengeti, Tanzania",
-    rating: 4.8,
-    reviews: 67,
-    price: 350,
-    image: tourExample,
-    xpReward: 120,
-    description: "Wildlife safari experience of a lifetime"
-  },
-];
+const API_URL = import.meta.env.VITE_BASE_API_URL || 'http://localhost:8080';
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -98,40 +33,102 @@ const Search = () => {
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState("relevance");
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchTerm) params.set("q", searchTerm);
-    if (selectedCategory !== "all") params.set("category", selectedCategory);
-    if (selectedLocation !== "all") params.set("location", selectedLocation);
-    setSearchParams(params);
+  
+  const [publications, setPublications] = useState<PublicationSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [query, setQuery] = useState('');
+  const handleSearch = (searchQuery) => {
+    setQuery(searchQuery);
   };
 
-  const filteredExperiences = allExperiences.filter((experience) => {
-    const matchesSearch = searchTerm === "" ||
-      experience.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      experience.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      experience.description.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    if (query) {
+      fetchSearchResults();
+    }
+  }, [query]);
 
-    const matchesCategory = selectedCategory === "all" || experience.category === selectedCategory;
-    const matchesLocation = selectedLocation === "all" || experience.location.includes(selectedLocation);
-    const matchesPrice = experience.price >= priceRange[0] && experience.price <= priceRange[1];
-    const matchesRating = experience.rating >= minRating;
+  const fetchSearchResults = async () => {
+    setLoading(true);
+    try {
+      // Aquí usas la query junto con otros parámetros que necesites
+      //const otherParams = obtenerOtrosParametros(); // tu lógica aquí
+      
+      const response = await apiClient.get<PublicationSummary[]>(`/publications/search?q=${query.toString()}`);
+      setPublications(response.data);
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // Cargar publications desde el backend
+  // useEffect(() => {
+  //   const fetchPublications = async () => {
+  //     setLoading(true);
+  //     setError(null);
+      
+  //     try {
+  //       const params = new URLSearchParams();
+  //       if (searchTerm) params.append('q', searchTerm);
+  //       if (selectedCategory !== 'all') params.append('category', selectedCategory);
+  //       if (selectedLocation !== 'all') params.append('location', selectedLocation);
+  //       params.append('minPrice', priceRange[0].toString());
+  //       params.append('maxPrice', priceRange[1].toString());
+  //       if (minRating > 0) params.append('minRating', minRating.toString());
 
-    return matchesSearch && matchesCategory && matchesLocation && matchesPrice && matchesRating;
-  });
+  //       const response = await apiClient.get<PublicationSummary[]>(`/publications/search?${params.toString()}`);
+        
+  //       if (!response.ok) {
+  //         throw new Error('Error al buscar experiencias');
+  //       }
+        
+  //       const data = await response.json();
+  //       setPublications(data);
+  //     } catch (err) {
+  //       setError(err instanceof Error ? err.message : 'Error desconocido');
+  //       console.error('Error fetching experiences:', err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-  const sortedExperiences = [...filteredExperiences].sort((a, b) => {
+  //   fetchPublications();
+  // }, [searchTerm, selectedCategory, selectedLocation, priceRange, minRating]);
+
+  // Cargar ubicaciones disponibles
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await apiClient.get<PublicationSummary[]>("/publications");
+        if (response.ok) {
+          const data = await response.json();
+          setLocations(data);
+        }
+      } catch (err) {
+        console.error('Error fetching locations:', err);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   const params = new URLSearchParams();
+  //   if (searchTerm) params.set("q", searchTerm);
+  //   if (selectedCategory !== "all") params.set("category", selectedCategory);
+  //   if (selectedLocation !== "all") params.set("location", selectedLocation);
+  //   setSearchParams(params);
+  // };
+
+  const sortedPublications = [...publications].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
         return a.price - b.price;
       case "price-high":
         return b.price - a.price;
-      case "rating":
-        return b.rating - a.rating;
-      case "xp":
-        return b.xpReward - a.xpReward;
       default:
         return 0;
     }
@@ -155,20 +152,9 @@ const Search = () => {
         {/* Search Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4 bg-gradient-hero bg-clip-text text-transparent">
-            Search Experiences
+            Buscar Experiencias
           </h1>
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search for hotels, restaurants, tours..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button type="submit">Search</Button>
-          </form>
+          <SearchBar onSearch={handleSearch} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -177,21 +163,21 @@ const Search = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                Filters
+                Filtros
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Category Filter */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Category</label>
+                <label className="text-sm font-medium mb-2 block">Categoría</label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="hotel">Hotels</SelectItem>
-                    <SelectItem value="restaurant">Restaurants</SelectItem>
+                    <SelectItem value="all">Todas las Categorías</SelectItem>
+                    <SelectItem value="hotel">Hoteles</SelectItem>
+                    <SelectItem value="restaurant">Restaurantes</SelectItem>
                     <SelectItem value="tour">Tours</SelectItem>
                   </SelectContent>
                 </Select>
@@ -199,19 +185,18 @@ const Search = () => {
 
               {/* Location Filter */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Location</label>
+                <label className="text-sm font-medium mb-2 block">Ubicación</label>
                 <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Locations</SelectItem>
-                    <SelectItem value="Bali">Bali</SelectItem>
-                    <SelectItem value="Tokyo">Tokyo</SelectItem>
-                    <SelectItem value="Rome">Rome</SelectItem>
-                    <SelectItem value="Maldives">Maldives</SelectItem>
-                    <SelectItem value="Peru">Peru</SelectItem>
-                    <SelectItem value="Tanzania">Tanzania</SelectItem>
+                    <SelectItem value="all">Todas las Ubicaciones</SelectItem>
+                    {locations.map((loc) => (
+                      <SelectItem key={loc} value={loc}>
+                        {loc}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -222,7 +207,7 @@ const Search = () => {
               <div>
                 <label className="text-sm font-medium mb-2 block flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
-                  Price Range: ${priceRange[0]} - ${priceRange[1]}
+                  Rango de Precio: ${priceRange[0]} - ${priceRange[1]}
                 </label>
                 <Slider
                   value={priceRange}
@@ -238,7 +223,7 @@ const Search = () => {
               <div>
                 <label className="text-sm font-medium mb-2 block flex items-center gap-2">
                   <Star className="h-4 w-4" />
-                  Minimum Rating: {minRating > 0 ? `${minRating}+` : "Any"}
+                  Rating Mínimo: {minRating > 0 ? `${minRating}+` : "Cualquiera"}
                 </label>
                 <Slider
                   value={[minRating]}
@@ -254,23 +239,23 @@ const Search = () => {
 
               {/* Sort Options */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Sort By</label>
+                <label className="text-sm font-medium mb-2 block">Ordenar Por</label>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="relevance">Relevance</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="rating">Highest Rated</SelectItem>
-                    <SelectItem value="xp">Most XP</SelectItem>
+                    <SelectItem value="relevance">Relevancia</SelectItem>
+                    <SelectItem value="price-low">Precio: Menor a Mayor</SelectItem>
+                    <SelectItem value="price-high">Precio: Mayor a Menor</SelectItem>
+                    <SelectItem value="rating">Mejor Valorados</SelectItem>
+                    <SelectItem value="xp">Más XP</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <Button variant="outline" onClick={clearFilters} className="w-full">
-                Clear All Filters
+                Limpiar Filtros
               </Button>
             </CardContent>
           </Card>
@@ -281,11 +266,11 @@ const Search = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-semibold">
-                  {sortedExperiences.length} experiences found
+                  {loading ? 'Buscando...' : `${sortedPublications.length} experiencias encontradas`}
                 </h2>
                 {searchTerm && (
                   <p className="text-muted-foreground">
-                    Search results for "{searchTerm}"
+                    Resultados para "{searchTerm}"
                   </p>
                 )}
               </div>
@@ -312,32 +297,39 @@ const Search = () => {
               </div>
             </div>
 
-            {/* Experience Grid */}
-            {sortedExperiences.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {sortedExperiences.map((experience) => (
-                  <ExperienceCard
-                    key={experience.id}
-                    id={experience.id.toString()}
-                    title={experience.title}
-                    category={experience.category as "hotel" | "restaurant" | "tour"}
-                    location={experience.location}
-                    rating={experience.rating}
-                    reviewCount={experience.reviews}
-                    price={experience.price.toString()}
-                    image={experience.image}
-                    xpReward={experience.xpReward}
-                  />
-                ))}
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : (
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="text-center py-12">
+                <p className="text-red-500 mb-4">Error: {error}</p>
+                <Button onClick={() => window.location.reload()}>
+                  Reintentar
+                </Button>
+              </div>
+            )}
+
+            {/* Publications Grid */}
+            {!loading && !error && sortedPublications.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PublicationList publications={publications} />
+              </div>
+            )}
+
+            {/* No Results */}
+            {!loading && !error && sortedPublications.length === 0 && (
               <div className="text-center py-12">
                 <SearchIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No experiences found</h3>
+                <h3 className="text-lg font-semibold mb-2">No se encontraron experiencias</h3>
                 <p className="text-muted-foreground mb-4">
-                  Try adjusting your search criteria or filters
+                  Intenta ajustar tus criterios de búsqueda o filtros
                 </p>
-                <Button onClick={clearFilters}>Clear Filters</Button>
+                <Button onClick={clearFilters}>Limpiar Filtros</Button>
               </div>
             )}
           </div>
