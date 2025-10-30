@@ -3,6 +3,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 import { AxiosError } from 'axios';
+import { SearchFilters } from "@/components/SearchFilters";
+
+export interface SearchFilters {
+  query?: string;
+}
 
 // El tipo (sin cambios)
 export type PublicationSummary = {
@@ -16,22 +21,40 @@ export type PublicationSummary = {
 };
 
 // La función de fetching (afuera)
-const fetchPublications = async (): Promise<PublicationSummary[]> => {
-    const response = await apiClient.get<PublicationSummary[]>("/publications");
-    console.log("Respuesta de la API:", response.data); // Tu log
-    return response.data;
+const fetchPublications = async (filters: SearchFilters): Promise<PublicationSummary[]> => {
+    
+    const hasFilters = Object.values(filters).some(value => value && value.trim() !== '');
+    
+    
+    if (!hasFilters) {
+        // Sin filtros: usar endpoint simple
+        const response = await apiClient.get<PublicationSummary[]>("/publications");
+        console.log("Respuesta de la API (todas las publicaciones):", response.data);
+        return response.data;
+    } else {
+        // Con filtros: usar endpoint de búsqueda con parámetros
+        const queryParams = new URLSearchParams();
+        
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value && value.trim() !== '') {
+                queryParams.append(key, value);
+            }
+        });
+
+        const url = `/publications/search?${queryParams.toString()}`;
+        const response = await apiClient.get<PublicationSummary[]>(url);
+        console.log("Respuesta de la API (búsqueda filtrada):", response.data);
+        return response.data;
+    }
 };
 
 // El hook usando useQuery
-export const usePublications = () => {
+export const usePublications = (filters: SearchFilters) => {
 
     // El 'data', 'isLoading' y 'error' te los da useQuery
     const { data, isLoading, error } = useQuery<PublicationSummary[], AxiosError>({
-        // Esta es la "llave" que se invalida
-        queryKey: ["publications"],
-
-        // La función que se ejecutará
-        queryFn: fetchPublications,
+        queryKey: ["publications", filters],
+        queryFn: () => fetchPublications(filters),
     });
 
     // Devolvemos los datos con los mismos nombres que antes

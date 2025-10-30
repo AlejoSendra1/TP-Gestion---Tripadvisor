@@ -59,7 +59,7 @@ public class PublicationRestController {
 
     @GetMapping("/search")
     public ResponseEntity<List<PublicationListDTO>> searchPublications(
-            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) BigDecimal minPrice,
@@ -76,8 +76,8 @@ public class PublicationRestController {
             q, categoryFilter, locationFilter, minPrice, maxPrice
         );
         */
-        System.out.println("\n\n\n\n\nReceived search request with query: " + q);
-        List<PublicationListDTO> results = publicationService.findByTitle(q);
+        System.out.println("\n\n\n\n\nReceived search request with query: " + query);
+        List<PublicationListDTO> results = publicationService.findByTitle(query);
 
         return ResponseEntity.ok(results);
     }
