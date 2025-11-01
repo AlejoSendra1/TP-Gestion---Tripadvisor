@@ -17,6 +17,10 @@ export const SearchFilters = () => {
         setFilters(prev => ({ ...prev, query }));
     };
 
+    const handleCategorySelect = (category: string | undefined) => {
+        setFilters(prev => ({ ...prev, category }));
+    };
+
     // 5. Esta función decide qué mostrar basado en el estado del hook
     const renderContent = () => {
         
@@ -66,7 +70,10 @@ export const SearchFilters = () => {
             </div>
             <div className="min-h-screen bg-background">
                 <Hero />
-                <Categories />
+                <Categories 
+                    selectedCategory={filters.category}
+                    onCategorySelect={handleCategorySelect}
+                />
                 {renderContent()}
             </div>
         </section>

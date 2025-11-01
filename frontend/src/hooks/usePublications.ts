@@ -7,6 +7,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 
 export interface SearchFilters {
   query?: string;
+  category?: string;
 }
 
 // El tipo (sin cambios)
@@ -27,7 +28,7 @@ const fetchPublications = async (filters: SearchFilters): Promise<PublicationSum
     
     
     if (!hasFilters) {
-        // Sin filtros: usar endpoint simple
+        // Sin filtros: usar endpoint para todos
         const response = await apiClient.get<PublicationSummary[]>("/publications");
         console.log("Respuesta de la API (todas las publicaciones):", response.data);
         return response.data;
