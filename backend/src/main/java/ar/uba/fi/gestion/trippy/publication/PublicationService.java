@@ -97,6 +97,11 @@ public class PublicationService {
                 .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada con ID: " + id));
     }
 
+    public Publication getPublicationById_(Long id) {
+        return publicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada con ID: " + id));
+    }
+
     // --- ¡NUEVO MÉTODO PARA US #23! ---
 
     /**

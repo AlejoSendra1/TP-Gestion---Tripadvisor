@@ -100,7 +100,6 @@ public class UserService {
         if (user.isEmpty()) {
             throw new EntityNotFoundException("User does not exist");
         }
-
         return user.get();
     }
 

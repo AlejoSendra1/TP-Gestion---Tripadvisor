@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useCreateReview } from "@/hooks/useCreateReview";
 
 // --- Hooks de datos ---
 import {
@@ -73,6 +74,9 @@ export default function ExperienceDetails() {
   const { mutate: performDelete, isPending: isDeleting } =
       useDeletePublication();
 
+  // hooks relacionados a reviews
+  const { mutate: createReview, isPending: isSubmittingReview } = useCreateReview();
+
   // --- Estados locales para UI (reseñas) ---
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
@@ -129,10 +133,22 @@ export default function ExperienceDetails() {
       xpEarned: xpReward,
     };
 
-    setComments([comment, ...comments]);
-    setNewComment("");
-    setRating(5);
-    // (Aquí iría la llamada al hook 'useCreateReview')
+    createReview(
+          {
+            publicationId: id,
+            reviewerEmail: user.email,
+            rating: rating,
+            reviewContent: newComment,
+          },
+          {
+            onSuccess: () => {
+              // Reset form after successful submission
+              setComments([comment, ...comments]);
+              setNewComment("");
+              setRating(5);
+            },
+          }
+        );
   };
 
   // --- Renderizado de Carga y Error ---

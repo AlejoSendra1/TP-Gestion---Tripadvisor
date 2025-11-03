@@ -70,9 +70,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/publications/{id}").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sessions").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/reviews").permitAll()
                         .anyRequest().authenticated()
                 )
-
+                //.requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("TRAVELER", "USER")
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling.authenticationEntryPoint(
                                 (request, response, authException) ->
