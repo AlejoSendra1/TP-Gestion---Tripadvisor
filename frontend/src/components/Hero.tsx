@@ -16,24 +16,20 @@ export function Hero({ onFiltersChange }: HeroProps) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (onFiltersChange) {
-      onFiltersChange({ query, category: selectedCategory });
+      onFiltersChange({ query });
     }
   };
 
   const handleCategorySelect = (category: string | undefined) => {
     setSelectedCategory(category);
     if (onFiltersChange) {
-      onFiltersChange({ query: searchQuery, category });
+      onFiltersChange({ category: category || ''});
     }
   };
 
   const handleAdvancedFiltersChange = (filters: any) => {
     if (onFiltersChange) {
-      onFiltersChange({ 
-        query: searchQuery, 
-        category: selectedCategory,
-        ...filters 
-      });
+      onFiltersChange(filters);
     }
   };
 
@@ -84,7 +80,7 @@ export function Hero({ onFiltersChange }: HeroProps) {
         <SearchFilters 
           onSearch={handleSearch}
           onCategorySelect={handleCategorySelect}
-          onFiltersChange={onFiltersChange}
+          onFiltersChange={handleAdvancedFiltersChange}
           selectedCategory={selectedCategory}
         />
       </div>

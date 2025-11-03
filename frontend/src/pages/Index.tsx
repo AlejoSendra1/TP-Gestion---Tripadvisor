@@ -11,7 +11,10 @@ const Index = () => {
     const [filters, setFilters] = useState<SearchFiltersType>({});
     const { publications, isLoading, error } = usePublications(filters);
     const handleFiltersChange = (newFilters: any) => {
-        setFilters(newFilters);
+        setFilters(prevFilters => ({
+            ...prevFilters,
+            ...newFilters
+        }));
     };
 
     return (

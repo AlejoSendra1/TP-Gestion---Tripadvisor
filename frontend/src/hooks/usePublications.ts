@@ -8,6 +8,8 @@ import { SearchFilters } from "@/components/SearchFilters";
 export interface SearchFilters {
   query?: string;
   category?: string;
+  minPrice?: string;
+  maxPrice?: string;
 }
 
 // El tipo (sin cambios)
