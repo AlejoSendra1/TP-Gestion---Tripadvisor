@@ -21,6 +21,10 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
           AND (:category IS NULL OR p.tipo_publicacion = :category)
           AND (:minPrice IS NULL OR p.price >= :minPrice)
           AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+          AND (:location IS NULL OR 
+           LOWER(p.city) LIKE LOWER(CONCAT('%', :location, '%')) OR
+           LOWER(p.country) LIKE LOWER(CONCAT('%', :location, '%')) OR
+           LOWER(p.state) LIKE LOWER(CONCAT('%', :location, '%')))
         ORDER BY p.title DESC
         """, nativeQuery = true)
     List<Publication> searchPublications(
