@@ -1,14 +1,48 @@
 // src/components/PublicationList.tsx
 import { ExperienceCard } from "./ExperienceCard";
+import { Skeleton } from "@/components/ui/skeleton";
 // 1. Importamos el tipo desde el hook
 import { PublicationSummary } from "@/hooks/usePublications";
 
-type PublicationListProps = {
-  // 2. Usamos el tipo correcto en las props
+interface PublicationListProps {
   publications: PublicationSummary[];
-};
+  isLoading?: boolean;
+  error?: Error | null;
+}
 
-export function PublicationList({ publications }: PublicationListProps) {
+export function PublicationList({ publications, isLoading, error }: PublicationListProps) {
+      
+  //Si 'isLoading' es true, mostramos Skeletons
+  if (isLoading) {
+      return (
+          <div className="container mx-auto px-4 py-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Creamos un array "falso" de 6 items para los skeletons */}
+                  {[...Array(6)].map((_, i) => (
+                      <div key={i} className="flex flex-col space-y-3">
+                          <Skeleton className="h-[225px] w-full rounded-xl" />
+                          <div className="space-y-2">
+                              <Skeleton className="h-4 w-[250px]" />
+                              <Skeleton className="h-4 w-[200px]" />
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      );
+  }
+
+  //Si hay error, lo mostramos
+  if (error) {
+      return (
+          <div className="container mx-auto px-4 py-16 text-center">
+              <p className="text-destructive text-lg">
+                  ¡Oops! No pudimos cargar las experiencias. ({error.message})
+              </p>
+          </div>
+      );
+  }
+  
   return (
       <section className="py-16">
         <div className="container mx-auto px-4">
