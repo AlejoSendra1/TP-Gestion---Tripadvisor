@@ -1,4 +1,4 @@
-import { Building2, UtensilsCrossed, Mountain, Coffee, Camera, Plane } from "lucide-react";
+import { Building2, UtensilsCrossed, Mountain, Briefcase } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -20,36 +20,20 @@ const categories = [
     count: "8,923",
   },
   {
-    id: "tour",
-    name: "Tours",
+    id: "activity",
+    name: "Activity",
     icon: Mountain,
     color: "bg-adventure",
     selectedColor: "bg-primary/80",
     count: "5,432",
   },
   {
-    id: "cafe",
-    name: "Cafes",
-    icon: Coffee,
+    id: "coworking",
+    name: "Coworking",
+    icon: Briefcase,
     color: "bg-experience",
     selectedColor: "bg-primary/80",
     count: "3,821",
-  },
-  {
-    id: "attraction",
-    name: "Attractions",
-    icon: Camera,
-    color: "bg-success",
-    selectedColor: "bg-primary/80",
-    count: "7,234",
-  },
-  {
-    id: "flight",
-    name: "Flights",
-    icon: Plane,
-    color: "bg-secondary",
-    selectedColor: "bg-primary/80",
-    count: "15,678",
   },
 ];
 
@@ -82,7 +66,7 @@ export function Categories({ selectedCategory, onCategorySelect }: CategoriesPro
         </div>
           */}
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((category) => {
             const IconComponent = category.icon;
             const isSelected = selectedCategory === category.id;
