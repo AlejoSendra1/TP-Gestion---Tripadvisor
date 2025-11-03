@@ -14,15 +14,13 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
     // findById(id) funcionará perfecto.
     List<Publication> findByTitleContainingIgnoreCase(String title);
     
-    @Query("SELECT e FROM Publication e WHERE " +
-           "(:query IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(e.description) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(e.location) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
-           "(:category IS NULL OR TYPE(e) = :category) AND " +
-           "(:location IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :location, '%'))) AND " +
-           "(:minPrice IS NULL OR e.price >= :minPrice) AND " +
-           "(:maxPrice IS NULL OR e.price <= :maxPrice) " +
-           "ORDER BY e.title DESC")
+    @Query(value = """
+        SELECT p.* FROM publication p 
+        WHERE (:query IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) 
+               OR LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%')))
+          AND (:category IS NULL OR p.tipo_publicacion = :category)
+        ORDER BY p.title DESC
+        """, nativeQuery = true)
     List<Publication> searchPublications(
         @Param("query") String query,
         @Param("category") String category,

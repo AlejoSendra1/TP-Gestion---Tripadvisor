@@ -24,8 +24,24 @@ export function Hero() {
         </h1>
         
         <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto">
-          HOLAAAAA Share your travel experiences, gain XP points, and unlock exclusive rewards while helping fellow travelers discover amazing places.
+          Share your travel experiences, gain XP points, and unlock exclusive rewards while helping fellow travelers discover amazing places.
         </p>
+        
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-8 mt-12 max-w-md mx-auto">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-white">50K+</div>
+            <div className="text-white/80">Experiences</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-white">25K+</div>
+            <div className="text-white/80">Travelers</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-white">1M+</div>
+            <div className="text-white/80">XP Earned</div>
+          </div>
+        </div>
 
         {/* Search Card */}
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-hero max-w-3xl mx-auto">
@@ -54,21 +70,6 @@ export function Hero() {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-8 mt-12 max-w-md mx-auto">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">50K+</div>
-            <div className="text-white/80">Experiences</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">25K+</div>
-            <div className="text-white/80">Travelers</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">1M+</div>
-            <div className="text-white/80">XP Earned</div>
-          </div>
-        </div>
       </div>
     </section>
   );

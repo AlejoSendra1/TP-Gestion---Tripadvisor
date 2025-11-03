@@ -10,6 +10,7 @@ import { SearchBar } from "@/components/SearchBar";
 export const SearchFilters = () => {
     const [filters, setFilters] = useState<SearchFiltersType>({
         query: '',
+        category: '',
     });
 
     const { publications, isLoading, error } = usePublications(filters);
@@ -69,11 +70,11 @@ export const SearchFilters = () => {
                 <SearchBar onSearch={handleTitleSearch} />
             </div>
             <div className="min-h-screen bg-background">
-                <Hero />
                 <Categories 
                     selectedCategory={filters.category}
                     onCategorySelect={handleCategorySelect}
                 />
+                <Hero />
                 {renderContent()}
             </div>
         </section>

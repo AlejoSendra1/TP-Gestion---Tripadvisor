@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const categories = [
   {
-    id: "hotels",
+    id: "hotel",
     name: "Hotels",
     icon: Building2,
     color: "bg-primary",
@@ -12,7 +12,7 @@ const categories = [
     count: "12,543",
   },
   {
-    id: "restaurants",
+    id: "restaurant",
     name: "Restaurants",
     icon: UtensilsCrossed,
     color: "bg-accent",
@@ -20,7 +20,7 @@ const categories = [
     count: "8,923",
   },
   {
-    id: "tours",
+    id: "tour",
     name: "Tours",
     icon: Mountain,
     color: "bg-adventure",
@@ -28,7 +28,7 @@ const categories = [
     count: "5,432",
   },
   {
-    id: "cafes",
+    id: "cafe",
     name: "Cafes",
     icon: Coffee,
     color: "bg-experience",
@@ -36,7 +36,7 @@ const categories = [
     count: "3,821",
   },
   {
-    id: "attractions",
+    id: "attraction",
     name: "Attractions",
     icon: Camera,
     color: "bg-success",
@@ -44,7 +44,7 @@ const categories = [
     count: "7,234",
   },
   {
-    id: "flights",
+    id: "flight",
     name: "Flights",
     icon: Plane,
     color: "bg-secondary",
@@ -71,6 +71,7 @@ export function Categories({ selectedCategory, onCategorySelect }: CategoriesPro
   return (
     <section className="py-16 bg-secondary/30">
       <div className="container mx-auto px-4">
+          {/*
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Explore by Category
@@ -79,6 +80,7 @@ export function Categories({ selectedCategory, onCategorySelect }: CategoriesPro
             Discover amazing experiences and earn XP points by sharing your reviews in different categories
           </p>
         </div>
+          */}
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {categories.map((category) => {
