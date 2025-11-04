@@ -107,7 +107,6 @@ VALUES (
 );
 
 
--- Asumimos que la tabla se llama 'review'
 INSERT INTO review (review_id, publication_id, user_id, publication_rating, review_content, created_at)
 VALUES
     (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2024-05-20 08:00:00'),
@@ -116,3 +115,5 @@ VALUES
 -- ACTUALIZA EL CONTADOR DE IDS
 -- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1
 SELECT setval('publication_id_seq', (SELECT MAX(id) FROM publication));
+SELECT setval('review_review_id_seq', (SELECT MAX(review_id) FROM review));
+

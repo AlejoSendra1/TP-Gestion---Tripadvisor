@@ -121,29 +121,20 @@ export default function ExperienceDetails() {
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
 
-    createReview(
-          {
+    createReview({
             publicationId: id,
             reviewerEmail: user.email,
             rating: rating,
             reviewContent: newComment,
-          },
-          {
-            onSuccess: () => {
-              // Reset form after successful submission
-              setNewComment("");
-              setComments([comment, ...comments]);
-              setRating(5);
-            },
-          }
-        );
+    });
+    setNewComment("");
+    setRating(5);
   };
 
   // --- Renderizado de Carga y Error ---
   if (isLoading) {
     return (
         <div className="min-h-screen bg-background">
-          <Header userXP={2450} userLevel={12} />
           <div className="container mx-auto px-4 py-8 text-center">
             <h1 className="text-2xl font-bold">Cargando...</h1>
           </div>
@@ -154,7 +145,6 @@ export default function ExperienceDetails() {
   if (isError || !publication) {
     return (
         <div className="min-h-screen bg-background">
-          <Header userXP={2450} userLevel={12} />
           <div className="container mx-auto px-4 py-8 text-center">
             <h1 className="text-2xl font-bold mb-4">
               Experiencia no encontrada

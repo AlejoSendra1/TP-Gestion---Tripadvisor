@@ -55,6 +55,9 @@ export function useCreateReview() {
       queryClient.invalidateQueries({
         queryKey: ['publication', variables.publicationId]
       });
+      queryClient.invalidateQueries({
+        queryKey: ['reviews', variables.publicationId]  // ← Add this!
+      });
 
       toast({
         title: '✅ ¡Reseña enviada!',
