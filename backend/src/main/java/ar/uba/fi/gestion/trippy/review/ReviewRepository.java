@@ -1,7 +1,6 @@
 package ar.uba.fi.gestion.trippy.review;
 
 import ar.uba.fi.gestion.trippy.publication.Publication;
-import ar.uba.fi.gestion.trippy.review.dto.ReviewResponseDTO;
 import ar.uba.fi.gestion.trippy.user.Traveler;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

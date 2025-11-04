@@ -48,13 +48,12 @@ import {
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
-  id: number;
-  user: string;
+  username: string;
+  userLastname: string;
   avatar: string;
   rating: number;
-  date: string;
+  createdAt: string;
   text: string;
-  xpEarned: number;
 };
 
 export default function ExperienceDetails() {
@@ -92,16 +91,13 @@ export default function ExperienceDetails() {
 
   const reviewsArray = reviewPage?.content || [];
   const displayReviews: DisplayReview[] = reviewsArray.map((review: ReviewDTO) => ({
-    id: review.id,
-    user: review.username,
+    username: review.username,
+    userLastname: review.userLastname,
     avatar: review.username.substring(0, 2).toUpperCase(),
     rating: review.rating,
-    date: review.date || "Justo ahora",
+    date: review.createdAt || "Justo ahora",
     text: review.reviewContent,
-    xpEarned: review.xpEarned || 30,
   }));
-
-
 
   // --- Estados Derivados (para Rating) ---
   const avgRating =
@@ -125,16 +121,6 @@ export default function ExperienceDetails() {
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
 
-    const comment: DisplayReview = {
-      id: comments.length + 1, // ID local temporal
-      user: "Tú",
-      avatar: "TÚ",
-      rating,
-      date: "Justo ahora",
-      text: newComment,
-      xpEarned: xpReward,
-    };
-
     createReview(
           {
             publicationId: id,
@@ -145,8 +131,8 @@ export default function ExperienceDetails() {
           {
             onSuccess: () => {
               // Reset form after successful submission
-              setComments([comment, ...comments]);
               setNewComment("");
+              setComments([comment, ...comments]);
               setRating(5);
             },
           }
@@ -204,7 +190,6 @@ export default function ExperienceDetails() {
   // --- Renderizado Principal (JSX) ---
   return (
       <div className="min-h-screen bg-background">
-        <Header userXP={2450} userLevel={12} />
 
         <div className="container mx-auto px-4 py-8">
           {/* Botón Volver */}
@@ -377,7 +362,7 @@ export default function ExperienceDetails() {
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium">{comment.user}</span>
+                                <span className="font-medium">{comment.username} {comment.userLastname}</span>
                                 <div className="flex items-center">
                                   {[...Array(comment.rating)].map((_, i) => (
                                       <Star
@@ -389,9 +374,6 @@ export default function ExperienceDetails() {
                                 <span className="text-sm text-muted-foreground">
                                      {comment.date}
                                 </span>
-                                <Badge variant="outline" className="text-xs">
-                                  +{comment.xpEarned} XP
-                                </Badge>
                               </div>
                               <p className="text-muted-foreground">
                                 {comment.text}

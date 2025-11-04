@@ -106,12 +106,12 @@ VALUES (
     3
 );
 
--- Asumimos que la tabla se llama 'review'
-INSERT INTO review (review_id, publication_id, user_id, publication_rating, review_content)
-VALUES
-    (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.'),
-    (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.');
 
+-- Asumimos que la tabla se llama 'review'
+INSERT INTO review (review_id, publication_id, user_id, publication_rating, review_content, created_at)
+VALUES
+    (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2024-05-20 08:00:00'),
+    (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2024-05-20 08:00:00');
 
 -- ACTUALIZA EL CONTADOR DE IDS
 -- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1

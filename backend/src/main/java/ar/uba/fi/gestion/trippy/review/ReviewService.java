@@ -32,19 +32,19 @@ public class ReviewService {
     }
 
     public ReviewResponseDTO createReview(CreateReviewDTO data) {
-        // 1. Fetch the publication
+        // Fetch the publication
         Publication publication = publicationService.getPublicationById_(data.publicationId());
 
-        // 2. Fetch the user
+        // Fetch the user
         Traveler user = (Traveler) userService.getUserByEmail(data.getReviewerEmail());
 
-        // Optional: Check if user already reviewed this publication
+        // if user already reviewed this publication - shouldn't be able to submit
         if (reviewRepository.existsByPublicationAndReviewer(publication, user)) {
-            //throw new DuplicateReviewException("You already reviewed this publication");
+            //throw new DuplicateReviewException("You already reviewed this publication"); TODO
             throw new EntityNotFoundException("You already reviewed this publication");
         }
 
-        // 3. Create the review entity
+        // Create the review entity
         Review review = new Review(
                 publication,
                 user,
@@ -52,7 +52,6 @@ public class ReviewService {
                 data.reviewContent()
         );
 
-        // 4. Save and return
         Review savedReview = reviewRepository.save(review);
         return mapToResponseDTO(savedReview);
     }
@@ -60,8 +59,10 @@ public class ReviewService {
     private ReviewResponseDTO mapToResponseDTO(Review review) {
         return new ReviewResponseDTO(
                 review.getReviewer().getFirstName(),
+                review.getReviewer().getLastName(),
                 review.getPublicationRating(),
-                review.getReviewContent()
+                review.getReviewContent(),
+                review.getCreatedAt()
         );
     }
 

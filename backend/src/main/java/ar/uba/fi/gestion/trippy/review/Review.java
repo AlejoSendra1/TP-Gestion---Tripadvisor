@@ -3,8 +3,11 @@ package ar.uba.fi.gestion.trippy.review;
 
 import ar.uba.fi.gestion.trippy.publication.Publication;
 import ar.uba.fi.gestion.trippy.user.Traveler;
-import ar.uba.fi.gestion.trippy.user.User;
+
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "review")
@@ -27,6 +30,10 @@ public class Review {
     @Column(columnDefinition = "TEXT",  nullable = false)
     private String reviewContent;
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false, name = "created_at")
+    private LocalDateTime createdAt;
+
     public Review(){}
 
     public Review(Publication publication,Traveler creator,Short rating , String content){
@@ -43,4 +50,5 @@ public class Review {
     public Traveler getReviewer(){ return reviewer;}
     public Short getPublicationRating(){ return publicationRating;}
     public String getReviewContent(){ return reviewContent;}
+    public LocalDateTime getCreatedAt(){ return createdAt;}
 }
