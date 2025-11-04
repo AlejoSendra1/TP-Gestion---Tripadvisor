@@ -27,6 +27,8 @@ public class Review {
     @Column(columnDefinition = "TEXT",  nullable = false)
     private String reviewContent;
 
+    public Review(){}
+
     public Review(Publication publication,Traveler creator,Short rating , String content){
         this.publication = publication;
         this.reviewer = creator;

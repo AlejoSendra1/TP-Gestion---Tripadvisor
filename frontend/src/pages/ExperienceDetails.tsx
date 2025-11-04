@@ -1,5 +1,3 @@
-// src/pages/ExperienceDetails.tsx
-
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCreateReview } from "@/hooks/useCreateReview";
@@ -7,13 +5,14 @@ import { useCreateReview } from "@/hooks/useCreateReview";
 // --- Hooks de datos ---
 import {
   usePublicationDetail,
-  type ReviewDTO,
 } from "@/hooks/usePublicationDetail";
 import { useDeletePublication } from "@/hooks/useDeletePublication"; // <-- HOOK DE BORRADO
+import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 
 // --- Hooks de UI y Auth ---
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+
 
 // --- Componentes de UI (shadcn/ui) ---
 import { Header } from "@/components/Header";
@@ -63,7 +62,7 @@ export default function ExperienceDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // --- Hook para OBTENER datos ---
+  // --- Hook para OBTENER datos de la publicación ---
   const {
     data: publication,
     isLoading,
@@ -76,6 +75,12 @@ export default function ExperienceDetails() {
 
   // hooks relacionados a reviews
   const { mutate: createReview, isPending: isSubmittingReview } = useCreateReview();
+  // --- Hook para OBTENER datos de las reviews ---
+  const {
+        data: reviewPage,
+        isLoading: isLoadingReviews,
+        isError: isErrorReviews,
+  } = useReviews(id);
 
   // --- Estados locales para UI (reseñas) ---
   const [newComment, setNewComment] = useState("");
@@ -85,21 +90,18 @@ export default function ExperienceDetails() {
   // Lógica de Gamificación (local)
   const xpReward = 50;
 
-  // --- Sincronizar Reseñas de la API al estado local ---
-  useEffect(() => {
-    if (publication && publication.reviews) {
-      const fetchedReviews = publication.reviews.map((review: ReviewDTO) => ({
-        id: review.id,
-        user: review.authorName,
-        avatar: review.authorName.substring(0, 2).toUpperCase(),
-        rating: review.rating,
-        date: "Hace un tiempo",
-        text: review.comment,
-        xpEarned: 30, // Mock
-      }));
-      setComments(fetchedReviews);
-    }
-  }, [publication]);
+  const reviewsArray = reviewPage?.content || [];
+  const displayReviews: DisplayReview[] = reviewsArray.map((review: ReviewDTO) => ({
+    id: review.id,
+    user: review.username,
+    avatar: review.username.substring(0, 2).toUpperCase(),
+    rating: review.rating,
+    date: review.date || "Justo ahora",
+    text: review.reviewContent,
+    xpEarned: review.xpEarned || 30,
+  }));
+
+
 
   // --- Estados Derivados (para Rating) ---
   const avgRating =
@@ -364,7 +366,7 @@ export default function ExperienceDetails() {
 
                   {/* Lista de Comentarios */}
                   <div className="space-y-4">
-                    {comments.map((comment) => (
+                    {displayReviews.map((comment) => (
                         <div
                             key={comment.id}
                             className="border-b pb-4 last:border-b-0"
@@ -385,8 +387,8 @@ export default function ExperienceDetails() {
                                   ))}
                                 </div>
                                 <span className="text-sm text-muted-foreground">
-                              {comment.date}
-                            </span>
+                                     {comment.date}
+                                </span>
                                 <Badge variant="outline" className="text-xs">
                                   +{comment.xpEarned} XP
                                 </Badge>

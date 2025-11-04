@@ -7,7 +7,10 @@ import ar.uba.fi.gestion.trippy.publication.Publication;
 import ar.uba.fi.gestion.trippy.publication.PublicationService;
 import ar.uba.fi.gestion.trippy.review.dto.CreateReviewDTO;
 import ar.uba.fi.gestion.trippy.user.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +33,7 @@ public class ReviewService {
 
     public ReviewResponseDTO createReview(CreateReviewDTO data) {
         // 1. Fetch the publication
-        Publication publication = publicationService.getPublicationById_(Long.valueOf(data.publicationId()));
+        Publication publication = publicationService.getPublicationById_(data.publicationId());
 
         // 2. Fetch the user
         Traveler user = (Traveler) userService.getUserByEmail(data.getReviewerEmail());
@@ -45,7 +48,7 @@ public class ReviewService {
         Review review = new Review(
                 publication,
                 user,
-                Short.valueOf(data.rating()),
+                data.rating(),
                 data.reviewContent()
         );
 
@@ -60,6 +63,11 @@ public class ReviewService {
                 review.getPublicationRating(),
                 review.getReviewContent()
         );
+    }
+
+    public Page<ReviewResponseDTO> getReviewsByPublicationId(Long publicationId, @Valid Pageable pageable) {
+        return reviewRepository.findByPublicationId(publicationId,pageable)
+                .map(this::mapToResponseDTO);
     }
 
 }
