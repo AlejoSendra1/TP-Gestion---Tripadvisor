@@ -37,6 +37,10 @@ import ar.uba.fi.gestion.trippy.user.User; // <-- Para la entidad User
 import ar.uba.fi.gestion.trippy.user.UserRepository; // <-- ¡NUEVA dependencia!
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
+
+import ar.uba.fi.gestion.trippy.publication.FiltersSpec;
 
 @Service
 @Transactional(readOnly = true) // Por defecto, solo lectura
@@ -65,19 +69,99 @@ public class PublicationService {
                 .collect(Collectors.toList());
     }
 
-    public List<PublicationDetailDTO> searchPublications(
-        String q,
-        String category,
-        String location,
-        BigDecimal minPrice,
-        BigDecimal maxPrice
-    ) {
-        return publicationRepository.searchPublications(
-                q, category, location, minPrice, maxPrice
-        ).stream()
-         .map(this::convertToDetailDTO)
-         .collect(Collectors.toList());
+    /**
+     * Búsqueda unificada con todos los filtros
+     */
+    public List<PublicationListDTO> searchPublications(FiltersSpec filters) {
+        // Convierte la categoría al discriminador
+        String categoryDiscriminator = convertCategoryToDiscriminator(filters.category());
+    
+        System.out.println("Searching with category: " + filters.category() + " -> " + categoryDiscriminator);
+        
+        // Si category es "all" o null, pasamos null para no filtrar
+        if (filters.category() != null && filters.category().equalsIgnoreCase("all")) {
+            categoryDiscriminator = null;
+        }
+        try{
+            // Usa el método existente del repository que YA FUNCIONA
+            List<Publication> results = publicationRepository.searchPublications(
+                filters.query(),
+                categoryDiscriminator,
+                filters.location(),
+                filters.minPrice(),
+                filters.maxPrice()
+            );
+            
+            return results.stream()
+                    .map(this::convertToListDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.out.println("Error during searchPublications: " + e.getMessage());  
+            return Collections.emptyList();
+        }
     }
+
+    /**
+     * Convierte categorías amigables a los valores REALES de tu columna tipo_publicacion
+     */
+    private String convertCategoryToDiscriminator(String category) {
+        if (category == null || category.trim().isEmpty()) {
+            return null;
+        }
+        
+        // ESTOS SON LOS VALORES QUE ESTÁN REALMENTE EN TU BD
+        // Revisa tu tabla publication para ver qué valores tiene la columna tipo_publicacion
+        switch (category.toLowerCase()) {
+            case "hotels":
+            case "hotel":
+                return "HOTEL";  // ← El valor EXACTO de tu BD
+            case "restaurants":
+            case "restaurant":
+                return "RESTAURANT"; // ← El valor EXACTO de tu BD
+            case "activities":
+            case "activity":
+                return "ACTIVITY"; // ← El valor EXACTO de tu BD  
+            case "coworkings":
+            case "coworking":
+                return "COWORKING"; // ← El valor EXACTO de tu BD
+            default:
+                return category.toUpperCase(); // Por si acaso
+        }
+    }
+
+    /**
+     * Construye el objeto Sort basado en los parámetros
+     */
+    private Sort buildSort(String sortBy, String sortOrder) {
+        Sort.Direction direction = sortOrder.equalsIgnoreCase("asc") ? 
+            Sort.Direction.ASC : Sort.Direction.DESC;
+        
+        switch (sortBy.toLowerCase()) {
+            case "price":
+                return Sort.by(direction, "price");
+            case "title":
+                return Sort.by(direction, "title");
+            case "rating":
+                // Aquí podrías ordenar por rating cuando lo implementes
+                return Sort.by(direction, "title"); // Por ahora, fallback a título
+            default:
+                return Sort.by(Sort.Direction.DESC, "title");
+        }
+    }
+
+    // public List<PublicationDetailDTO> searchPublications(
+    //     String q,
+    //     String category,
+    //     String location,
+    //     BigDecimal minPrice,
+    //     BigDecimal maxPrice
+    // ) {
+    //     return publicationRepository.searchPublications(
+    //             q, category, location, minPrice, maxPrice
+    //     ).stream()
+    //      .map(this::convertToDetailDTO)
+    //      .collect(Collectors.toList());
+    //}
 
     public List<PublicationListDTO> findByTitle(String title) {
         List<Publication> result = publicationRepository.findByTitleContainingIgnoreCase(title);
