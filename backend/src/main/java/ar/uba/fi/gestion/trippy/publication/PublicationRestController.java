@@ -72,7 +72,7 @@ public class PublicationRestController {
     ) {
         System.out.println("Search request - Query: " + query + ", Category: " + category + 
                         ", Location: " + location + ", MinPrice: " + minPrice + 
-                        ", MaxPrice: " + maxPrice);
+                        ", MaxPrice: " + maxPrice + ", SortBy: " + sortBy + ", SortOrder: " + sortOrder);
         
         // Crear DTO con todos los filtros
         FiltersSpec filters = new FiltersSpec(

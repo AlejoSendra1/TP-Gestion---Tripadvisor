@@ -11,10 +11,11 @@ interface SearchFiltersProps {
   onSearch?: (query: string) => void;
   onCategorySelect?: (category: string | undefined) => void;
   onFiltersChange?: (filters: any) => void;
+  onSortChange?: (sortOption: string) => void;
   selectedCategory?: string;
 }
 
-export const SearchFilters = ({ onSearch, onCategorySelect, onFiltersChange, selectedCategory }: SearchFiltersProps) => {
+export const SearchFilters = ({ onSearch, onCategorySelect, onFiltersChange, onSortChange, selectedCategory }: SearchFiltersProps) => {
     return (
         <div className="space-y-6 w-full">
             {/* 1. Barra de Búsqueda - Fondo transparente */}
@@ -32,7 +33,10 @@ export const SearchFilters = ({ onSearch, onCategorySelect, onFiltersChange, sel
 
             {/* 3. Filtros Avanzados - Fondo transparente */}
             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 shadow-hero border border-white/30">
-                <AdvancedFilters onFiltersChange={onFiltersChange} />
+                <AdvancedFilters 
+                    onFiltersChange={onFiltersChange} 
+                    onSortChange={onSortChange}
+                />
             </div>
         </div>
 

@@ -2,12 +2,14 @@ import { useState } from "react";
 import { MapPin, DollarSign, Users, Calendar, Star, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AdvancedFiltersProps {
   onFiltersChange: (filters: any) => void;
+  onSortChange?: (sortBy: string, sortOrder: string) => void;
 }
 
-export function AdvancedFilters({ onFiltersChange }: AdvancedFiltersProps) {
+export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     location: '',
@@ -20,10 +22,27 @@ export function AdvancedFilters({ onFiltersChange }: AdvancedFiltersProps) {
     duration: ''
   });
 
+  const [sortBy, setSortBy] = useState('');
+  const [sortOrder, setSortOrder] = useState('')
+
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     onFiltersChange(newFilters);
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value);
+    if (onSortChange) {
+      onSortChange(value, sortOrder);
+    }
+  };
+
+  const handleSortOrderChange = (value: string) => {
+    setSortOrder(value);
+    if (onSortChange) {
+      onSortChange(sortBy, value);
+    }
   };
 
   const clearFilters = () => {
@@ -39,6 +58,11 @@ export function AdvancedFilters({ onFiltersChange }: AdvancedFiltersProps) {
     };
     setFilters(emptyFilters);
     onFiltersChange(emptyFilters);
+    setSortBy('');
+    setSortOrder('');
+    if (onSortChange) {
+      onSortChange('', '');
+    }
   };
 
   return (
@@ -50,6 +74,21 @@ export function AdvancedFilters({ onFiltersChange }: AdvancedFiltersProps) {
           <h3 className="text-lg font-semibold text-white">Advanced Filters</h3>
         </div>
         <div className="flex gap-2">
+          {/* Selector de Ordenamiento */}
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-[180px] bg-white/20 border-white/30 text-white">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="title-asc">Title A-Z</SelectItem>
+              <SelectItem value="title-desc">Title Z-A</SelectItem>
+              <SelectItem value="price-asc">Price ↑</SelectItem>
+              <SelectItem value="price-desc">Price ↓</SelectItem>
+              <SelectItem value="rating-desc">Rating ↓</SelectItem>
+              <SelectItem value="rating-asc">Rating ↑</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Button 
             variant="outline" 
             size="sm" 

@@ -33,6 +33,12 @@ export function Hero({ onFiltersChange }: HeroProps) {
     }
   };
 
+  const handleSortChange = (sortOption: string) => {
+    if (onFiltersChange) {
+      onFiltersChange({ sort: sortOption });
+    }
+  };
+
   return (
     <section className="relative min-h-[800px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -81,6 +87,7 @@ export function Hero({ onFiltersChange }: HeroProps) {
           onSearch={handleSearch}
           onCategorySelect={handleCategorySelect}
           onFiltersChange={handleAdvancedFiltersChange}
+          onSortChange={handleSortChange}
           selectedCategory={selectedCategory}
         />
       </div>
