@@ -106,13 +106,13 @@ export function DinamicHeaderSide() {
             to="/register"
             className="text-sm hover:text-primary transition-colors"
           >
-            Register
+            Registrarse
           </Link>
           <Link
             to="/login"
             className="text-sm font-medium hover:text-primary transition-colors"
           >
-            Log in
+            Iniciar Sesión
           </Link>
         </div>
       )}
