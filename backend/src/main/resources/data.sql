@@ -80,10 +80,10 @@ VALUES
 -- 1. Creen la entidad Review.java y la tabla 'review'
 -- 2. Modifiquen PublicationService.java para que busque reseñas
 
-/*
+
 
 INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (2001, 'maria.garcia@example.com', 'hashed_password_456', TRUE, 'TRAVELER');
+VALUES (201, 'maria.garcia@example.com', 'hashed_password_456', TRUE, 'TRAVELER');
 
 INSERT INTO travelers (id, first_name, last_name, xp, level)
 VALUES (
@@ -106,13 +106,14 @@ VALUES (
     3
 );
 
--- Asumimos que la tabla se llama 'review'
-INSERT INTO review (id, publication_id, user_id, rating, comment, created_at)
+
+INSERT INTO review (review_id, publication_id, user_id, publication_rating, review_content, created_at)
 VALUES
-    (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2025-10-20 14:30:00'),
-    (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2025-10-21 09:15:00');
-*/
+    (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2024-05-20 08:00:00'),
+    (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2024-05-20 08:00:00');
 
 -- ACTUALIZA EL CONTADOR DE IDS
 -- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1
 SELECT setval('publication_id_seq', (SELECT MAX(id) FROM publication));
+SELECT setval('review_review_id_seq', (SELECT MAX(review_id) FROM review));
+

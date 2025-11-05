@@ -19,7 +19,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 import java.util.UUID;
 
-
 @Service
 @Transactional
 public class UserService {
@@ -42,7 +41,6 @@ public class UserService {
     }
 
     public Optional<UserDTO> createUser(RegistrationRequestDTO data) {
-        System.out.println("se esta creando el user");
         if (userRepository.findByEmail(data.email()).isPresent()) {
             throw new DuplicateEntityException("User", "email");
         }
@@ -54,21 +52,21 @@ public class UserService {
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);
         userRepository.save(user);
-        //emailService.sendValidationEmail(user.getEmail(), verificationToken);
+        // emailService.sendValidationEmail(user.getEmail(), verificationToken);
         TokenDTO tokens = Optional.of(generateTokens(user)).orElseThrow();
 
-        return Optional.of(UserDTOFactory.fromUser(user,tokens));
+        return Optional.of(UserDTOFactory.fromUser(user, tokens));
     }
 
     public Optional<UserDTO> loginUser(UserLoginDTO data) {
-        System.out.println("el login dto: "+ data.toString());
+        System.out.println("el login dto: " + data.toString());
         User maybeUser = userRepository.findByEmail(data.getEmail())
                 .filter(user -> passwordEncoder.matches(data.getPassword(), user.getPassword()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
         // Generate tokens for the user
         TokenDTO tokenDTO = generateTokens(maybeUser);
-        return Optional.of(UserDTOFactory.fromUser(maybeUser,tokenDTO));
+        return Optional.of(UserDTOFactory.fromUser(maybeUser, tokenDTO));
     }
 
     Optional<TokenDTO> refresh(RefreshDTO data) {
@@ -80,15 +78,14 @@ public class UserService {
     private TokenDTO generateTokens(User user) {
         String accessToken = jwtService.createToken(new JwtUserDetails(
                 user.getEmail(),
-                user.getRole()
-        ));
+                user.getRole()));
         RefreshToken refreshToken = refreshTokenService.createFor(user);
         return new TokenDTO(accessToken, refreshToken.value());
     }
 
     public boolean verifyEmailToken(String token) {
-        return userRepository.findByTokenVerified(token).map(user->{
-            //user.setEmailVerified(true);
+        return userRepository.findByTokenVerified(token).map(user -> {
+            // user.setEmailVerified(true);
             user.setTokenVerified(null);
             userRepository.save(user);
             return true;
@@ -100,7 +97,6 @@ public class UserService {
         if (user.isEmpty()) {
             throw new EntityNotFoundException("User does not exist");
         }
-
         return user.get();
     }
 
@@ -108,16 +104,17 @@ public class UserService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JwtUserDetails userDetails = (JwtUserDetails) principal;
         User currentUser = getUserByEmail(userDetails.username());
-        //return currentUser.getFirstname();
+        // return currentUser.getFirstname();
         return "TODO -> getCurrentUserName - UserService";
     }
+
     public UserProfileDTO getCurrentUserProfile() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof JwtUserDetails userDetails) {
             User user = getUserByEmail(userDetails.username());
-            //return UserProfileDTO.fromUser(user);
-            return new UserProfileDTO(0L,"todo","todo","todo@todo","todo.png");
+            // return UserProfileDTO.fromUser(user);
+            return new UserProfileDTO(0L, "todo", "todo", "todo@todo", "todo.png");
         }
         throw new AccessDeniedException("User not authenticated or principal type is incorrect");
     }
