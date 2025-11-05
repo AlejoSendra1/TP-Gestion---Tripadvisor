@@ -1,5 +1,18 @@
 INSERT INTO users (id, email, password, agree_to_terms, user_type)
 VALUES (100, 'hotel@paradise.com', 'hashed_password_789', TRUE, 'OWNER');
+DROP TABLE IF EXISTS reservation;
+CREATE TABLE IF NOT EXISTS reservation (
+    id SERIAL PRIMARY KEY,
+    publication_id INT NOT NULL REFERENCES publication(id) ON DELETE CASCADE,
+    traveler_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reservation_date TIMESTAMP NOT NULL DEFAULT NOW(),
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP,
+    total_price DECIMAL(10,2) NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('CONFIRMED', 'CANCELLED', 'COMPLETED')),
+    guest_count INT,
+    notes TEXT
+);
 
 INSERT INTO business_owners (id, business_name, business_type, business_description, verified)
 VALUES (

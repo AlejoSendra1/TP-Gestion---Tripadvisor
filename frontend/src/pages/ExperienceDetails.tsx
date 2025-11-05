@@ -53,6 +53,7 @@ import {
   MoreVertical, // <-- NUEVO ICONO
 } from "lucide-react";
 
+import BookingModal from "@/components/BookingModal"; // <-- nuevo
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
@@ -102,6 +103,9 @@ export default function ExperienceDetails() {
   const [comments, setComments] = useState<DisplayReview[]>([]);
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
 
+  // Estado para abrir modal de reserva
+  const [openBooking, setOpenBooking] = useState(false);
+
   // Lógica de Gamificación (local)
   const xpReward = 50;
 
@@ -132,7 +136,7 @@ export default function ExperienceDetails() {
 
   // --- Manejadores de Eventos (UI) ---
   const handleReserve = () => {
-    alert("Redirigiendo a la reserva...");
+    setOpenBooking(true); // ahora abre el modal en vez de alert
   };
 
   const handleSubmitComment = () => {
@@ -508,6 +512,14 @@ export default function ExperienceDetails() {
             </div>
           </div>
         </div>
+
+        {/* Booking Modal */}
+        <BookingModal
+          publicationId={publication.id}
+          publicationType={publication.publicationType} // se pasa el tipo
+          open={openBooking}
+          onClose={() => setOpenBooking(false)}
+        />
       </div>
   );
 }
