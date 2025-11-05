@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const categories = [
   {
     id: "hotel",
-    name: "Hotels",
+    name: "Hoteles",
     icon: Building2,
     color: "bg-primary",
     selectedColor: "bg-primary/80",
@@ -13,7 +13,7 @@ const categories = [
   },
   {
     id: "restaurant",
-    name: "Restaurants",
+    name: "Restaurantes",
     icon: UtensilsCrossed,
     color: "bg-accent",
     selectedColor: "bg-primary/80",
@@ -21,7 +21,7 @@ const categories = [
   },
   {
     id: "activity",
-    name: "Activity",
+    name: "Actividades",
     icon: Mountain,
     color: "bg-adventure",
     selectedColor: "bg-primary/80",
@@ -98,9 +98,9 @@ export function Categories({ selectedCategory, onCategorySelect }: CategoriesPro
                   )}>
                     {category.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {category.count} places
-                  </p>
+                  {/*<p className="text-sm text-muted-foreground">*/}
+                  {/*  {category.count} lugares*/}
+                  {/*</p>*/}
                 </CardContent>
               </Card>
             );

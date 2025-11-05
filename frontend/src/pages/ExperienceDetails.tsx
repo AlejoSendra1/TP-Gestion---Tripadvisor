@@ -219,7 +219,7 @@ export default function ExperienceDetails() {
           <Link to="/">
             <Button variant="outline" className="mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Go Back
+              Volver
             </Button>
           </Link>
 
@@ -315,7 +315,7 @@ export default function ExperienceDetails() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold mb-4">
-                    About this Experience
+                    Sobre esta experiencia
                   </h3>
                   <p className="text-muted-foreground leading-relaxed">
                     {publication.description}
@@ -327,7 +327,7 @@ export default function ExperienceDetails() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold mb-4">
-                    Details
+                    Detalles
                   </h3>
                   <RenderSpecificDetails details={publication.specificDetails} />
                 </CardContent>
@@ -342,7 +342,7 @@ export default function ExperienceDetails() {
 
                   {/* Añadir Comentario */}
                   <div className="mb-6 p-4 bg-secondary/50 rounded-lg">
-                    <h4 className="font-medium mb-3">Share your experience</h4>
+                    <h4 className="font-medium mb-3">Compartí tu experiencia</h4>
                     <div className="flex items-center mb-3">
                       <span className="mr-2 text-sm">Rating:</span>
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -358,7 +358,7 @@ export default function ExperienceDetails() {
                       ))}
                     </div>
                     <Textarea
-                        placeholder="Tell us about your experience..."
+                        placeholder="Contanos sobre tu experiencia..."
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         className="mb-3"
@@ -368,7 +368,7 @@ export default function ExperienceDetails() {
                         className="w-full md:w-auto"
                     >
                       <Trophy className="h-4 w-4 mr-2" />
-                      Submit review and gain {xpReward} XP
+                      Enviá tu reseña y ganá {xpReward} de XP
                     </Button>
                   </div>
 
@@ -429,7 +429,7 @@ export default function ExperienceDetails() {
                                     disabled={deletingReviewId === comment.reviewerEmail}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete review
+                                    Borrar reseña
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -453,26 +453,26 @@ export default function ExperienceDetails() {
                       ${publication.price}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      per{" "}
+                      por{" "}
                       {publication.publicationType.toLowerCase() === "hotel"
-                          ? "night"
-                          : "person"}
+                          ? "noche"
+                          : "persona"}
                     </div>
                   </div>
 
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Availability:</span>
+                      <span className="text-sm font-medium">Disponibilidad</span>
                       <Badge
                           variant="outline"
                           className="text-green-600 border-green-600"
                       >
-                        Available
+                        Disponible
                       </Badge>
                     </div>
                     <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
                       <Trophy className="h-4 w-4 mr-2 text-experience" />
-                      Gain {xpReward} XP by reviewing this experience!
+                      Ganá {xpReward} de XP al reseñar esta publicación!
                     </div>
                   </div>
 
@@ -483,15 +483,15 @@ export default function ExperienceDetails() {
                         size="lg"
                     >
                       <Calendar className="h-4 w-4 mr-2" />
-                      Book Now
+                      Reservá Ahora
                     </Button>
                     <Button variant="outline" className="w-full">
                       <Heart className="h-4 w-4 mr-2" />
-                      Save to Wishlist
+                      Guardar en Favoritos
                     </Button>
                     <Button variant="outline" className="w-full">
                       <Users className="h-4 w-4 mr-2" />
-                      Get in touch with {publication.host?.name || "Host"}
+                      Contactar a {publication.host?.name || "Host"}
                     </Button>
                   </div>
                 </CardContent>
@@ -502,9 +502,9 @@ export default function ExperienceDetails() {
                 <CardContent className="p-4">
                   <div className="text-center">
                     <Trophy className="h-8 w-8 mx-auto mb-2 text-experience" />
-                    <h4 className="font-semibold mb-1">Gain XP rewards!</h4>
+                    <h4 className="font-semibold mb-1">Ganate recompensas!</h4>
                     <p className="text-sm text-muted-foreground">
-                      Share your experience and gain {xpReward} XP to level up!
+                      Compartí tu reseña y ganá {xpReward} de XP para subir de nivel!
                     </p>
                   </div>
                 </CardContent>

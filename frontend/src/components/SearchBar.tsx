@@ -26,7 +26,7 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
         onChange={(e) => setSearchInput(e.target.value)}
         onKeyPress={handleKeyPress}
         placeholder="Buscar publicaciones por título..."
-        className="search-input flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        className="search-input flex-1 px-6 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
       />
       <button 
         onClick={handleSearch} 

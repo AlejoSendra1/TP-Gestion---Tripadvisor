@@ -57,30 +57,31 @@ export function Hero({ onFiltersChange }: HeroProps) {
         {/* PARTE 1: Descripción */}
         <div className="text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Discover & Earn
-            <span className="block text-accent">Your Adventures</span>
+            Animate,
+            <span className="block text-accent">Conocé! Viajá!</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
-            Share your travel experiences, gain XP points, and unlock exclusive rewards while helping fellow travelers discover amazing places.
+            Contá tus aventuras, sumá XP y desbloqueá recompensas exclusivas.
+            ¡Tu historia puede inspirar el próximo viaje de alguien!
           </p>
         </div>
 
         {/* PARTE 2: Estadísticas */}
-        <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">50K+</div>
-            <div className="text-white/80">Experiences</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">25K+</div>
-            <div className="text-white/80">Travelers</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">1M+</div>
-            <div className="text-white/80">XP Earned</div>
-          </div>
-        </div>
+        {/*<div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">*/}
+        {/*  <div className="text-center">*/}
+        {/*    <div className="text-3xl font-bold text-white">50K+</div>*/}
+        {/*    <div className="text-white/80">Experiences</div>*/}
+        {/*  </div>*/}
+        {/*  <div className="text-center">*/}
+        {/*    <div className="text-3xl font-bold text-white">25K+</div>*/}
+        {/*    <div className="text-white/80">Travelers</div>*/}
+        {/*  </div>*/}
+        {/*  <div className="text-center">*/}
+        {/*    <div className="text-3xl font-bold text-white">1M+</div>*/}
+        {/*    <div className="text-white/80">XP Earned</div>*/}
+        {/*  </div>*/}
+        {/*</div>*/}
 
         {/* PARTE 3: SearchFilters (contiene todos los elementos de búsqueda) */}
         <SearchFilters 
