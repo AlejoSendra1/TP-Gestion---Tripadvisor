@@ -31,20 +31,6 @@ export function Header() {
                         {/*</h1>*/}
                     </Link>
 
-                    {/* Search Bar */}
-                    <div className="flex-1 max-w-md mx-8">
-                        <Link to="/search">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                <Input
-                                    placeholder="Search hotels, restaurants, tours..."
-                                    className="pl-10 bg-secondary/50 cursor-pointer"
-                                    readOnly
-                                />
-                            </div>
-                        </Link>
-                    </div>
-
                     {/* Lado Dinámico (Botones) */}
                     <div className="flex items-center gap-4">
                         {/* 3. Botón condicional de "Crear" */}

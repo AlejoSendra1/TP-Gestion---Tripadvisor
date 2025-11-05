@@ -85,32 +85,6 @@ public class PublicationRestController {
         return ResponseEntity.ok(results);
     }
 
-    // @GetMapping("/search")
-    // public ResponseEntity<List<PublicationListDTO>> searchPublications(
-    //         @RequestParam(required = false) String query,
-    //         @RequestParam(required = false) String category,
-    //         @RequestParam(required = false) String location,
-    //         @RequestParam(required = false) BigDecimal minPrice,
-    //         @RequestParam(required = false) BigDecimal maxPrice,
-    //         @RequestParam(required = false) BigDecimal minRating
-    // ) {
-    //     /*
-    //     // Si category o location son "all", los convertimos a null
-    //     String categoryFilter = (category != null && category.equals("all")) ? null : category;
-    //     String locationFilter = (location != null && location.equals("all")) ? null : location;
-        
-    //     // Implementación del endpoint de búsqueda
-    //     List<PublicationDetailDTO> results = publicationService.searchPublications(
-    //         q, categoryFilter, locationFilter, minPrice, maxPrice
-    //     );
-    //     */
-    //     System.out.println("\n\n\n\n\nReceived search request with query: " + query);
-    //     List<PublicationListDTO> results = publicationService.findByTitle(query);
-
-    //     return ResponseEntity.ok(results);
-    // }
-
-
     // --- ENDPOINTS DE CREACIÓN (POST) ---
 
     /**
