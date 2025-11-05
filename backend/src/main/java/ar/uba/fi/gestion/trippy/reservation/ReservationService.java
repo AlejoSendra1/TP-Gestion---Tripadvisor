@@ -63,7 +63,10 @@ public class ReservationService {
 
         // Validar solapamiento con reservas existentes de la misma publicación
         if (newStart != null && newEnd != null) {
-            List<Reservation> existing = reservationRepository.findByPublicationId(publicationId);
+            List<Reservation> existing = reservationRepository.findByPublicationId(publicationId)
+                    .stream()
+                    .filter(r -> r.getStatus() != ReservationStatus.CANCELLED) // <--- importante
+                    .toList();
             for (Reservation ex : existing) {
                 LocalDateTime exStart = ex.getStartDate();
                 LocalDateTime exEnd = ex.getEndDate() != null ? ex.getEndDate() : exStart;
@@ -108,6 +111,38 @@ public class ReservationService {
 
         return reservationRepository.save(r);
     }
+    
+
+    @Transactional(readOnly = true)
+    public List<Reservation> getReservationsForTraveler(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + userEmail));
+
+        if (!(user instanceof Traveler traveler))
+            throw new IllegalStateException("Solo los viajeros pueden tener reservas");
+
+        return reservationRepository.findByTravelerId(traveler.getId());
+    }
+
+    @Transactional
+    public Reservation cancelReservation(Long publicationId, Long reservationId, String userEmail) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada: " + reservationId));
+
+        if (!reservation.getPublication().getId().equals(publicationId))
+            throw new IllegalStateException("La reserva no pertenece a esta publicación.");
+
+        if (!reservation.getTraveler().getEmail().equals(userEmail))
+            throw new SecurityException("No tenés permiso para cancelar esta reserva.");
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        return reservationRepository.save(reservation);
+    }
+
+
+
+
+
 
 
 }
