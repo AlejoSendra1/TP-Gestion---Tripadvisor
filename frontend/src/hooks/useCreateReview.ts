@@ -56,7 +56,7 @@ export function useCreateReview() {
         queryKey: ['publication', variables.publicationId]
       });
       queryClient.invalidateQueries({
-        queryKey: ['reviews', variables.publicationId]  // ← Add this!
+        queryKey: ['reviews', variables.publicationId]
       });
 
       toast({

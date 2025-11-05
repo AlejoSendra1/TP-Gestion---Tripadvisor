@@ -12,7 +12,8 @@ type PageableInput = {
 // DTO structure you expected for a single review
 export type ReviewDTO = {
     username: string;
-    userlastname: string;
+    userLastname: string;
+    reviewerEmail: String
     rating: number;
     reviewContent: string;
     createdAt: string;

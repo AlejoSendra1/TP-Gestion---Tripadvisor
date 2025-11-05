@@ -8,6 +8,7 @@ import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,4 +40,12 @@ public class ReviewRestController {
         return ResponseEntity.ok(reviews);
     }
 
+    @DeleteMapping("/{publicationId}/{reviewerEmail}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteReview(
+            @PathVariable Long publicationId,
+            @PathVariable String reviewerEmail
+    ) {
+        reviewService.deleteReview(publicationId, reviewerEmail);
+    }
 }

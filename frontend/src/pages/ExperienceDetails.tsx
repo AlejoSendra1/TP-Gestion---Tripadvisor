@@ -6,7 +6,8 @@ import { useCreateReview } from "@/hooks/useCreateReview";
 import {
   usePublicationDetail,
 } from "@/hooks/usePublicationDetail";
-import { useDeletePublication } from "@/hooks/useDeletePublication"; // <-- HOOK DE BORRADO
+import { useDeletePublication } from "@/hooks/useDeletePublication";
+import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 
 // --- Hooks de UI y Auth ---
@@ -31,6 +32,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // --- Iconos (lucide-react) ---
 import {
@@ -41,15 +48,18 @@ import {
   Calendar,
   Users,
   Heart,
-  Trash2, // <-- Icono de Borrar
-  Loader2, // <-- Icono de Carga
+  Trash2,
+  Loader2,
+  MoreVertical, // <-- NUEVO ICONO
 } from "lucide-react";
 
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
+  id: string; // <-- Asegurarse de tener el ID
   username: string;
   userLastname: string;
+  reviewerEmail: string; // <-- NUEVO: para verificar propiedad
   avatar: string;
   rating: number;
   createdAt: string;
@@ -68,12 +78,17 @@ export default function ExperienceDetails() {
     isError,
   } = usePublicationDetail(id);
 
-  // --- Hook para BORRAR datos ---
+  // --- Hook para BORRAR publicación ---
   const { mutate: performDelete, isPending: isDeleting } =
       useDeletePublication();
 
+  // --- Hook para BORRAR review ---
+  const { mutate: deleteReview, isPending: isDeletingReview } =
+      useDeleteReview();
+
   // hooks relacionados a reviews
   const { mutate: createReview, isPending: isSubmittingReview } = useCreateReview();
+
   // --- Hook para OBTENER datos de las reviews ---
   const {
         data: reviewPage,
@@ -85,17 +100,20 @@ export default function ExperienceDetails() {
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
   const [comments, setComments] = useState<DisplayReview[]>([]);
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
 
   // Lógica de Gamificación (local)
   const xpReward = 50;
 
   const reviewsArray = reviewPage?.content || [];
   const displayReviews: DisplayReview[] = reviewsArray.map((review: ReviewDTO) => ({
+    id: review.id,
     username: review.username,
     userLastname: review.userLastname,
+    reviewerEmail: review.reviewerEmail,
     avatar: review.username.substring(0, 2).toUpperCase(),
     rating: review.rating,
-    date: review.createdAt || "Justo ahora",
+    createdAt: review.createdAt || "Justo ahora",
     text: review.reviewContent,
   }));
 
@@ -114,7 +132,6 @@ export default function ExperienceDetails() {
 
   // --- Manejadores de Eventos (UI) ---
   const handleReserve = () => {
-    // (Esta lógica iría a la página de checkout)
     alert("Redirigiendo a la reserva...");
   };
 
@@ -129,6 +146,18 @@ export default function ExperienceDetails() {
     });
     setNewComment("");
     setRating(5);
+  };
+
+  const handleDeleteReview = (userEmail: string) => {
+    setDeletingReviewId(userEmail);
+    deleteReview(
+      { reviewerEmail: userEmail, publicationId: id },
+      {
+        onSettled: () => {
+          setDeletingReviewId(null);
+        },
+      }
+    );
   };
 
   // --- Renderizado de Carga y Error ---
@@ -180,7 +209,7 @@ export default function ExperienceDetails() {
   // --- Renderizado Principal (JSX) ---
   return (
       <div className="min-h-screen bg-background">
-
+        <Header />
         <div className="container mx-auto px-4 py-8">
           {/* Botón Volver */}
           <Link to="/">
@@ -240,7 +269,7 @@ export default function ExperienceDetails() {
                               Cancelar
                             </AlertDialogCancel>
                             <AlertDialogAction
-                                onClick={() => performDelete(id!)} // <-- Llama al hook
+                                onClick={() => performDelete(id!)}
                                 disabled={isDeleting}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
@@ -341,7 +370,9 @@ export default function ExperienceDetails() {
 
                   {/* Lista de Comentarios */}
                   <div className="space-y-4">
-                    {displayReviews.map((comment) => (
+                    {displayReviews.map((comment) => {
+                      const isOwner = user && user.email === comment.reviewerEmail;
+                      return (
                         <div
                             key={comment.id}
                             className="border-b pb-4 last:border-b-0"
@@ -362,16 +393,47 @@ export default function ExperienceDetails() {
                                   ))}
                                 </div>
                                 <span className="text-sm text-muted-foreground">
-                                     {comment.date}
+                                     {comment.createdAt}
                                 </span>
                               </div>
                               <p className="text-muted-foreground">
                                 {comment.text}
                               </p>
                             </div>
+
+                            {/* Menú de 3 puntos para el propietario */}
+                            {isOwner && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    disabled={deletingReviewId === comment.reviewerEmail}
+                                  >
+                                    {deletingReviewId === comment.reviewerEmail ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <MoreVertical className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDeleteReview(comment.reviewerEmail)}
+                                    disabled={deletingReviewId === comment.reviewerEmail}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete review
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </div>
                         </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
