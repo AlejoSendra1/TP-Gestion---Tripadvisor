@@ -31,6 +31,8 @@ import ar.uba.fi.gestion.trippy.publication.dto.HotelUpdateDTO; // <-- NUEVO
 import ar.uba.fi.gestion.trippy.publication.dto.RestaurantUpdateDTO;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationUpdateDTO;
 
+import ar.uba.fi.gestion.trippy.publication.FiltersSpec;
+
 @RestController
 @RequestMapping("/publications")
 public class PublicationRestController {
@@ -42,14 +44,14 @@ public class PublicationRestController {
         this.publicationService = publicationService;
     }
 
-    // Endpoint para US #43 (El que ya tenías)
+    // Endpoint para US #43
     @GetMapping
     public ResponseEntity<List<PublicationListDTO>> getAllPublications() {
         List<PublicationListDTO> publications = publicationService.getAllPublications();
         return ResponseEntity.ok(publications);
     }
 
-    // Endpoint para US #11 (El que ya tenías)
+    // Endpoint para US #11
     @GetMapping("/{id}")
     public ResponseEntity<PublicationDetailDTO> getPublicationById(@PathVariable Long id) {
         // El servicio puede lanzar EntityNotFoundException
@@ -59,29 +61,29 @@ public class PublicationRestController {
 
     @GetMapping("/search")
     public ResponseEntity<List<PublicationListDTO>> searchPublications(
-            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(required = false) BigDecimal minRating
+            @RequestParam(required = false) BigDecimal minRating,
+            @RequestParam(required = false, defaultValue = "title") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortOrder
     ) {
-        /*
-        // Si category o location son "all", los convertimos a null
-        String categoryFilter = (category != null && category.equals("all")) ? null : category;
-        String locationFilter = (location != null && location.equals("all")) ? null : location;
+        System.out.println("Search request - Query: " + query + ", Category: " + category + 
+                        ", Location: " + location + ", MinPrice: " + minPrice + 
+                        ", MaxPrice: " + maxPrice + ", SortBy: " + sortBy + ", SortOrder: " + sortOrder);
         
-        // Implementación del endpoint de búsqueda
-        List<PublicationDetailDTO> results = publicationService.searchPublications(
-            q, categoryFilter, locationFilter, minPrice, maxPrice
+        // Crear DTO con todos los filtros
+        FiltersSpec filters = new FiltersSpec(
+            query, category, location, minPrice, maxPrice, minRating, sortBy, sortOrder
         );
-        */
-        System.out.println("\n\n\n\n\nReceived search request with query: " + q);
-        List<PublicationListDTO> results = publicationService.findByTitle(q);
-
+        
+        List<PublicationListDTO> results = publicationService.searchPublications(filters);
+        
+        System.out.println("Found " + results.size() + " publications");
         return ResponseEntity.ok(results);
     }
-
 
     // --- ENDPOINTS DE CREACIÓN (POST) ---
 
