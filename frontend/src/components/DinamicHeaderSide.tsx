@@ -39,7 +39,7 @@ export function DinamicHeaderSide() {
             onClick={() => logout()}
             className="text-sm hover:text-primary transition-colors px-2 py-1 hover:bg-muted rounded"
           >
-            Log out
+            Cerrar Sesión
           </button>
 
           <div className="flex items-center">

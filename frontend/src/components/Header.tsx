@@ -38,7 +38,7 @@ export function Header() {
                             <Button asChild variant="default">
                                 <Link to="/create-publication">
                                     <PlusCircle className="h-4 w-4 mr-2" />
-                                    Create Publication
+                                    Crear una Publicación
                                 </Link>
                             </Button>
                         )}
