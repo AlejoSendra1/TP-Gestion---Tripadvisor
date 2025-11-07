@@ -15,7 +15,6 @@ public class IAReviewRestController {
 
     @GetMapping("/summary/{publicationId}")
     public ResponseEntity<String> getAISummary(@PathVariable Long publicationId) {
-        String summary = iaReviewService.summarizeReviews(publicationId);
-        return ResponseEntity.ok(summary);
+        return ResponseEntity.ok(iaReviewService.summarizeReviews(publicationId));
     }
 }

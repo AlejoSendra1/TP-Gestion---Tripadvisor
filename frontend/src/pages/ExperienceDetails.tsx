@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCreateReview } from "@/hooks/useCreateReview";
-
+import { ReviewsSection } from "@/components/ReviewsSection";
 // --- Hooks de datos ---
 import {
   usePublicationDetail,
@@ -139,17 +139,13 @@ export default function ExperienceDetails() {
     setOpenBooking(true); // ahora abre el modal en vez de alert
   };
 
-  const handleSubmitComment = () => {
-    if (!newComment.trim()) return;
-
+  const handleSubmitComment = (rating: number, content: string) => {
     createReview({
-            publicationId: id,
-            reviewerEmail: user.email,
-            rating: rating,
-            reviewContent: newComment,
+      publicationId: id,
+      reviewerEmail: user.email,
+      rating: rating,
+      reviewContent: content,
     });
-    setNewComment("");
-    setRating(5);
   };
 
   const handleDeleteReview = (userEmail: string) => {
@@ -334,113 +330,15 @@ export default function ExperienceDetails() {
               </Card>
 
               {/* Sección de Comentarios */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-6">
-                    Reviews
-                  </h3>
-
-                  {/* Añadir Comentario */}
-                  <div className="mb-6 p-4 bg-secondary/50 rounded-lg">
-                    <h4 className="font-medium mb-3">Compartí tu experiencia</h4>
-                    <div className="flex items-center mb-3">
-                      <span className="mr-2 text-sm">Rating:</span>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                              key={star}
-                              className={`h-5 w-5 cursor-pointer ${
-                                  star <= rating
-                                      ? "text-yellow-500 fill-current"
-                                      : "text-gray-300"
-                              }`}
-                              onClick={() => setRating(star)}
-                          />
-                      ))}
-                    </div>
-                    <Textarea
-                        placeholder="Contanos sobre tu experiencia..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="mb-3"
-                    />
-                    <Button
-                        onClick={handleSubmitComment}
-                        className="w-full md:w-auto"
-                    >
-                      <Trophy className="h-4 w-4 mr-2" />
-                      Enviá tu reseña y ganá {xpReward} de XP
-                    </Button>
-                  </div>
-
-                  {/* Lista de Comentarios */}
-                  <div className="space-y-4">
-                    {displayReviews.map((comment) => {
-                      const isOwner = user && user.email === comment.reviewerEmail;
-                      return (
-                        <div
-                            key={comment.id}
-                            className="border-b pb-4 last:border-b-0"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-medium">
-                              {comment.avatar}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium">{comment.username} {comment.userLastname}</span>
-                                <div className="flex items-center">
-                                  {[...Array(comment.rating)].map((_, i) => (
-                                      <Star
-                                          key={i}
-                                          className="h-3 w-3 text-yellow-500 fill-current"
-                                      />
-                                  ))}
-                                </div>
-                                <span className="text-sm text-muted-foreground">
-                                     {comment.createdAt}
-                                </span>
-                              </div>
-                              <p className="text-muted-foreground">
-                                {comment.text}
-                              </p>
-                            </div>
-
-                            {/* Menú de 3 puntos para el propietario */}
-                            {isOwner && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    disabled={deletingReviewId === comment.reviewerEmail}
-                                  >
-                                    {deletingReviewId === comment.reviewerEmail ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <MoreVertical className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => handleDeleteReview(comment.reviewerEmail)}
-                                    disabled={deletingReviewId === comment.reviewerEmail}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Borrar reseña
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+              <ReviewsSection
+                reviews={displayReviews}
+                currentUserEmail={user?.email}
+                xpReward={xpReward}
+                isSubmitting={isSubmittingReview}
+                onSubmitReview={handleSubmitComment}
+                onDeleteReview={handleDeleteReview}
+                deletingReviewId={deletingReviewId}
+              />  
             </div>
 
             {/* Sidebar */}
