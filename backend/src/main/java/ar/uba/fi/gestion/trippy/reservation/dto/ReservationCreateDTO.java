@@ -10,6 +10,6 @@ public record ReservationCreateDTO(
         @JsonAlias({"endDate", "end_date"}) LocalDate endDate,
         @JsonAlias({"dateTime", "reservationDate", "reservation_date"}) LocalDateTime dateTime,
         @JsonAlias({"guests", "guestCount", "guest_count"}) Integer guests,
-        @JsonAlias({"additionalInfo", "notes"}) String additionalInfo,
-        @JsonAlias({"totalPrice", "total_price"}) BigDecimal totalPrice
+        @JsonAlias({"roomCount", "rooms", "room_count"}) Integer roomCount,
+        @JsonAlias({"additionalInfo", "notes"}) String additionalInfo
 ) {}

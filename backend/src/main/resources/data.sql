@@ -1,17 +1,32 @@
 INSERT INTO users (id, email, password, agree_to_terms, user_type)
 VALUES (100, 'hotel@paradise.com', 'hashed_password_789', TRUE, 'OWNER');
 DROP TABLE IF EXISTS reservation;
+-- eliminar tablas dependientes y la tabla base con CASCADE
+DROP TABLE IF EXISTS reservation_activity, reservation_restaurant, room_type, reservation_room_details, reservation_coworking, reservation_hotel, reservation CASCADE;
+
+-- Tabla única de reservas con todos los campos (nullable los específicos)
 CREATE TABLE IF NOT EXISTS reservation (
     id SERIAL PRIMARY KEY,
     publication_id INT NOT NULL REFERENCES publication(id) ON DELETE CASCADE,
     traveler_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     reservation_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP,
+
+    reservation_type VARCHAR(20),
     total_price DECIMAL(10,2) NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN ('CONFIRMED', 'CANCELLED', 'COMPLETED')),
+    notes TEXT,
+
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    check_in DATE,
+    check_out DATE,
+    reservation_datetime TIMESTAMP,
+    start_datetime TIMESTAMP,
+
     guest_count INT,
-    notes TEXT
+    room_count INT,
+    cover_count INT,
+    participant_count INT
 );
 
 INSERT INTO business_owners (id, business_name, business_type, business_description, verified)
