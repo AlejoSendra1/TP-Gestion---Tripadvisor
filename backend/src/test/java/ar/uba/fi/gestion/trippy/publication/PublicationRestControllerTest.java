@@ -137,10 +137,11 @@ public class PublicationRestControllerTest {
                 "Hotel", Map.of("roomCount", 50)
         );
 
+        // Incluir maxGroupSize en los detalles esperados (p. ej. 20)
         detailDtoActivity = new PublicationDetailDTO(
                 2L, "Test Activity", "Descripción Actividad", 50.0, testLocation,
                 hostDto, Collections.emptyList(), Collections.emptyList(),
-                "Activity", Map.of("durationInHours", 3)
+                "Activity", Map.of("durationInHours", 3, "maxGroupSize", 20)
         );
 
         detailDtoCoworking = new PublicationDetailDTO(
@@ -162,10 +163,12 @@ public class PublicationRestControllerTest {
                 10, 20 // roomCount y capacity
         );
 
+        // Agregado el campo maxGroupSize al constructor (p. ej. 20)
         activityCreateDto = new ActivityCreateDTO(
                 "Actividad Creada", "Desc", 50.0, testLocation,
                 "http://img.com/act.png", Collections.emptyList(),
-                3, "Obelisco", "Guía", "Moderado", "Español"
+                3, "Obelisco", "Guía", "Moderado", "Español",
+                20
         );
 
         coworkingCreateDto = new CoworkingCreateDTO(

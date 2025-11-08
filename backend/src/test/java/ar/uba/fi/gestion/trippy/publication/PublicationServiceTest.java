@@ -102,10 +102,12 @@ public class PublicationServiceTest {
                 10, 20 // roomCount y capacity
         );
 
+        // Se agrega el nuevo parámetro maxGroupSize al final (p. ej. 15)
         activityCreateDto = new ActivityCreateDTO(
                 "Nueva Actividad", "Descripción Actividad", 50.0,
                 testLocation, "http://img.com/act.png", Collections.emptyList(),
-                3, "Obelisco", "Guía y agua", "Moderado", "Español"
+                3, "Obelisco", "Guía y agua", "Moderado", "Español",
+                15
         );
 
         coworkingCreateDto = new CoworkingCreateDTO(
@@ -150,6 +152,8 @@ public class PublicationServiceTest {
         savedActivity.setHost(mockHost);
         savedActivity.setDurationInHours(activityCreateDto.durationInHours());
         savedActivity.setMeetingPoint(activityCreateDto.meetingPoint());
+        // Asegurar que el savedActivity incluya el nuevo campo
+        savedActivity.setMaxGroupSize(activityCreateDto.maxGroupSize());
 
         when(publicationRepositoryMock.save(any(Activity.class))).thenReturn(savedActivity);
 

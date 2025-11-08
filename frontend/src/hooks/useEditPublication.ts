@@ -50,6 +50,9 @@ const editPublicationFn = async ({
             whatIsIncluded: formData.whatIsIncluded,
             activityLevel: formData.activityLevel,
             language: formData.language,
+            maxGroupSize: formData.maxGroupSize !== undefined
+                        ? (parseInt(String(formData.maxGroupSize), 10) || null)
+                        : null, // <-- agregado
         };
     } else if (publicationType === "coworking") {
         // ✅ --- LÓGICA DE COWORKING AÑADIDA ---

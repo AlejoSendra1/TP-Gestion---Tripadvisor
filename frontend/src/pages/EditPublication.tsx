@@ -337,6 +337,18 @@ const EditPublication = () => {
                                                 onChange={handleInputChange}
                                             />
                                         </div>
+                                        {/* AÑADIDO: campo para maxGroupSize */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="maxGroupSize">Tamaño Máximo del Grupo</Label>
+                                                <Input
+                                                    id="maxGroupSize"
+                                                    name="maxGroupSize"
+                                                    type="number"
+                                                    value={formData.maxGroupSize ?? ""}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Ej: 20"
+                                                />
+                                            </div>
                                     </div>
                                 )}
 

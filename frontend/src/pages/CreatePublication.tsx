@@ -39,6 +39,7 @@ const initialState = {
     whatIsIncluded: "",
     activityLevel: "",
     language: "",
+    maxGroupSize: 0, // <-- agregado
 
     // --- Coworking ---
     pricePerDay: 0,
@@ -123,6 +124,7 @@ const CreatePublication = () => {
                 whatIsIncluded: formData.whatIsIncluded,
                 activityLevel: formData.activityLevel,
                 language: formData.language,
+                maxGroupSize: parseInt(String(formData.maxGroupSize), 10), // <-- agregado
             };
         } else if (publicationType === "coworking") {
             specificData = {
@@ -348,6 +350,10 @@ const CreatePublication = () => {
                                         <div className="space-y-2">
                                             <Label htmlFor="activityLevel">Activity Level</Label>
                                             <Input id="activityLevel" name="activityLevel" value={formData.activityLevel} onChange={handleInputChange} placeholder="Ej: Moderado, Intenso" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="maxGroupSize">Max Group Size</Label>
+                                            <Input id="maxGroupSize" name="maxGroupSize" type="number" value={formData.maxGroupSize} onChange={handleInputChange} placeholder="Ej: 20" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">

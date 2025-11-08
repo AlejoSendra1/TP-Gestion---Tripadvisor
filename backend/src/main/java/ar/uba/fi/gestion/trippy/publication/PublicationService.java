@@ -248,6 +248,8 @@ public class PublicationService {
         newActivity.setWhatIsIncluded(dto.whatIsIncluded());
         newActivity.setActivityLevel(dto.activityLevel());
         newActivity.setLanguage(dto.language());
+        // Mapear nuevo campo
+        newActivity.setMaxGroupSize(dto.maxGroupSize());
 
         // 5. Asignar el Host
         newActivity.setHost((BusinessOwner) hostUser);
@@ -442,7 +444,8 @@ public class PublicationService {
         if (dto.whatIsIncluded()  != null) a.setWhatIsIncluded(dto.whatIsIncluded());
         if (dto.activityLevel()   != null) a.setActivityLevel(dto.activityLevel());
         if (dto.language()        != null) a.setLanguage(dto.language());
-
+        // Manejo del nuevo campo
+        if (dto.maxGroupSize()    != null) a.setMaxGroupSize(dto.maxGroupSize());
         return convertToDetailDTO(publicationRepository.save(a));
     }
 

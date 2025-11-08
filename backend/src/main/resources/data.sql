@@ -66,11 +66,11 @@ INSERT INTO publication (
 INSERT INTO publication (
     id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
     street_address, city, state, country, zip_code,
-    duration_in_hours, meeting_point, what_is_included, activity_level, language
+    duration_in_hours, meeting_point, what_is_included, activity_level, language, max_group_size
 ) VALUES (
              3, 'ACTIVITY', 'Tour de Grafitis...', 'Recorre las calles...', 25.00, 100, 'https://turismo.buenosaires.gob.ar/sites/turismo/files/field/image/ElRegreso980.jpg',
              'Honduras y Serrano', 'Buenos Aires', 'CABA', 'Argentina', '1414',
-             3, 'Esquina...', 'Guía...', 'Bajo', 'Español/Inglés'
+             3, 'Esquina...', 'Guía...', 'Bajo', 'Español/Inglés', 20
          );
 
 -- 4. Coworking (ID 4)
