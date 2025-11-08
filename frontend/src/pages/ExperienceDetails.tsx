@@ -11,9 +11,7 @@ import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 
 // --- Hooks de UI y Auth ---
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-
 
 // --- Componentes de UI (shadcn/ui) ---
 import { Header } from "@/components/Header";
@@ -32,12 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 // --- Iconos (lucide-react) ---
 import {
@@ -50,7 +42,6 @@ import {
   Heart,
   Trash2,
   Loader2,
-  MoreVertical, // <-- NUEVO ICONO
 } from "lucide-react";
 
 import BookingModal from "@/components/BookingModal"; // <-- nuevo
@@ -86,6 +77,9 @@ export default function ExperienceDetails() {
   // --- Hook para BORRAR review ---
   const { mutate: deleteReview, isPending: isDeletingReview } =
       useDeleteReview();
+
+  // For example, from your API or publication data:
+  const reviewsSummaryText = "aca estaria el resumen re q ti re jodido \n aaaaaa\n asdaisjfoafj\nsifjaoifj"; 
 
   // hooks relacionados a reviews
   const { mutate: createReview, isPending: isSubmittingReview } = useCreateReview();
@@ -329,7 +323,6 @@ export default function ExperienceDetails() {
                 </CardContent>
               </Card>
 
-              {/* Sección de Comentarios */}
               <ReviewsSection
                 reviews={displayReviews}
                 currentUserEmail={user?.email}
@@ -337,8 +330,9 @@ export default function ExperienceDetails() {
                 isSubmitting={isSubmittingReview}
                 onSubmitReview={handleSubmitComment}
                 onDeleteReview={handleDeleteReview}
-                deletingReviewId={deletingReviewId}
-              />  
+                deletingReviewId={deletingReviewId} 
+                publicationId={publication.id}              
+              />
             </div>
 
             {/* Sidebar */}

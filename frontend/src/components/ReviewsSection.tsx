@@ -8,7 +8,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Star, Trophy, Trash2, Loader2, MoreVertical } from "lucide-react";
+import { Star, Trophy, Trash2, Loader2, MoreVertical, ThumbsUp, ThumbsDown } from "lucide-react";
+import { useReviewSummary } from "@/hooks/useReviewSummary";
+import {formatDate} from "@/lib/datesFormater";
 
 type DisplayReview = {
   id: string;
@@ -23,6 +25,7 @@ type DisplayReview = {
 
 interface ReviewsSectionProps {
   reviews: DisplayReview[];
+  publicationId: string;
   currentUserEmail?: string;
   xpReward: number;
   isSubmitting: boolean;
@@ -33,6 +36,7 @@ interface ReviewsSectionProps {
 
 export function ReviewsSection({
   reviews,
+  publicationId,
   currentUserEmail,
   xpReward,
   isSubmitting,
@@ -42,6 +46,10 @@ export function ReviewsSection({
 }: ReviewsSectionProps) {
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
+  const [reviewLikes, setReviewLikes] = useState<Record<string, { liked: boolean; disliked: boolean }>>({});
+
+  // Fetch summary from API
+  const { summaryText, isLoading: isSummaryLoading, error: summaryError } = useReviewSummary(publicationId);
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
@@ -50,12 +58,163 @@ export function ReviewsSection({
     setRating(5);
   };
 
+  const handleLike = (reviewId: string) => {
+    setReviewLikes(prev => ({
+      ...prev,
+      [reviewId]: {
+        liked: !prev[reviewId]?.liked,
+        disliked: false
+      }
+    }));
+  };
+
+  const handleDislike = (reviewId: string) => {
+    setReviewLikes(prev => ({
+      ...prev,
+      [reviewId]: {
+        liked: false,
+        disliked: !prev[reviewId]?.disliked
+      }
+    }));
+  };
+
+  // Separar la review del usuario actual de las demás
+  const userReview = reviews.find(review => review.reviewerEmail === currentUserEmail);
+  const otherReviews = reviews.filter(review => review.reviewerEmail !== currentUserEmail);
+
+  const renderReview = (comment: DisplayReview, isUserReview: boolean = false) => {
+    const isOwner = currentUserEmail === comment.reviewerEmail;
+    const isLiked = reviewLikes[comment.id]?.liked || false;
+    const isDisliked = reviewLikes[comment.id]?.disliked || false;
+
+    return (
+      <div
+        key={comment.id}
+        className={`border rounded-lg p-4 ${isUserReview ? 'bg-blue-50 border-blue-200' : ''}`}
+      >
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-medium">
+            {comment.avatar}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-medium">
+                {comment.username} {comment.userLastname}
+              </span>
+              {isUserReview && (
+                <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">
+                  Tu reseña
+                </span>
+              )}
+              <div className="flex items-center">
+                {[...Array(comment.rating)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className="h-3 w-3 text-yellow-500 fill-current"
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {formatDate(comment.createdAt)}
+              </span>
+            </div>
+            <p className="text-muted-foreground mb-3">{comment.text}</p>
+            
+            {/* Sección de utilidad */}
+            {!isUserReview &&
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>¿Te resultó útil esta reseña?</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 gap-1 ${isLiked ? 'text-green-600' : ''}`}
+                onClick={() => handleLike(comment.id)}
+              >
+                <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 gap-1 ${isDisliked ? 'text-red-600' : ''}`}
+                onClick={() => handleDislike(comment.id)}
+              >
+                <ThumbsDown className={`h-4 w-4 ${isDisliked ? 'fill-current' : ''}`} />
+              </Button>
+            </div>
+            }
+          </div>
+
+          {/* Menú de 3 puntos para el propietario */}
+          {isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  disabled={deletingReviewId === comment.reviewerEmail}
+                >
+                  {deletingReviewId === comment.reviewerEmail ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MoreVertical className="h-4 w-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onDeleteReview(comment.reviewerEmail)}
+                  disabled={deletingReviewId === comment.reviewerEmail}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Borrar reseña
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
         <h3 className="text-xl font-semibold mb-6">Reviews</h3>
 
+        {/* Resumen de Reviews */}
+        {isSummaryLoading && (
+          <div className="mb-6 p-6 border bg-orange-100 border-orange-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-6 w-6 text-yellow-500 animate-spin" />
+              <span className="text-muted-foreground">Cargando resumen...</span>
+            </div>
+          </div>
+        )}
+        
+        {summaryText && !isSummaryLoading && (
+          <div className="mb-6 p-6 border bg-orange-100 border-orange-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Star className="h-6 w-6 text-yellow-500 fill-current flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-lg mb-2">Resumen de Reseñas</h4>
+                <p className="leading-relaxed whitespace-pre-line">
+                  {summaryText}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {summaryError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+            Error al cargar el resumen: {summaryError}
+          </div>
+        )}
+
         {/* Añadir Comentario */}
+        {!userReview &&
         <div className="mb-6 p-4 bg-secondary/50 rounded-lg">
           <h4 className="font-medium mb-3">Compartí tu experiencia</h4>
           <div className="flex items-center mb-3">
@@ -88,76 +247,30 @@ export function ReviewsSection({
             ) : (
               <Trophy className="h-4 w-4 mr-2" />
             )}
-            {isSubmitting ? "Enviando..." : `Enviá tu reseña y ganá ${xpReward} de XP`}
+            {isSubmitting ? "Enviando..." : `Enviá tu reseña y ganá XP`}
           </Button>
         </div>
+        }
 
         {/* Lista de Comentarios */}
         <div className="space-y-4">
-          {reviews.map((comment) => {
-            const isOwner = currentUserEmail === comment.reviewerEmail;
-            return (
-              <div
-                key={comment.id}
-                className="border-b pb-4 last:border-b-0"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-medium">
-                    {comment.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">
-                        {comment.username} {comment.userLastname}
-                      </span>
-                      <div className="flex items-center">
-                        {[...Array(comment.rating)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-3 w-3 text-yellow-500 fill-current"
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {comment.createdAt}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground">{comment.text}</p>
-                  </div>
-
-                  {/* Menú de 3 puntos para el propietario */}
-                  {isOwner && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          disabled={deletingReviewId === comment.reviewerEmail}
-                        >
-                          {deletingReviewId === comment.reviewerEmail ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <MoreVertical className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => onDeleteReview(comment.reviewerEmail)}
-                          disabled={deletingReviewId === comment.reviewerEmail}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Borrar reseña
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+          {/* Mostrar primero la reseña del usuario actual */}
+          {userReview && (
+            <>
+              <h4 className="font-semibold text-sm text-muted-foreground">Tu reseña</h4>
+              {renderReview(userReview, true)}
+              {otherReviews.length > 0 && (
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-4">
+                    Otras reseñas ({otherReviews.length})
+                  </h4>
                 </div>
-              </div>
-            );
-          })}
+              )}
+            </>
+          )}
+          
+          {/* Mostrar las demás reseñas */}
+          {otherReviews.map((comment) => renderReview(comment, false))}
         </div>
       </CardContent>
     </Card>
