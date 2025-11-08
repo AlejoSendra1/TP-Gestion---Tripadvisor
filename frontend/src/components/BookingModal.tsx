@@ -47,8 +47,6 @@ export default function BookingModal({ publicationId, publicationType, open, onC
       .then(res => {
         const payload = Array.isArray(res.data) ? res.data : [];
 
-        // Mantener exactamente las entradas que trae el endpoint en el mismo orden.
-        // Normalizamos solo cuando venga con 'T' o cuando sea string; evitamos `new Date(string)` para no introducir shift.
         const mapped = payload.map((d: any) => {
           if (typeof d === 'string') {
             const dateStr = d.split('T')[0];
@@ -56,11 +54,9 @@ export default function BookingModal({ publicationId, publicationType, open, onC
           }
           if (d && d.date !== undefined) {
             if (typeof d.date === 'string') {
-              // si ya es 'YYYY-MM-DD' o 'YYYY-MM-DDTHH:MM:SS' -> tomar parte de fecha sin tocar con Date()
               const dateStr = String(d.date).split('T')[0];
               return { date: dateStr, available: d.available === undefined ? true : Boolean(d.available) };
             }
-            // si viene otro formato no string (p.ej número epoch), usar Date sólo en ese caso
             const parsed = new Date(d.date);
             const dateStr = isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10);
             return { date: dateStr, available: d.available === undefined ? true : Boolean(d.available) };
@@ -169,8 +165,8 @@ export default function BookingModal({ publicationId, publicationType, open, onC
     if (isActivity) {
       if (!activityDate) { setError('Seleccioná la fecha.'); return; }
       if (!isDateAvailable(activityDate)) { setError('La fecha no está disponible.'); return; }
-      if (!activityTime) { setError('Seleccioná la hora.'); return; }
-      body.dateTime = `${activityDate}T${activityTime}:00`;
+      // No mostrar selector de hora para actividades: enviar con hora por defecto (00:00:00)
+      body.dateTime = `${activityDate}T00:00:00`;
       body.guests = guests;
     }
 
@@ -212,9 +208,9 @@ export default function BookingModal({ publicationId, publicationType, open, onC
           <QuantityAndNotes isHotel={isHotel} guests={guests} roomCount={roomCount} notes={notes}
             setGuests={setGuests} setRoomCount={setRoomCount} setNotes={setNotes} />
 
-          {(isRestaurant || isActivity) && (
-            <DateTimeSelector label="Fecha" selectedDate={selectedDate} time={isRestaurant ? restaurantTime : activityTime}
-              hours={hours} onChangeTime={(t) => isRestaurant ? setRestaurantTime(t) : setActivityTime(t)} />
+          {isRestaurant && (
+            <DateTimeSelector label="Fecha" selectedDate={selectedDate} time={restaurantTime}
+              hours={hours} onChangeTime={(t) => setRestaurantTime(t)} />
           )}
 
           <div className="flex items-center gap-3 mt-2">
