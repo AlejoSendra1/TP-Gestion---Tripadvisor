@@ -4,55 +4,70 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Calendar, Star, Trophy, Camera, TrendingUp, Gift, Award } from "lucide-react";
+import { Calendar, Star, Trophy, Award, Gift, TrendingUp } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const Profile = () => {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isTraveler } = useAuth();
 
-  useEffect(() => {
-    // Simular llamada a la API
-    // En producción: fetch('/api/user/profile')
-    const mockApiResponse = {
-      id: 1,
-      firstName: "Explorador",
-      lastName: "Aventurero",
-      email: "explorador@trippy.com",
-      photo: "",
-      levelInfo: {
-        currentLevel: 8,
-        currentXp: 2850,
-        xpForNextLevel: 3500,
-        xpRequiredForNextLevel: 650,
-        progressPercentage: 76.92,
-        benefits: "20% de descuento • Check-in/out flexibles",
-        discountPercentage: 20
-      },
-      reviewsCount: 42,
-      placesVisited: 28,
-      photosShared: 156,
-      helpfulVotes: 89
-    };
-
-    setTimeout(() => {
-      setUserData(mockApiResponse);
-      setLoading(false);
-    }, 500);
-  }, []);
-
-  if (loading || !userData) {
+  // Si no hay usuario o no es traveler, mostrar mensaje
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Cargando perfil...</p>
+          <p className="text-muted-foreground">No has iniciado sesión</p>
         </div>
       </div>
     );
   }
 
-  const { levelInfo } = userData;
-  const joinDate = "Enero 2024";
+  if (!isTraveler()) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Este perfil es solo para viajeros</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Usar los datos directamente del usuario autenticado
+  const currentLevel = user.userLevel || 1;
+  const currentXp = user.userXP || 0;
+
+  // Funciones de cálculo de XP (mismas que en el backend)
+  const calculateXpForLevel = (level) => {
+    if (level <= 1) return 0;
+    const BASE_XP = 500;
+    const XP_MULTIPLIER = 1.5;
+    let totalXp = 0;
+    for (let i = 1; i < level; i++) {
+      totalXp += Math.floor(BASE_XP * Math.pow(XP_MULTIPLIER, i - 1));
+    }
+    return totalXp;
+  };
+
+  const xpForCurrentLevel = calculateXpForLevel(currentLevel);
+  const xpForNextLevel = calculateXpForLevel(currentLevel + 1);
+  const xpInCurrentLevel = currentXp - xpForCurrentLevel;
+  const xpRequiredForNextLevel = xpForNextLevel - xpForCurrentLevel;
+  const progressPercentage = xpRequiredForNextLevel > 0 
+    ? Math.min((xpInCurrentLevel / xpRequiredForNextLevel) * 100, 100)
+    : 100;
+
+  // Calcular descuento según nivel
+  const getDiscountPercentage = (level) => {
+    if (level === 1) return 0;
+    if (level === 2) return 5;
+    if (level === 3 || level === 4) return 10;
+    if (level === 5 || level === 6) return 15;
+    if (level === 7 || level === 8) return 20;
+    if (level === 9) return 25;
+    return level >= 10 ? 30 : 0;
+  };
+
+  const discountPercentage = getDiscountPercentage(currentLevel);
+  const joinDate = "Enero 2024"; // Esto debería venir del backend
 
   // Sistema de niveles con beneficios detallados
   const levelBenefits = [
@@ -68,13 +83,21 @@ const Profile = () => {
     { level: 10, discount: 30, benefits: ["30% de descuento", "Acceso Elite", "Todas las ventajas premium"] },
   ];
 
+  // Datos que eventualmente vendrán del backend
+  const profileStats = {
+    reviewsCount: 42,
+    placesVisited: 28,
+    photosShared: 156,
+    helpfulVotes: 89
+  };
+
   const achievements = [
-    { name: "Explorador", icon: "🗺️", description: "Visitó 25+ lugares", earned: userData.placesVisited >= 25 },
-    { name: "Crítico", icon: "✍️", description: "Escribió 40+ reseñas", earned: userData.reviewsCount >= 40 },
-    { name: "Fotógrafo", icon: "📸", description: "Compartió 150+ fotos", earned: userData.photosShared >= 150 },
-    { name: "Colaborador", icon: "🤝", description: "Recibió 50+ votos útiles", earned: userData.helpfulVotes >= 50 },
-    { name: "Trotamundos", icon: "🌍", description: "Visitó 50+ lugares", earned: userData.placesVisited >= 50 },
-    { name: "Maestro Crítico", icon: "⭐", description: "Escribió 100+ reseñas", earned: userData.reviewsCount >= 100 }
+    { name: "Explorador", icon: "🗺️", description: "Visitó 25+ lugares", earned: profileStats.placesVisited >= 25 },
+    { name: "Crítico", icon: "✍️", description: "Escribió 40+ reseñas", earned: profileStats.reviewsCount >= 40 },
+    { name: "Fotógrafo", icon: "📸", description: "Compartió 150+ fotos", earned: profileStats.photosShared >= 150 },
+    { name: "Colaborador", icon: "🤝", description: "Recibió 50+ votos útiles", earned: profileStats.helpfulVotes >= 50 },
+    { name: "Trotamundos", icon: "🌍", description: "Visitó 50+ lugares", earned: profileStats.placesVisited >= 50 },
+    { name: "Maestro Crítico", icon: "⭐", description: "Escribió 100+ reseñas", earned: profileStats.reviewsCount >= 100 }
   ];
 
   const recentReviews = [
@@ -123,26 +146,26 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header userXP={levelInfo.currentXp} userLevel={levelInfo.currentLevel} />
-
+      <Header userXP={currentXp} userLevel={currentLevel} />
+      
       <main className="container py-8 space-y-8">
         {/* Encabezado del Perfil */}
         <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="p-8">
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
               <Avatar className="h-24 w-24 ring-4 ring-primary/20">
-                <AvatarImage src={userData.photo} alt={`${userData.firstName} ${userData.lastName}`} />
+                <AvatarImage src={user.photo} alt={`${user.firstName} ${user.lastName}`} />
                 <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-                  {userData.firstName[0]}{userData.lastName[0]}
+                  {user.firstName?.[0]}{user.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 text-center lg:text-left space-y-4">
                 <div>
                   <h1 className="text-3xl font-bold text-foreground">
-                    {userData.firstName} {userData.lastName}
+                    {user.firstName} {user.lastName}
                   </h1>
-                  <p className="text-muted-foreground">{userData.email}</p>
+                  <p className="text-muted-foreground">{user.email}</p>
                   <p className="text-sm text-muted-foreground flex items-center justify-center lg:justify-start gap-1 mt-1">
                     <Calendar className="h-4 w-4" />
                     Miembro desde {joinDate}
@@ -152,41 +175,41 @@ const Profile = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Award className={`h-5 w-5 ${getLevelColor(levelInfo.currentLevel)}`} />
-                      <span className="text-lg font-bold">Nivel {levelInfo.currentLevel}</span>
-                      {levelInfo.discountPercentage > 0 && (
+                      <Award className={`h-5 w-5 ${getLevelColor(currentLevel)}`} />
+                      <span className="text-lg font-bold">Nivel {currentLevel}</span>
+                      {discountPercentage > 0 && (
                         <Badge variant="secondary" className="ml-2">
-                          {levelInfo.discountPercentage}% descuento
+                          {discountPercentage}% descuento
                         </Badge>
                       )}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {levelInfo.currentXp} / {levelInfo.xpForNextLevel} XP
+                      {currentXp} / {xpForNextLevel} XP
                     </span>
                   </div>
-                  <Progress value={levelInfo.progressPercentage} className="h-3" />
+                  <Progress value={progressPercentage} className="h-3" />
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <TrendingUp className="h-4 w-4" />
-                    {levelInfo.xpRequiredForNextLevel} XP para el Nivel {levelInfo.currentLevel + 1}
+                    {xpRequiredForNextLevel} XP para el Nivel {currentLevel + 1}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-primary">{userData.reviewsCount}</div>
+                  <div className="text-2xl font-bold text-primary">{profileStats.reviewsCount}</div>
                   <div className="text-xs text-muted-foreground">Reseñas</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-blue-500">{userData.placesVisited}</div>
+                  <div className="text-2xl font-bold text-blue-500">{profileStats.placesVisited}</div>
                   <div className="text-xs text-muted-foreground">Lugares</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-purple-500">{userData.photosShared}</div>
+                  <div className="text-2xl font-bold text-purple-500">{profileStats.photosShared}</div>
                   <div className="text-xs text-muted-foreground">Fotos</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-green-500">{userData.helpfulVotes}</div>
+                  <div className="text-2xl font-bold text-green-500">{profileStats.helpfulVotes}</div>
                   <div className="text-xs text-muted-foreground">Útiles</div>
                 </div>
               </div>
@@ -206,12 +229,12 @@ const Profile = () => {
             <CardContent className="space-y-4">
               <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                 <div className="flex items-center gap-2 mb-3">
-                  <Award className={`h-6 w-6 ${getLevelColor(levelInfo.currentLevel)}`} />
-                  <span className="text-xl font-bold">Nivel {levelInfo.currentLevel}</span>
+                  <Award className={`h-6 w-6 ${getLevelColor(currentLevel)}`} />
+                  <span className="text-xl font-bold">Nivel {currentLevel}</span>
                 </div>
                 <div className="space-y-2">
                   {levelBenefits
-                    .find(lb => lb.level === levelInfo.currentLevel)
+                    .find(lb => lb.level === currentLevel)
                     ?.benefits.map((benefit, idx) => (
                       <div key={idx} className="flex items-start gap-2 text-sm">
                         <span className="text-primary mt-0.5">✓</span>
@@ -221,19 +244,21 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t">
-                <h4 className="font-semibold mb-3 text-sm">Próximos beneficios (Nivel {levelInfo.currentLevel + 1})</h4>
-                <div className="space-y-2">
-                  {levelBenefits
-                    .find(lb => lb.level === levelInfo.currentLevel + 1)
-                    ?.benefits.map((benefit, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <span className="mt-0.5">→</span>
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
+              {currentLevel < 10 && (
+                <div className="pt-4 border-t">
+                  <h4 className="font-semibold mb-3 text-sm">Próximos beneficios (Nivel {currentLevel + 1})</h4>
+                  <div className="space-y-2">
+                    {levelBenefits
+                      .find(lb => lb.level === currentLevel + 1)
+                      ?.benefits.map((benefit, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="mt-0.5">→</span>
+                          <span>{benefit}</span>
+                        </div>
+                      ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -278,37 +303,43 @@ const Profile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentReviews.map((review) => (
-                  <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-sm">{review.placeName}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">{review.type}</Badge>
-                          <span className="text-xs text-muted-foreground">{review.date}</span>
+                {recentReviews.length > 0 ? (
+                  recentReviews.map((review) => (
+                    <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm">{review.placeName}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">{review.type}</Badge>
+                            <span className="text-xs text-muted-foreground">{review.date}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-3 w-3 ${
-                              i < review.rating 
-                                ? 'text-yellow-500 fill-yellow-500' 
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < review.rating 
+                                  ? 'text-yellow-500 fill-yellow-500' 
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <Badge className={`text-xs ${getXPColor(review.xpEarned)}`}>
+                          +{review.xpEarned} XP
+                        </Badge>
                       </div>
-                      <Badge className={`text-xs ${getXPColor(review.xpEarned)}`}>
-                        +{review.xpEarned} XP
-                      </Badge>
+                      <p className="text-xs text-muted-foreground mt-2">{review.excerpt}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">{review.excerpt}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Aún no has escrito ninguna reseña
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -328,20 +359,20 @@ const Profile = () => {
                 <div
                   key={levelData.level}
                   className={`p-4 rounded-lg border transition-all ${
-                    levelData.level === levelInfo.currentLevel
+                    levelData.level === currentLevel
                       ? 'bg-primary/10 border-primary shadow-md ring-2 ring-primary/20'
-                      : levelData.level < levelInfo.currentLevel
+                      : levelData.level < currentLevel
                       ? 'bg-muted/30 border-muted opacity-60'
                       : 'bg-card border-border hover:border-primary/50'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className={`text-lg font-bold ${
-                      levelData.level === levelInfo.currentLevel ? 'text-primary' : ''
+                      levelData.level === currentLevel ? 'text-primary' : ''
                     }`}>
                       Nivel {levelData.level}
                     </span>
-                    {levelData.level === levelInfo.currentLevel && (
+                    {levelData.level === currentLevel && (
                       <Badge variant="default" className="text-xs">Actual</Badge>
                     )}
                   </div>
