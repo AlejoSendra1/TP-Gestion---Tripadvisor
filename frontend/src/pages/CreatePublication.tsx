@@ -1,3 +1,6 @@
+// typescript
+// File: frontend/src/pages/CreatePublication.tsx
+import { hourOptions, isOpeningBeforeClosing, normalizeToHour } from "@/lib/timeHelpers";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -49,7 +52,8 @@ const initialState = {
     // --- Restaurant ---
     cuisineType: "",
     priceRange: "", // Ej: "$$"
-    openingHours: "",
+    openingStart: "", // nuevo
+    openingEnd: "",   // nuevo
     menuUrl: "",
 };
 
@@ -67,7 +71,7 @@ const CreatePublication = () => {
     // Handler para campos simples (sin cambios)
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
+        setFormData((prev: any) => ({
             ...prev,
             [name]: value,
         }));
@@ -76,7 +80,7 @@ const CreatePublication = () => {
     // Handler para 'location' (sin cambios)
     const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
+        setFormData((prev: any) => ({
             ...prev,
             location: {
                 ...prev.location,
@@ -131,13 +135,27 @@ const CreatePublication = () => {
                 pricePerDay: parseFloat(String(formData.pricePerDay)),
                 pricePerMonth: parseFloat(String(formData.pricePerMonth)),
                 // Convertimos el string "Wifi, Cafe" en un array ["Wifi", "Cafe"]
-                services: formData.services.split(",").map((s) => s.trim()).filter(s => s.length > 0),
+                services: (formData.services || "").split(",").map((s: string) => s.trim()).filter((s: string) => s.length > 0),
             };
         } else if (publicationType === "restaurant") {
+            if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
+                toast({
+                  title: "Horario inválido",
+                  description: "El horario de apertura debe ser menor que el horario de cierre.",
+                  variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+              }
+            // Normalizar horarios a hora en punto
+            const openingStart = normalizeToHour(formData.openingStart);
+            const openingEnd = normalizeToHour(formData.openingEnd);
+
             specificData = {
                 cuisineType: formData.cuisineType,
                 priceRange: formData.priceRange,
-                openingHours: formData.openingHours,
+                openingStart: openingStart || null,
+                openingEnd: openingEnd || null,
                 menuUrl: formData.menuUrl,
             };
         }
@@ -385,28 +403,78 @@ const CreatePublication = () => {
                             )}
 
                             {/* NUEVO: Renderizado condicional para RESTAURANT */}
-                            {publicationType === 'restaurant' && (
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Restaurant Details</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="cuisineType">Cuisine Type</Label>
-                                            <Input id="cuisineType" name="cuisineType" value={formData.cuisineType} onChange={handleInputChange} placeholder="Ej: Italiana, Mexicana" required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="priceRange">Price Range</Label>
-                                            <Input id="priceRange" name="priceRange" value={formData.priceRange} onChange={handleInputChange} placeholder="Ej: $, $$, $$$" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="openingHours">Timetables</Label>
-                                        <Input id="openingHours" name="openingHours" value={formData.openingHours} onChange={handleInputChange} placeholder="Ej: Lunes a Viernes 9am-10pm" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="menuUrl">Menu URL (Optional)</Label>
-                                        <Input id="menuUrl" name="menuUrl" type="url" value={formData.menuUrl} onChange={handleInputChange} placeholder="https://ejemplo.com/menu.pdf" />
-                                    </div>
+                            {publicationType === "restaurant" && (
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-medium">Detalles del Restaurante</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="cuisineType">Tipo de Cocina</Label>
+                                    <Input
+                                      id="cuisineType"
+                                      name="cuisineType"
+                                      value={formData.cuisineType || ""}
+                                      onChange={handleInputChange}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="priceRange">Rango de Precio</Label>
+                                    <Input
+                                      id="priceRange"
+                                      name="priceRange"
+                                      value={formData.priceRange || ""}
+                                      onChange={handleInputChange}
+                                    />
+                                  </div>
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="openingStart">Horario Inicio</Label>
+                                    <select
+                                      id="openingStart"
+                                      name="openingStart"
+                                      value={formData.openingStart || ""}
+                                      onChange={handleInputChange}
+                                      className="w-full rounded-md border px-3 py-2"
+                                    >
+                                      <option value="">-- Seleccionar --</option>
+                                      {hourOptions.map((h) => (
+                                        <option key={`start-${h}`} value={h}>
+                                          {h}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="openingEnd">Horario Fin</Label>
+                                    <select
+                                      id="openingEnd"
+                                      name="openingEnd"
+                                      value={formData.openingEnd || ""}
+                                      onChange={handleInputChange}
+                                      className="w-full rounded-md border px-3 py-2"
+                                    >
+                                      <option value="">-- Seleccionar --</option>
+                                      {hourOptions.map((h) => (
+                                        <option key={`end-${h}`} value={h}>
+                                          {h}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="menuUrl">URL del Menú</Label>
+                                  <Input
+                                    id="menuUrl"
+                                    name="menuUrl"
+                                    value={formData.menuUrl || ""}
+                                    onChange={handleInputChange}
+                                  />
+                                </div>
+                              </div>
                             )}
 
                             {/* --- Submit --- */}

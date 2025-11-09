@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
+import { isOpeningBeforeClosing } from "@/lib/timeHelpers";
 import { useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
 
@@ -67,11 +68,21 @@ const editPublicationFn = async ({
             services: servicesArray,
         };
     } else if (publicationType === "restaurant") {
+        if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
+            toast({
+              title: "Horario inválido",
+              description: "El horario de apertura debe ser menor que el horario de cierre.",
+              variant: "destructive",
+            });
+            return;
+          }
         // ✅ --- LÓGICA DE RESTAURANT AÑADIDA ---
+        // Enviar openingStart / openingEnd por separado
         specificData = {
             cuisineType: formData.cuisineType,
             priceRange: formData.priceRange,
-            openingHours: formData.openingHours,
+            openingStart: formData.openingStart ?? null,
+            openingEnd: formData.openingEnd ?? null,
             menuUrl: formData.menuUrl,
         };
     }
