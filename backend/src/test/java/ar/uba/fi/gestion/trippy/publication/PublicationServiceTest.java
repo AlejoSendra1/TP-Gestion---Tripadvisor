@@ -119,7 +119,7 @@ public class PublicationServiceTest {
         restaurantCreateDto = new RestaurantCreateDTO(
                 "Nuevo Restaurant", "Descripción Restaurant", 40.0,
                 testLocation, "http://img.com/resto.png", Collections.emptyList(),
-                "Italiana", "$$$", "12:00-23:00", "http://menu.com"
+                "Italiana", "$$$", "12:00", "23:00", "http://menu.com"
         );
     }
 

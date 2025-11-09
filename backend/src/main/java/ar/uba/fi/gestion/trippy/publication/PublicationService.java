@@ -326,10 +326,16 @@ public class PublicationService {
         newRestaurant.setMainImageUrl(dto.mainImageUrl());
         newRestaurant.setImageUrls(dto.imageUrls() != null ? dto.imageUrls() : Collections.emptyList());
 
+        // Validación de horarios
+        if (!isOpeningBeforeClosing(dto.openingStart(), dto.openingEnd())) {
+            throw new IllegalArgumentException("Horario inválido: openingStart debe ser menor que openingEnd.");
+        }
+
         // 4. Mapear campos específicos (de Restaurant.java)
         newRestaurant.setCuisineType(dto.cuisineType());
         newRestaurant.setPriceRange(dto.priceRange());
-        newRestaurant.setOpeningHours(dto.openingHours());
+        newRestaurant.setOpeningStart(dto.openingStart());
+        newRestaurant.setOpeningEnd(dto.openingEnd());
         newRestaurant.setMenuUrl(dto.menuUrl());
 
         // 5. Asignar el Host
@@ -481,7 +487,8 @@ public class PublicationService {
 
         if (dto.cuisineType() != null)  r.setCuisineType(dto.cuisineType());
         if (dto.priceRange()  != null)  r.setPriceRange(dto.priceRange());
-        if (dto.openingHours()!= null)  r.setOpeningHours(dto.openingHours());
+        if (dto.openingStart()!= null)  r.setOpeningStart(dto.openingStart());
+        if (dto.openingEnd()  != null)  r.setOpeningEnd(dto.openingEnd());
         if (dto.menuUrl()     != null)  r.setMenuUrl(dto.menuUrl());
 
         return convertToDetailDTO(publicationRepository.save(r));
@@ -506,4 +513,19 @@ public class PublicationService {
         publicationRepository.delete(publication);
     }
 
+    private Integer timeToMinutes(String t) {
+        if (t == null || t.isBlank()) return null;
+        String[] parts = t.split(":");
+        if (parts.length < 1) return null;
+        int hh = Integer.parseInt(parts[0]);
+        int mm = (parts.length > 1) ? Integer.parseInt(parts[1]) : 0;
+        return hh * 60 + mm;
+    }
+
+    private boolean isOpeningBeforeClosing(String opening, String closing) {
+        Integer o = timeToMinutes(opening);
+        Integer c = timeToMinutes(closing);
+        if (o == null || c == null) return true; // si falta alguno, no validamos aquí
+        return o < c;
+    }
 }

@@ -13,7 +13,9 @@ public class Restaurant extends Publication {
 
     private String cuisineType;
     private String priceRange;
-    private String openingHours;
+    // Reemplazamos el campo único by dos campos separados
+    private String openingStart; // formato "HH:mm" o cualquier cadena que uses
+    private String openingEnd;
     private String menuUrl;
 
     @Override
@@ -21,7 +23,8 @@ public class Restaurant extends Publication {
         Map<String, Object> details = new HashMap<>();
         details.put("cuisineType", this.cuisineType);
         details.put("priceRange", this.priceRange);
-        details.put("openingHours", this.openingHours);
+        details.put("openingStart", this.openingStart);
+        details.put("openingEnd", this.openingEnd);
         details.put("menuUrl", this.menuUrl);
         return details;
     }
@@ -32,9 +35,20 @@ public class Restaurant extends Publication {
     public void setPriceRange(String priceRange) {
         this.priceRange = priceRange;
     }
-    public void setOpeningHours(String openingHours) {
-        this.openingHours = openingHours;
+
+    public String getOpeningStart() {
+        return openingStart;
     }
+    public void setOpeningStart(String openingStart) {
+        this.openingStart = openingStart;
+    }
+    public String getOpeningEnd() {
+        return openingEnd;
+    }
+    public void setOpeningEnd(String openingEnd) {
+        this.openingEnd = openingEnd;
+    }
+
     public void setMenuUrl(String menuUrl) {
         this.menuUrl = menuUrl;
     }
