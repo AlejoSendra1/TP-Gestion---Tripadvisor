@@ -77,11 +77,11 @@ INSERT INTO publication (
 INSERT INTO publication (
     id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
     street_address, city, state, country, zip_code,
-    price_per_day, price_per_month
+    price_per_day, price_per_month, capacity
 ) VALUES (
              4, 'COWORKING', 'Trippy WorkSpace', 'Oficina compartida...', 30.00, 100, 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600',
              'Av. Vélez Sarsfield 800', 'Córdoba', 'Córdoba', 'Argentina', '5000',
-             30.00, 450.00
+             30.00, 450.00, 100
          );
 
 -- --- DETALLES DE PUBLICACIONES (PARA US 11) ---
