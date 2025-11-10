@@ -45,7 +45,11 @@ public abstract class Reservation {
         this.publication = pub;
         this.traveler = traveler;
         if (dto != null) {
-            this.reservationDate = dto.dateTime();
+            // Usar únicamente reservationDate si el cliente lo envía explícitamente.
+            // NO copiar dto.dateTime() aquí (ese campo es la fecha solicitada para la reserva).
+            if (dto.reservationDate() != null) {
+                this.reservationDate = dto.reservationDate();
+            }
             this.notes = dto.additionalInfo();
         }
     }

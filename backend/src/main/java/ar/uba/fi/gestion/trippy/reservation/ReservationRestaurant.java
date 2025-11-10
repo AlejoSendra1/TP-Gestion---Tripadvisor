@@ -36,7 +36,16 @@ public class ReservationRestaurant extends Reservation {
 
     @Override
     public void validateCapacity(ReservationRepository reservationRepository) {
-        // No-op para restaurantes (o validaciones específicas si se requieren)
+        if (this.dateTime == null) {
+            throw new IllegalStateException("Las reservas de restaurant requieren fecha y hora de inicio.");
+        }
+        // exigir hora en punto (ej. 18:00), sin minutos/segundos/nanos
+        if (dateTime.getMinute() != 0 || dateTime.getSecond() != 0 || dateTime.getNano() != 0) {
+            throw new IllegalStateException("La hora de la reserva debe ser una hora en punto (por ejemplo: 18:00).");
+        }
+
+        // Validación de capacidad por hora puede agregarse aquí si la entidad Restaurant expone capacidad.
+        // Ejemplo (opcional): sumar cubiertos ya reservados entre dateTime y dateTime.plusHours(1)
     }
 
     public LocalDateTime getDateTime() { return dateTime; }
