@@ -1,6 +1,7 @@
 // java
 package ar.uba.fi.gestion.trippy.reservation;
 
+import ar.uba.fi.gestion.trippy.publication.Coworking;
 import ar.uba.fi.gestion.trippy.publication.Publication;
 import ar.uba.fi.gestion.trippy.reservation.dto.ReservationCreateDTO;
 import ar.uba.fi.gestion.trippy.user.User;
@@ -46,7 +47,32 @@ public class ReservationCoworking extends Reservation {
 
     @Override
     public void validateCapacity(ReservationRepository reservationRepository) {
-        // No-op para coworking (o implementar validación específica si se requiere)
+        // Validación para coworking: sumar guestCount de reservas confirmadas que se solapan
+        if (this.starDate == null) {
+            throw new IllegalStateException("Las reservas de coworking requieren fecha de inicio.");
+        }
+
+        LocalDate start = this.starDate;
+        LocalDate end = this.endDate != null ? this.endDate : start;
+
+        int requested = this.guestCount != null ? this.guestCount : 1;
+
+        // obtener capacidad de la publicación; si es null => sin límite
+        Coworking coworking = (Coworking) getPublication();
+        Integer capacity = coworking.getCapacity();
+        if (capacity == null) return;
+
+        Long already = reservationRepository.sumGuestsForCoworkingForPublicationBetween(
+                getPublication().getId(),
+                ReservationStatus.CONFIRMED,
+                start,
+                end
+        );
+        long booked = already != null ? already : 0L;
+
+        if (booked + requested > capacity) {
+            throw new IllegalStateException("No hay suficientes lugares disponibles en las fechas seleccionadas.");
+        }
     }
 
     public LocalDate getstarDate() { return starDate; }

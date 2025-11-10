@@ -60,4 +60,20 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    // NUEVO: suma de guestCount para coworking considerando solapamiento por fechas (start/end)
+    @Query("""
+        SELECT COALESCE(SUM(r.guestCount), 0)
+        FROM ReservationCoworking r
+        WHERE r.publication.id = :pubId
+          AND r.status = :status
+          AND r.endDate >= :start
+          AND r.starDate <= :end
+    """)
+    Long sumGuestsForCoworkingForPublicationBetween(
+            @Param("pubId") Long publicationId,
+            @Param("status") ReservationStatus status,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
+    );
 }
