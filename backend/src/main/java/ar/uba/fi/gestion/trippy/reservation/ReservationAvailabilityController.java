@@ -1,9 +1,7 @@
 // java
 package ar.uba.fi.gestion.trippy.reservation;
 
-import ar.uba.fi.gestion.trippy.publication.Publication;
-import ar.uba.fi.gestion.trippy.publication.PublicationRepository;
-import ar.uba.fi.gestion.trippy.publication.Restaurant;
+import ar.uba.fi.gestion.trippy.publication.*;
 import ar.uba.fi.gestion.trippy.reservation.dto.DailyAvailabilityDTO;
 import ar.uba.fi.gestion.trippy.reservation.dto.HourlyAvailabilityDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +36,80 @@ public class ReservationAvailabilityController {
             return ResponseEntity.notFound().build();
         }
 
-        LocalDate start = LocalDate.now().plusDays(5); // desde 5 dias dps
+        Optional<Publication> maybe = publicationRepository.findById(publicationId);
+        if (maybe.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Publication pub = maybe.get();
 
-        List<DailyAvailabilityDTO> result = new ArrayList<>(35);
+        LocalDate start = LocalDate.now().plusDays(1); // desde mañana
+
+        List<DailyAvailabilityDTO> result = new ArrayList<>(30);
         for (int i = 0; i < 30; i++) {
             LocalDate d = start.plusDays(i);
-            // sin verificar superposición: todos disponibles = true
-            result.add(new DailyAvailabilityDTO(d, true));
+            boolean available = true;
+
+            if (pub instanceof Hotel) {
+                Hotel hotel = (Hotel) pub;
+                int maxRooms = hotel.getRoomCount();
+                Long already = reservationRepository.sumBookedRoomsForPublicationBetween(
+                        publicationId, ReservationStatus.CONFIRMED, d, d);
+                long booked = already != null ? already : 0L;
+                available = booked < maxRooms;
+            } else if (pub instanceof Coworking) {
+                Coworking cw = (Coworking) pub;
+                Integer capacity = cw.getCapacity();
+                if (capacity == null) {
+                    available = true;
+                } else {
+                    Long already = reservationRepository.sumGuestsForCoworkingForPublicationBetween(
+                            publicationId, ReservationStatus.CONFIRMED, d, d);
+                    long booked = already != null ? already : 0L;
+                    available = booked < capacity;
+                }
+            } else if (pub instanceof Activity) {
+                Activity a = (Activity) pub;
+                int maxGroup = a.getMaxGroupSize();
+                LocalDateTime startOfDay = d.atStartOfDay();
+                LocalDateTime startOfNextDay = startOfDay.plusDays(1);
+                Long already = reservationRepository.sumParticipantsForPublicationBetween(
+                        publicationId, ReservationStatus.CONFIRMED, startOfDay, startOfNextDay);
+                long booked = already != null ? already : 0L;
+                available = booked < maxGroup;
+            } else if (pub instanceof Restaurant) {
+                Restaurant rest = (Restaurant) pub;
+                String openingStartStr = rest.getOpeningStart();
+                String openingEndStr = rest.getOpeningEnd();
+                Integer capacity = rest.getCapacity();
+                // Si no hay horarios, tratar como no disponible (o ajustar según política)
+                if (openingStartStr == null || openingEndStr == null) {
+                    available = false;
+                } else {
+                    try {
+                        LocalTime openingStart = LocalTime.parse(openingStartStr);
+                        LocalTime openingEnd = LocalTime.parse(openingEndStr);
+                        available = false;
+                        for (LocalTime t = openingStart; t.isBefore(openingEnd); t = t.plusHours(1)) {
+                            LocalDateTime slotStart = d.atTime(t);
+                            LocalDateTime slotEnd = slotStart.plusHours(1);
+                            Long already = reservationRepository.sumGuestsForPublicationBetween(
+                                    publicationId, ReservationStatus.CONFIRMED, slotStart, slotEnd);
+                            long booked = already != null ? already : 0L;
+                            if (capacity == null || booked < capacity) {
+                                available = true;
+                                break;
+                            }
+                        }
+                    } catch (DateTimeParseException ex) {
+                        available = false;
+                    }
+                }
+            } else {
+                // tipo no reconocido: por defecto disponible
+                available = true;
+            }
+
+            result.add(new DailyAvailabilityDTO(d, available));
         }
 
         return ResponseEntity.ok(result);
