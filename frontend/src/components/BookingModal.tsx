@@ -1,4 +1,3 @@
-// File: `frontend/src/components/BookingModal.tsx`
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { useCreateReservation } from '@/hooks/useCreateReservation';
@@ -7,6 +6,8 @@ import DaysPicker from './DaysPicker';
 import DateTimeSelector from './DateTimeSelector';
 import QuantityAndNotes from './QuantityAndNotes';
 import { DayAvailability, isDateAvailable as utilIsDateAvailable, areRangeAvailable as utilAreRangeAvailable } from '@/utils/dates';
+
+type HourSlot = { time: string; available: boolean; availableSeats?: number | null };
 
 type BookingModalProps = {
   publicationId: number | string;
@@ -26,7 +27,9 @@ export default function BookingModal({ publicationId, publicationType, open, onC
   const [roomCount, setRoomCount] = useState(1);
   const [notes, setNotes] = useState('');
   const [days, setDays] = useState<DayAvailability[]>([]);
+  const [hoursSlots, setHoursSlots] = useState<HourSlot[]>([]);
   const [fetching, setFetching] = useState(false);
+  const [hoursLoading, setHoursLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { createReservation, isLoading: creating } = useCreateReservation();
   const { toast } = useToast();
@@ -76,7 +79,64 @@ export default function BookingModal({ publicationId, publicationType, open, onC
     setRestaurantDate(''); setRestaurantTime('12:00');
     setActivityDate(''); setActivityTime('12:00');
     setGuests(1); setRoomCount(1); setNotes(''); setError(null);
+    setHoursSlots([]);
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !isRestaurant || !restaurantDate) return;
+    setHoursLoading(true);
+    setError(null);
+    setHoursSlots([]);
+
+    const controller = new AbortController();
+    apiClient.get(`/publications/${publicationId}/availability/hours`, {
+      params: { date: restaurantDate },
+      signal: controller.signal
+    })
+      .then(res => {
+        const payload = Array.isArray(res.data) ? res.data : [];
+        const mapped: HourSlot[] = payload.map((h: any) => {
+          const startStr = String(h.start || h.dateTime || '');
+          const time = startStr.includes('T') ? startStr.split('T')[1].slice(0,5) : (startStr.slice(11,16) || '00:00');
+          return {
+            time,
+            available: h.available === undefined ? true : Boolean(h.available),
+            availableSeats: h.availableSeats === undefined ? null : (h.availableSeats === null ? null : Number(h.availableSeats))
+          };
+        });
+        setHoursSlots(mapped);
+        // elegir primera disponible si la actual no aplica
+        const current = mapped.find(h => h.time === restaurantTime && h.available && (h.availableSeats === null || h.availableSeats >= guests));
+        if (!current) {
+          const first = mapped.find(h => h.available && (h.availableSeats === null || h.availableSeats >= guests));
+          if (first) setRestaurantTime(first.time);
+        }
+      })
+      .catch(err => {
+        if (err?.name === 'CanceledError' || err?.message === 'canceled') return;
+        setError('No se pudo cargar franjas horarias.');
+      })
+      .finally(() => setHoursLoading(false));
+
+    return () => controller.abort();
+  }, [open, isRestaurant, restaurantDate, publicationId]);
+
+  // Nuevo useEffect: cuando cambia `guests` ajusto la hora seleccionada localmente sin refetch
+  useEffect(() => {
+    if (!open || !isRestaurant) return;
+    if (!hoursSlots.length) return;
+
+    const current = hoursSlots.find(h => h.time === restaurantTime && h.available && (h.availableSeats === null || h.availableSeats >= guests));
+    if (!current) {
+      const first = hoursSlots.find(h => h.available && (h.availableSeats === null || h.availableSeats >= guests));
+      if (first) setRestaurantTime(first.time);
+      else {
+        // si ninguna franja alcanza, seleccionar la primera disponible (si existe) o mantener
+        const any = hoursSlots.find(h => h.available) || hoursSlots[0];
+        if (any) setRestaurantTime(any.time);
+      }
+    }
+  }, [guests, hoursSlots, open, isRestaurant]);
 
   const isDateAvailable = (d: string) => utilIsDateAvailable(days, d);
   const areRangeAvailable = (s: string, e: string) => utilAreRangeAvailable(days, s, e);
@@ -158,6 +218,13 @@ export default function BookingModal({ publicationId, publicationType, open, onC
       if (!restaurantDate) { setError('Seleccioná la fecha.'); return; }
       if (!isDateAvailable(restaurantDate)) { setError('La fecha no está disponible.'); return; }
       if (!restaurantTime) { setError('Seleccioná la hora.'); return; }
+
+      const slot = hoursSlots.find(h => h.time === restaurantTime);
+      if (slot && slot.availableSeats !== null && guests > slot.availableSeats) {
+        setError('La capacidad de la franja horaria no alcanza para la cantidad de personas.');
+        return;
+      }
+
       body.dateTime = `${restaurantDate}T${restaurantTime}:00`;
       body.guests = guests;
     }
@@ -210,7 +277,11 @@ export default function BookingModal({ publicationId, publicationType, open, onC
 
           {isRestaurant && (
             <DateTimeSelector label="Fecha" selectedDate={selectedDate} time={restaurantTime}
-              hours={hours} onChangeTime={(t) => setRestaurantTime(t)} />
+              hours={hoursSlots.length ? hoursSlots : hours.map(t => ({ time: t, available: true, availableSeats: null }))}
+              onChangeTime={(t) => setRestaurantTime(t)}
+              guests={guests}
+              loading={hoursLoading}
+            />
           )}
 
           <div className="flex items-center gap-3 mt-2">

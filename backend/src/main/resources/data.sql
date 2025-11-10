@@ -55,11 +55,11 @@ INSERT INTO publication (
 INSERT INTO publication (
     id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
     street_address, city, state, country, zip_code,
-    cuisine_type, price_range, opening_start, opening_end, menu_url
+    cuisine_type, price_range, opening_start, opening_end, menu_url, capacity
 ) VALUES (
              2, 'RESTAURANT', 'Restaurante La Paella', 'Auténtica comida...', 45.50, 100, 'https://images.unsplash.com/photo-1558030006-450675393462?w=600',
              'Av. de Mayo 567', 'Buenos Aires', 'CABA', 'Argentina', '1084',
-             'Española', '$$$', '12:00', '00:00', '...'
+             'Española', '$$$', '12:00', '23:00', '...', '30'
          );
 
 -- 3. Actividad (ID 3)
