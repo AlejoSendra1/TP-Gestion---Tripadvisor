@@ -19,5 +19,7 @@ public record RestaurantCreateDTO(
         String priceRange, // Ej: "$$ - $$$"
         String openingStart,
         String openingEnd,
-        String menuUrl
+        String menuUrl,
+        Integer capacity
+
 ) {}

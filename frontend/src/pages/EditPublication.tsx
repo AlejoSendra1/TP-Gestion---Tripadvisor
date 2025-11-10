@@ -484,6 +484,18 @@ const EditPublication = () => {
                                             onChange={handleInputChange}
                                           />
                                         </div>
+                                        {/* NUEVO: campo capacity para restaurant */}
+                                        <div className="space-y-2">
+                                          <Label htmlFor="capacity">Capacidad (Personas)</Label>
+                                          <Input
+                                            id="capacity"
+                                            name="capacity"
+                                            type="number"
+                                            value={formData.capacity ?? ""}
+                                            onChange={handleInputChange}
+                                            placeholder="Ej: 30"
+                                          />
+                                        </div>
                                       </div>
                                     )}
 

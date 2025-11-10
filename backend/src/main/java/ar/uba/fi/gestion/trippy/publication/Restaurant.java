@@ -1,6 +1,7 @@
 package ar.uba.fi.gestion.trippy.publication;
 
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import java.util.HashMap;
@@ -17,6 +18,9 @@ public class Restaurant extends Publication {
     private String openingStart; // formato "HH:mm" o cualquier cadena que uses
     private String openingEnd;
     private String menuUrl;
+    // Reutiliza la columna existente "capacity" del Hotel
+    @Column(name = "capacity")
+    private Integer capacity;
 
     @Override
     public Map<String, Object> fetchSpecificDetails() {
@@ -26,6 +30,7 @@ public class Restaurant extends Publication {
         details.put("openingStart", this.openingStart);
         details.put("openingEnd", this.openingEnd);
         details.put("menuUrl", this.menuUrl);
+        details.put("capacity", this.capacity);
         return details;
     }
 
@@ -53,4 +58,11 @@ public class Restaurant extends Publication {
         this.menuUrl = menuUrl;
     }
 
+    // Nuevo campo reutilizado
+    public Integer getCapacity() {
+        return capacity;
+    }
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
 }

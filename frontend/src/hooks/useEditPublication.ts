@@ -76,16 +76,17 @@ const editPublicationFn = async ({
             });
             return;
           }
-        // ✅ --- LÓGICA DE RESTAURANT AÑADIDA ---
-        // Enviar openingStart / openingEnd por separado
-        specificData = {
-            cuisineType: formData.cuisineType,
-            priceRange: formData.priceRange,
-            openingStart: formData.openingStart ?? null,
-            openingEnd: formData.openingEnd ?? null,
-            menuUrl: formData.menuUrl,
-        };
-    }
+          specificData = {
+              cuisineType: formData.cuisineType,
+              priceRange: formData.priceRange,
+              openingStart: formData.openingStart ?? null,
+              openingEnd: formData.openingEnd ?? null,
+              menuUrl: formData.menuUrl,
+              capacity: formData.capacity !== undefined && formData.capacity !== ""
+                       ? (parseInt(String(formData.capacity), 10) || null)
+                       : null,
+          };
+      }
 
     // 4. Ejecutar las peticiones EN ORDEN (para evitar race conditions)
     await apiClient.patch(commonEndpoint, baseData);

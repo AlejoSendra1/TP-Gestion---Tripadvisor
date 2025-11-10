@@ -5,5 +5,6 @@ public record RestaurantUpdateDTO(
     String priceRange,
     String openingStart,
     String openingEnd,
-    String menuUrl
+    String menuUrl,
+    Integer capacity // permitir actualizar capacity
 ) {}

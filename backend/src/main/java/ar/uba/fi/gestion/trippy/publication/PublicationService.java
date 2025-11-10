@@ -337,7 +337,7 @@ public class PublicationService {
         newRestaurant.setOpeningStart(dto.openingStart());
         newRestaurant.setOpeningEnd(dto.openingEnd());
         newRestaurant.setMenuUrl(dto.menuUrl());
-
+        newRestaurant.setCapacity(dto.capacity());
         // 5. Asignar el Host
         newRestaurant.setHost((BusinessOwner) hostUser);
 

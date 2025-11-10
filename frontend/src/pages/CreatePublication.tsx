@@ -157,6 +157,9 @@ const CreatePublication = () => {
                 openingStart: openingStart || null,
                 openingEnd: openingEnd || null,
                 menuUrl: formData.menuUrl,
+               capacity: formData.capacity !== undefined && formData.capacity !== ""
+                         ? parseInt(String(formData.capacity), 10)
+                         : null,
             };
         }
 
@@ -472,6 +475,19 @@ const CreatePublication = () => {
                                     name="menuUrl"
                                     value={formData.menuUrl || ""}
                                     onChange={handleInputChange}
+                                  />
+                                </div>
+
+                                {/* NUEVO: campo capacity para restaurant */}
+                                <div className="space-y-2">
+                                  <Label htmlFor="capacity">Capacidad (Personas)</Label>
+                                  <Input
+                                    id="capacity"
+                                    name="capacity"
+                                    type="number"
+                                    value={formData.capacity || ""}
+                                    onChange={handleInputChange}
+                                    placeholder="Ej: 30"
                                   />
                                 </div>
                               </div>
