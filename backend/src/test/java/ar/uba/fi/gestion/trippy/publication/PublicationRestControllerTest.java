@@ -174,7 +174,7 @@ public class PublicationRestControllerTest {
         coworkingCreateDto = new CoworkingCreateDTO(
                 "Coworking Creado", "Desc", 15.0, testLocation,
                 "http://img.com/co.png", Collections.emptyList(),
-                25.0, 300.0, List.of("Wifi", "Café")
+                25.0, 300.0, List.of("Wifi", "Café"), 30
         );
 
         restaurantCreateDto = new RestaurantCreateDTO(

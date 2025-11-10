@@ -131,9 +131,27 @@ const CreatePublication = () => {
                 maxGroupSize: parseInt(String(formData.maxGroupSize), 10), // <-- agregado
             };
         } else if (publicationType === "coworking") {
+             if (formData.capacity === undefined || formData.capacity === "" ) {
+                toast({
+                    title: "Campo requerido",
+                    description: "La capacidad es obligatoria para Coworking.",
+                    variant: "destructive",
+                });
+                return;
+            }
+            const capNum = parseInt(String(formData.capacity), 10);
+            if (Number.isNaN(capNum) || capNum < 0) {
+                toast({
+                    title: "Valor inválido",
+                    description: "La capacidad debe ser un número entero válido mayor o igual a 0.",
+                    variant: "destructive",
+                });
+                return;
+            }
             specificData = {
                 pricePerDay: parseFloat(String(formData.pricePerDay)),
                 pricePerMonth: parseFloat(String(formData.pricePerMonth)),
+                capacity: parseInt(String(formData.capacity), 10), // entero obligatorio
                 // Convertimos el string "Wifi, Cafe" en un array ["Wifi", "Cafe"]
                 services: (formData.services || "").split(",").map((s: string) => s.trim()).filter((s: string) => s.length > 0),
             };
@@ -401,6 +419,19 @@ const CreatePublication = () => {
                                     <div className="space-y-2">
                                         <Label htmlFor="services">Services (do type separated by comma)</Label>
                                         <Input id="services" name="services" value={formData.services} onChange={handleInputChange} placeholder="Ej: Wifi, Café, Salas de reunión" />
+                                    </div>
+                                    {/* Nuevo campo capacity para coworking */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="capacity">Capacidad (Personas)</Label>
+                                        <Input
+                                            id="capacity"
+                                            name="capacity"
+                                            type="number"
+                                            value={formData.capacity ?? ""}
+                                            onChange={handleInputChange}
+                                            placeholder="Ej: 50"
+                                            required
+                                        />
                                     </div>
                                 </div>
                             )}

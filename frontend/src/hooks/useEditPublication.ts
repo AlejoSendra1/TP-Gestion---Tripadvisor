@@ -66,6 +66,9 @@ const editPublicationFn = async ({
             pricePerDay: parseFloat(String(formData.pricePerDay)) || null,
             pricePerMonth: parseFloat(String(formData.pricePerMonth)) || null,
             services: servicesArray,
+            capacity: formData.capacity !== undefined && formData.capacity !== ""
+                                  ? (parseInt(String(formData.capacity), 10) || null)
+                                  : null,
         };
     } else if (publicationType === "restaurant") {
         if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {

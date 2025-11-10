@@ -291,6 +291,9 @@ public class PublicationService {
         newCoworking.setPricePerMonth(dto.pricePerMonth());
         newCoworking.setServices(dto.services() != null ? dto.services() : Collections.emptyList());
 
+        // mapear capacity si viene
+        newCoworking.setCapacity(dto.capacity());
+
         // 5. Asignar el Host
         newCoworking.setHost((BusinessOwner) hostUser);
 
@@ -472,6 +475,9 @@ public class PublicationService {
         if (dto.pricePerDay()   != null) c.setPricePerDay(dto.pricePerDay());
         if (dto.pricePerMonth() != null) c.setPricePerMonth(dto.pricePerMonth());
         if (dto.services()      != null) c.setServices(dto.services());
+
+        // actualizar capacity si se envía
+        if (dto.capacity() != null) c.setCapacity(dto.capacity());
 
         return convertToDetailDTO(publicationRepository.save(c));
     }
