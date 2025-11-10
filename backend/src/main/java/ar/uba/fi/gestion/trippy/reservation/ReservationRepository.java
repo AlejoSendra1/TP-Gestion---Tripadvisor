@@ -44,4 +44,20 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    // NUEVO: suma de cubiertos (guestCount) para restaurants en una franja horaria
+    @Query("""
+        SELECT COALESCE(SUM(r.guestCount), 0)
+        FROM ReservationRestaurant r
+        WHERE r.publication.id = :pubId
+          AND r.status = :status
+          AND r.dateTime >= :start
+          AND r.dateTime < :end
+    """)
+    Long sumGuestsForPublicationBetween(
+            @Param("pubId") Long publicationId,
+            @Param("status") ReservationStatus status,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
 }

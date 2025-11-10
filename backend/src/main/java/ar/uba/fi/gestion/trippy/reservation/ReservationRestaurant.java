@@ -2,6 +2,7 @@
 package ar.uba.fi.gestion.trippy.reservation;
 
 import ar.uba.fi.gestion.trippy.publication.Publication;
+import ar.uba.fi.gestion.trippy.publication.Restaurant;
 import ar.uba.fi.gestion.trippy.reservation.dto.ReservationCreateDTO;
 import ar.uba.fi.gestion.trippy.user.User;
 import jakarta.persistence.*;
@@ -44,8 +45,28 @@ public class ReservationRestaurant extends Reservation {
             throw new IllegalStateException("La hora de la reserva debe ser una hora en punto (por ejemplo: 18:00).");
         }
 
-        // Validación de capacidad por hora puede agregarse aquí si la entidad Restaurant expone capacidad.
-        // Ejemplo (opcional): sumar cubiertos ya reservados entre dateTime y dateTime.plusHours(1)
+        int requested = this.guestCount != null ? this.guestCount : 1;
+
+        // franja de una hora
+        LocalDateTime start = this.dateTime;
+        LocalDateTime end = this.dateTime.plusHours(1);
+
+        Long already = reservationRepository.sumGuestsForPublicationBetween(
+                getPublication().getId(),
+                ReservationStatus.CONFIRMED,
+                start,
+                end
+        );
+        long booked = already != null ? already : 0L;
+
+        // obtener capacidad del restaurant; si es null => sin límite
+        Restaurant rest = (Restaurant) getPublication();
+        Integer capacity = rest.getCapacity();
+        if (capacity == null) return;
+
+        if (booked + requested > capacity) {
+            throw new IllegalStateException("No hay suficientes lugares disponibles en la franja horaria seleccionada.");
+        }
     }
 
     public LocalDateTime getDateTime() { return dateTime; }
