@@ -75,7 +75,7 @@ const Profile = () => {
   };
 
   const discountPercentage = getDiscountPercentage(currentLevel);
-  const joinDate = "Enero 2024"; // Esto debería venir del backend
+  const joinDate = "Noviembre 2025"; // Esto debería venir del backend
 
   // Sistema de niveles con beneficios detallados
   const levelBenefits = [
@@ -93,10 +93,10 @@ const Profile = () => {
 
   // Datos que eventualmente vendrán del backend
   const profileStats = {
-    reviewsCount: 42,
-    placesVisited: 28,
-    photosShared: 156,
-    helpfulVotes: 89
+    reviewsCount: 0,
+    placesVisited: 0,
+    photosShared: 0,
+    helpfulVotes: 0
   };
 
   const achievements = [ //
@@ -109,33 +109,33 @@ const Profile = () => {
   ];
 
   const recentReviews = [ //
-    {
-      id: 1,
-      placeName: "Resort & Spa Costero",
-      type: "Hotel",
-      rating: 5,
-      date: "hace 2 días",
-      xpEarned: 150,
-      excerpt: "Increíble ubicación frente al mar con un servicio excepcional..."
-    },
-    {
-      id: 2,
-      placeName: "Aventura en la Cima",
-      type: "Actividad",
-      rating: 4,
-      date: "hace 1 semana",
-      xpEarned: 200,
-      excerpt: "Caminata desafiante con vistas impresionantes en la cumbre..."
-    },
-    {
-      id: 3,
-      placeName: "Bistró Sabores Locales",
-      type: "Restaurante",
-      rating: 5,
-      date: "hace 2 semanas",
-      xpEarned: 125,
-      excerpt: "Auténtica cocina local con ingredientes frescos..."
-    }
+    // {
+    //   id: 1,
+    //   placeName: "Resort & Spa Costero",
+    //   type: "Hotel",
+    //   rating: 5,
+    //   date: "hace 2 días",
+    //   xpEarned: 150,
+    //   excerpt: "Increíble ubicación frente al mar con un servicio excepcional..."
+    // },
+    // {
+    //   id: 2,
+    //   placeName: "Aventura en la Cima",
+    //   type: "Actividad",
+    //   rating: 4,
+    //   date: "hace 1 semana",
+    //   xpEarned: 200,
+    //   excerpt: "Caminata desafiante con vistas impresionantes en la cumbre..."
+    // },
+    // {
+    //   id: 3,
+    //   placeName: "Bistró Sabores Locales",
+    //   type: "Restaurante",
+    //   rating: 5,
+    //   date: "hace 2 semanas",
+    //   xpEarned: 125,
+    //   excerpt: "Auténtica cocina local con ingredientes frescos..."
+    // }
   ];
 
   const getXPColor = (xp) => { //
