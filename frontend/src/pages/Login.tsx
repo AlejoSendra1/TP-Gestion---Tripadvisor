@@ -85,47 +85,47 @@ const Login = () => {
                 {/* Header */}
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                        Welcome Back
+                        bienvenido de nuevo!
                     </h1>
                     <p className="text-muted-foreground">
-                        Sign in to continue your adventure
+                        Iniciá sesión para continuar tu aventura
                     </p>
                 </div>
 
                 <Card className="bg-gradient-card shadow-card">
                     <CardHeader className="space-y-4">
-                        <CardTitle className="text-center">Sign In</CardTitle>
+                        <CardTitle className="text-center">Iniciar Sesión</CardTitle>
                         <CardDescription className="text-center">
-                            Discover and book amazing experiences, leave reviews, and earn XP
-                                                            or
-                            Manage your hotels, restaurants, tours and connect with travelers
+                            Descubrí y reservá experiencias increíbles, dejá reseñas y ganá XP
+                            o
+                            Gestioná tus hoteles, restaurantes, tours y conectá con viajeros
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email">Correo electrónico</Label>
                                 <Input
                                     id="email"
                                     name="email"
                                     type="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    placeholder="Enter your email"
+                                    placeholder="Ingresá tu correo electrónico"
                                     required
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">Contraseña</Label>
                                 <Input
                                     id="password"
                                     name="password"
                                     type="password"
                                     value={formData.password}
                                     onChange={handleInputChange}
-                                    placeholder="Enter your password"
+                                    placeholder="Ingresá tu contraseña"
                                     required
                                 />
                             </div>
@@ -135,19 +135,19 @@ const Login = () => {
                                     to="/forgot-password"
                                     className="text-sm text-primary hover:underline"
                                 >
-                                    Forgot password?
+                                    ¿Te Olvidaste la contraseña?
                                 </Link>
                             </div>
 
                             <Button type="submit" className="w-full">
-                                Sign In as {userType === "traveler" ? "Traveler" : "Business Owner"}
+                                Ingresar como {userType === "traveler" ? "Viajero" : "Propietario"}
                             </Button>
                         </form>
 
                         <div className="mt-6 text-center text-sm">
-                            <span className="text-muted-foreground">Don't have an account? </span>
+                            <span className="text-muted-foreground">¿No tenés una cuenta? </span>
                             <Link to="/register" className="text-primary hover:underline font-medium">
-                                Create account
+                                Crear cuenta
                             </Link>
                         </div>
                     </CardContent>
@@ -156,7 +156,7 @@ const Login = () => {
                 {/* Quick Access */}
                 <div className="text-center">
                     <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-                        ← Back to homepage
+                        ← Volver a la página principal
                     </Link>
                 </div>
             </div>

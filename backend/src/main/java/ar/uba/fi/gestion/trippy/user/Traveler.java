@@ -49,6 +49,14 @@ public class Traveler extends User {
         return this.lastName;
     }
 
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     public Integer getXp() { 
         return this.xp;
     }

@@ -73,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.DELETE, "/reviews").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/users/profile").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/ia/reviews/**").permitAll()
                         .anyRequest().authenticated()
                 )
