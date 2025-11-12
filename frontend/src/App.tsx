@@ -14,37 +14,45 @@ import ExperienceDetails from "./pages/ExperienceDetails";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import CreatePublication from "@/pages/CreatePublication";
 import EditPublication from "@/pages/EditPublication";
+import EditProfile from "@/pages/EditProfile.tsx"; // Tu import está correcto
 
 const queryClient = new QueryClient();
 sessionStorage.setItem("isLoggedIn", "false");
 
 const App = () => (
-  <AuthProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/experience/:id" element={<ExperienceDetails />} />
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* --- Rutas Públicas --- */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/experience/:id" element={<ExperienceDetails />} />
 
-            {/* 🔒 Rutas protegidas para Hosts */}
-            <Route element={<ProtectedRoute allowedRoles={["HOST"]} />}>
-              <Route path="/experience/:id/edit" element={<EditPublication />} />
-              <Route path="/create-publication" element={<CreatePublication />} />
-            </Route>
+              {/* --- 🔒 Rutas protegidas para Hosts --- */}
+              <Route element={<ProtectedRoute allowedRoles={["HOST"]} />}>
+                <Route path="/experience/:id/edit" element={<EditPublication />} />
+                <Route path="/create-publication" element={<CreatePublication />} />
+                {/* Quitamos /profile y /edit-profile de aquí */}
+              </Route>
 
-            {/* Ruta catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </AuthProvider>
+              {/* --- 🔒 Rutas protegidas para Travelers (Users) --- */}
+              <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
+              </Route>
+
+              {/* --- Ruta catch-all --- */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </AuthProvider>
 );
 
 export default App;
