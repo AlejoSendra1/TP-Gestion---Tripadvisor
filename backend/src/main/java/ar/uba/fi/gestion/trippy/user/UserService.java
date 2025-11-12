@@ -110,8 +110,12 @@ public class UserService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JwtUserDetails userDetails = (JwtUserDetails) principal;
         User currentUser = getUserByEmail(userDetails.username());
-        // return currentUser.getFirstname();
-        return "TODO -> getCurrentUserName - UserService";
+        
+        if (currentUser instanceof Traveler traveler) {
+            return traveler.getFirstName() + " " + traveler.getLastName();
+        }
+        
+        return currentUser.getEmail();
     }
 
     public UserProfileDTO getCurrentUserProfile() {
@@ -119,9 +123,48 @@ public class UserService {
 
         if (principal instanceof JwtUserDetails userDetails) {
             User user = getUserByEmail(userDetails.username());
-            // return UserProfileDTO.fromUser(user);
-            return new UserProfileDTO(0L, "todo", "todo", "todo@todo", "todo.png");
+            return UserProfileDTO.fromUser(user);
         }
         throw new AccessDeniedException("User not authenticated or principal type is incorrect");
+    }
+
+    /**
+     * Añade experiencia a un usuario traveler
+     */
+    public void addXpToUser(String email, Integer xpToAdd) {
+        User user = getUserByEmail(email);
+        if (user instanceof Traveler traveler) {
+            int oldLevel = traveler.getLevel();
+            traveler.addXp(xpToAdd);
+            userRepository.save(traveler);
+            
+            int newLevel = traveler.getLevel();
+            if (newLevel > oldLevel) {
+                System.out.println("¡Usuario " + email + " subió al nivel " + newLevel + "!");
+                // Aquí podrías enviar una notificación o email
+            }
+        }
+    }
+
+    /**
+     * Calcula y añade XP por una reseña
+     */
+    public void addXpForReview(String email, int rating, boolean hasPhotos, int reviewLength) {
+        int baseXp = 50;
+        int photoBonus = hasPhotos ? 25 : 0;
+        int lengthBonus = reviewLength > 200 ? 25 : 0;
+        int ratingBonus = rating >= 4 ? 10 : 0;
+        
+        int totalXp = baseXp + photoBonus + lengthBonus + ratingBonus;
+        addXpToUser(email, totalXp);
+    }
+
+    /**
+     * Calcula y añade XP por una compra/reserva
+     */
+    public void addXpForPurchase(String email, Double purchaseAmount) {
+        // 1 XP por cada $10 gastados
+        int xpToAdd = (int) (purchaseAmount / 10);
+        addXpToUser(email, xpToAdd);
     }
 }

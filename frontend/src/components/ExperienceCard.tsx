@@ -41,7 +41,7 @@ export function ExperienceCard({
   const getCategoryLabel = (cat: string) => {
     switch (cat) {
       case "hotel": return "Hotel";
-      case "restaurant": return "Restaurant";
+      case "restaurant": return "Restaurante";
       case "tour": return "Tour";
       default: return cat;
     }
@@ -100,7 +100,7 @@ export function ExperienceCard({
         )}
 
         <Button variant="experience" className="w-full">
-          View Details
+          Ver Detalles
         </Button>
       </CardContent>
     </Card>

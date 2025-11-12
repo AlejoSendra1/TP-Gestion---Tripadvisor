@@ -71,19 +71,19 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-white" />
-          <h3 className="text-lg font-semibold text-white">Advanced Filters</h3>
+          <h3 className="text-lg font-semibold text-white">Filtros Avanzados</h3>
         </div>
         <div className="flex gap-2">
           {/* Selector de Ordenamiento */}
           <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="w-[180px] bg-white/20 border-white/30 text-white">
-              <SelectValue placeholder="Sort by" />
+              <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="title-asc">Title A-Z</SelectItem>
-              <SelectItem value="title-desc">Title Z-A</SelectItem>
-              <SelectItem value="price-asc">Price ↑</SelectItem>
-              <SelectItem value="price-desc">Price ↓</SelectItem>
+              <SelectItem value="title-asc">A-Z</SelectItem>
+              <SelectItem value="title-desc">Z-A</SelectItem>
+              <SelectItem value="price-asc">Precio ↑</SelectItem>
+              <SelectItem value="price-desc">Precio ↓</SelectItem>
               <SelectItem value="rating-desc">Rating ↓</SelectItem>
               <SelectItem value="rating-asc">Rating ↑</SelectItem>
             </SelectContent>
@@ -95,7 +95,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             onClick={clearFilters}
             className="bg-white/20 text-white border-white/30 hover:bg-white/30"
           >
-            Clear
+            Limpiar filtros
           </Button>
           <Button 
             variant="outline" 
@@ -104,7 +104,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             className="flex items-center gap-1 bg-white/20 text-white border-white/30 hover:bg-white/30"
           >
             {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            {showFilters ? 'Hide' : 'Show'} Filters
+            {showFilters ? 'Ocultar' : 'Mostrar'} Filtros
           </Button>
         </div>
       </div>
@@ -118,7 +118,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
               <Input 
-                placeholder="Location" 
+                placeholder="Ubicación"
                 className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
                 value={filters.location}
                 onChange={(e) => handleFilterChange('location', e.target.value)}
@@ -129,7 +129,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
               <Input 
-                placeholder="Min Price" 
+                placeholder="Precio MÍN"
                 type="number"
                 className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
                 value={filters.minPrice}
@@ -141,7 +141,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
               <Input 
-                placeholder="Max Price" 
+                placeholder="Precio MAX"
                 type="number"
                 className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
                 value={filters.maxPrice}
@@ -153,7 +153,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             <div className="relative">
               <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
               <Input 
-                placeholder="Guests" 
+                placeholder="Cantidad de Personas"
                 type="number"
                 className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
                 value={filters.guests}
@@ -168,7 +168,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             <div className="relative">
               <Star className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
               <Input 
-                placeholder="Min. Rating" 
+                placeholder="Rating MÍN"
                 type="number"
                 min="1"
                 max="5"
@@ -183,7 +183,7 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
               <Input 
-                placeholder="Duration (days)" 
+                placeholder="Duración (días)"
                 type="number"
                 className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
                 value={filters.duration}

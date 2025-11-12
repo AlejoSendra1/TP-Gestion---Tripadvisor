@@ -1,24 +1,49 @@
 package ar.uba.fi.gestion.trippy.user.dto;
 
+import ar.uba.fi.gestion.trippy.user.Traveler;
+import ar.uba.fi.gestion.trippy.user.User;
+
 public record UserProfileDTO(
         Long id,
-        String name,
-        String lastname,
+        String firstName,
+        String lastName,
         String email,
-        String photo
+        String photo,
+        LevelInfoDTO levelInfo,
+        Integer reviewsCount,
+        Integer placesVisited,
+        Integer photosShared,
+        Integer helpfulVotes
 ) {
 
-    /*
     public static UserProfileDTO fromUser(User user) {
-
-        UserProfileDTO userProfileDTO = new UserProfileDTO(
+        if (user instanceof Traveler traveler) {
+            return new UserProfileDTO(
                 user.getId(),
-                user.getFirstname(),
-                user.getLastname(),
+                traveler.getFirstName(),
+                traveler.getLastName(),
                 user.getEmail(),
-                user.getPhoto()
-                ); return userProfileDTO;
+                null, // photo - implementar cuando tengas el campo
+                LevelInfoDTO.fromTraveler(traveler),
+                0, // reviewsCount - obtener de repositorio de reviews
+                0, // placesVisited - obtener de repositorio
+                0, // photosShared - obtener de repositorio
+                0  // helpfulVotes - obtener de repositorio
+            );
+        }
+        
+        // Para usuarios que no son Travelers
+        return new UserProfileDTO(
+            user.getId(),
+            "User",
+            "",
+            user.getEmail(),
+            null,
+            null,
+            0,
+            0,
+            0,
+            0
+        );
     }
-
-     */
 }
