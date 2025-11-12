@@ -17,6 +17,9 @@ public class Activity extends Publication {
     private String activityLevel;  // "nivel de actividad física"
     private String language;
 
+    // Nuevo campo: tamaño máximo del grupo
+    private int maxGroupSize;
+
     @Override
     public Map<String, Object> fetchSpecificDetails() {
         Map<String, Object> details = new HashMap<>();
@@ -28,5 +31,29 @@ public class Activity extends Publication {
         details.put("language", this.language);
 
         return details;
+    }
+
+    public void setDurationInHours(int durationInHours) {
+        this.durationInHours = durationInHours;
+    }
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
+    }
+    public void setWhatIsIncluded(String whatIsIncluded) {
+        this.whatIsIncluded = whatIsIncluded;
+    }
+    public void setActivityLevel(String activityLevel) {
+        this.activityLevel = activityLevel;
+    }
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    // Getter / Setter para maxGroupSize
+    public int getMaxGroupSize() {
+        return maxGroupSize;
+    }
+    public void setMaxGroupSize(int maxGroupSize) {
+        this.maxGroupSize = maxGroupSize;
     }
 }

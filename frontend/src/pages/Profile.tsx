@@ -1,20 +1,90 @@
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Calendar, Star, Trophy, Camera, TrendingUp } from "lucide-react";
+import { Calendar, Star, Trophy, Award, Gift, TrendingUp } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const Profile = () => {
-  // Mock user data - in a real app this would come from authentication/database
-  const user = {
-    name: "Adventure Explorer",
-    email: "explorer@questescapes.com",
-    avatar: "",
-    joinDate: "January 2024",
-    totalXP: 2850,
-    currentLevel: 8,
-    nextLevelXP: 3000,
+  const { user, isTraveler } = useAuth();
+
+  // Si no hay usuario o no es traveler, mostrar mensaje
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">No has iniciado sesión</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isTraveler()) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Este perfil es solo para viajeros</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Usar los datos directamente del usuario autenticado
+  const currentLevel = user.userLevel || 1;
+  const currentXp = user.userXP || 0;
+
+  // Funciones de cálculo de XP (mismas que en el backend)
+  const calculateXpForLevel = (level) => {
+    if (level <= 1) return 0;
+    const BASE_XP = 500;
+    const XP_MULTIPLIER = 1.5;
+    let totalXp = 0;
+    for (let i = 1; i < level; i++) {
+      totalXp += Math.floor(BASE_XP * Math.pow(XP_MULTIPLIER, i - 1));
+    }
+    return totalXp;
+  };
+
+  const xpForCurrentLevel = calculateXpForLevel(currentLevel);
+  const xpForNextLevel = calculateXpForLevel(currentLevel + 1);
+  const xpInCurrentLevel = currentXp - xpForCurrentLevel;
+  const xpRequiredForNextLevel = xpForNextLevel - xpForCurrentLevel;
+  const progressPercentage = xpRequiredForNextLevel > 0 
+    ? Math.min((xpInCurrentLevel / xpRequiredForNextLevel) * 100, 100)
+    : 100;
+
+  // Calcular descuento según nivel
+  const getDiscountPercentage = (level) => {
+    if (level === 1) return 0;
+    if (level === 2) return 5;
+    if (level === 3 || level === 4) return 10;
+    if (level === 5 || level === 6) return 15;
+    if (level === 7 || level === 8) return 20;
+    if (level === 9) return 25;
+    return level >= 10 ? 30 : 0;
+  };
+
+  const discountPercentage = getDiscountPercentage(currentLevel);
+  const joinDate = "Enero 2024"; // Esto debería venir del backend
+
+  // Sistema de niveles con beneficios detallados
+  const levelBenefits = [
+    { level: 1, discount: 0, benefits: ["Acceso básico a la plataforma"] },
+    { level: 2, discount: 5, benefits: ["5% de descuento en reservas"] },
+    { level: 3, discount: 10, benefits: ["10% de descuento en reservas", "Badge de Explorador"] },
+    { level: 4, discount: 10, benefits: ["10% de descuento", "Prioridad en atención al cliente"] },
+    { level: 5, discount: 15, benefits: ["15% de descuento", "Acceso a ofertas exclusivas"] },
+    { level: 6, discount: 15, benefits: ["15% de descuento", "Acceso VIP a eventos"] },
+    { level: 7, discount: 20, benefits: ["20% de descuento", "Upgrades gratuitos según disponibilidad"] },
+    { level: 8, discount: 20, benefits: ["20% de descuento", "Check-in/out flexibles"] },
+    { level: 9, discount: 25, benefits: ["25% de descuento", "Concierge personal"] },
+    { level: 10, discount: 30, benefits: ["30% de descuento", "Acceso Elite", "Todas las ventajas premium"] },
+  ];
+
+  // Datos que eventualmente vendrán del backend
+  const profileStats = {
     reviewsCount: 42,
     placesVisited: 28,
     photosShared: 156,
@@ -22,107 +92,125 @@ const Profile = () => {
   };
 
   const achievements = [
-    { name: "Explorer", icon: "🗺️", description: "Visited 25+ places", earned: true },
-    { name: "Reviewer", icon: "✍️", description: "Written 40+ reviews", earned: true },
-    { name: "Photographer", icon: "📸", description: "Shared 150+ photos", earned: true },
-    { name: "Helper", icon: "🤝", description: "Received 50+ helpful votes", earned: true },
-    { name: "Globe Trotter", icon: "🌍", description: "Visited 50+ places", earned: false },
-    { name: "Master Reviewer", icon: "⭐", description: "Written 100+ reviews", earned: false }
+    { name: "Explorador", icon: "🗺️", description: "Visitó 25+ lugares", earned: profileStats.placesVisited >= 25 },
+    { name: "Crítico", icon: "✍️", description: "Escribió 40+ reseñas", earned: profileStats.reviewsCount >= 40 },
+    { name: "Fotógrafo", icon: "📸", description: "Compartió 150+ fotos", earned: profileStats.photosShared >= 150 },
+    { name: "Colaborador", icon: "🤝", description: "Recibió 50+ votos útiles", earned: profileStats.helpfulVotes >= 50 },
+    { name: "Trotamundos", icon: "🌍", description: "Visitó 50+ lugares", earned: profileStats.placesVisited >= 50 },
+    { name: "Maestro Crítico", icon: "⭐", description: "Escribió 100+ reseñas", earned: profileStats.reviewsCount >= 100 }
   ];
 
   const recentReviews = [
     {
       id: 1,
-      placeName: "Seaside Resort & Spa",
+      placeName: "Resort & Spa Costero",
       type: "Hotel",
       rating: 5,
-      date: "2 days ago",
+      date: "hace 2 días",
       xpEarned: 150,
-      excerpt: "Amazing beachfront location with exceptional service..."
+      excerpt: "Increíble ubicación frente al mar con un servicio excepcional..."
     },
     {
       id: 2,
-      placeName: "Mountain Peak Adventure",
-      type: "Tour",
+      placeName: "Aventura en la Cima",
+      type: "Actividad",
       rating: 4,
-      date: "1 week ago",
+      date: "hace 1 semana",
       xpEarned: 200,
-      excerpt: "Challenging hike with breathtaking views at the summit..."
+      excerpt: "Caminata desafiante con vistas impresionantes en la cumbre..."
     },
     {
       id: 3,
-      placeName: "Local Flavors Bistro",
-      type: "Restaurant",
+      placeName: "Bistró Sabores Locales",
+      type: "Restaurante",
       rating: 5,
-      date: "2 weeks ago",
+      date: "hace 2 semanas",
       xpEarned: 125,
-      excerpt: "Authentic local cuisine with fresh ingredients..."
+      excerpt: "Auténtica cocina local con ingredientes frescos..."
     }
   ];
 
-  const getXPColor = (xp: number) => {
-    if (xp >= 200) return "xp-platinum";
-    if (xp >= 150) return "xp-gold";
-    if (xp >= 100) return "xp-silver";
-    return "xp-bronze";
+  const getXPColor = (xp) => {
+    if (xp >= 200) return "bg-purple-500 text-white";
+    if (xp >= 150) return "bg-yellow-500 text-white";
+    if (xp >= 100) return "bg-gray-400 text-white";
+    return "bg-orange-500 text-white";
   };
 
-  const progressPercentage = ((user.totalXP % 500) / 500) * 100;
+  const getLevelColor = (level) => {
+    if (level >= 10) return "text-purple-500";
+    if (level >= 7) return "text-yellow-500";
+    if (level >= 4) return "text-blue-500";
+    return "text-green-500";
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header userXP={user.totalXP} userLevel={user.currentLevel} />
+      <Header userXP={currentXp} userLevel={currentLevel} />
       
       <main className="container py-8 space-y-8">
-        {/* Profile Header */}
-        <Card className="bg-gradient-card">
+        {/* Encabezado del Perfil */}
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="p-8">
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={user.avatar} alt={user.name} />
+              <Avatar className="h-24 w-24 ring-4 ring-primary/20">
+                <AvatarImage src={user.photo} alt={`${user.firstName} ${user.lastName}`} />
                 <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+                  {user.firstName?.[0]}{user.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1 text-center lg:text-left space-y-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">{user.name}</h1>
+                  <h1 className="text-3xl font-bold text-foreground">
+                    {user.firstName} {user.lastName}
+                  </h1>
                   <p className="text-muted-foreground">{user.email}</p>
                   <p className="text-sm text-muted-foreground flex items-center justify-center lg:justify-start gap-1 mt-1">
                     <Calendar className="h-4 w-4" />
-                    Member since {user.joinDate}
+                    Miembro desde {joinDate}
                   </p>
                 </div>
-                
-                <div className="space-y-2">
+
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Level {user.currentLevel}</span>
-                    <span className="text-sm text-muted-foreground">{user.totalXP} / {user.nextLevelXP} XP</span>
+                    <div className="flex items-center gap-2">
+                      <Award className={`h-5 w-5 ${getLevelColor(currentLevel)}`} />
+                      <span className="text-lg font-bold">Nivel {currentLevel}</span>
+                      {discountPercentage > 0 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {discountPercentage}% descuento
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {currentXp} / {xpForNextLevel} XP
+                    </span>
                   </div>
-                  <Progress value={progressPercentage} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    {user.nextLevelXP - user.totalXP} XP until Level {user.currentLevel + 1}
+                  <Progress value={progressPercentage} className="h-3" />
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <TrendingUp className="h-4 w-4" />
+                    {xpRequiredForNextLevel} XP para el Nivel {currentLevel + 1}
                   </p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-primary">{user.reviewsCount}</div>
-                  <div className="text-xs text-muted-foreground">Reviews</div>
+                  <div className="text-2xl font-bold text-primary">{profileStats.reviewsCount}</div>
+                  <div className="text-xs text-muted-foreground">Reseñas</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-experience">{user.placesVisited}</div>
-                  <div className="text-xs text-muted-foreground">Places</div>
+                  <div className="text-2xl font-bold text-blue-500">{profileStats.placesVisited}</div>
+                  <div className="text-xs text-muted-foreground">Lugares</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-adventure">{user.photosShared}</div>
-                  <div className="text-xs text-muted-foreground">Photos</div>
+                  <div className="text-2xl font-bold text-purple-500">{profileStats.photosShared}</div>
+                  <div className="text-xs text-muted-foreground">Fotos</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold text-success">{user.helpfulVotes}</div>
-                  <div className="text-xs text-muted-foreground">Helpful</div>
+                  <div className="text-2xl font-bold text-green-500">{profileStats.helpfulVotes}</div>
+                  <div className="text-xs text-muted-foreground">Útiles</div>
                 </div>
               </div>
             </div>
@@ -130,20 +218,66 @@ const Profile = () => {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Achievements */}
-          <Card>
+          {/* Beneficios del Nivel Actual */}
+          <Card className="border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-adventure" />
-                Achievements
+                <Gift className="h-5 w-5 text-primary" />
+                Beneficios Actuales
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Award className={`h-6 w-6 ${getLevelColor(currentLevel)}`} />
+                  <span className="text-xl font-bold">Nivel {currentLevel}</span>
+                </div>
+                <div className="space-y-2">
+                  {levelBenefits
+                    .find(lb => lb.level === currentLevel)
+                    ?.benefits.map((benefit, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-sm">
+                        <span className="text-primary mt-0.5">✓</span>
+                        <span>{benefit}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {currentLevel < 10 && (
+                <div className="pt-4 border-t">
+                  <h4 className="font-semibold mb-3 text-sm">Próximos beneficios (Nivel {currentLevel + 1})</h4>
+                  <div className="space-y-2">
+                    {levelBenefits
+                      .find(lb => lb.level === currentLevel + 1)
+                      ?.benefits.map((benefit, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="mt-0.5">→</span>
+                          <span>{benefit}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Logros */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                Logros
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {achievements.map((achievement, index) => (
-                <div 
+                <div
                   key={index}
-                  className={`flex items-center gap-3 p-3 rounded-lg border ${
-                    achievement.earned ? 'bg-success/10 border-success/20' : 'bg-muted/50 border-border opacity-60'
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                    achievement.earned 
+                      ? 'bg-green-500/10 border-green-500/20 shadow-sm' 
+                      : 'bg-muted/50 border-border opacity-60'
                   }`}
                 >
                   <div className="text-2xl">{achievement.icon}</div>
@@ -152,56 +286,114 @@ const Profile = () => {
                     <div className="text-xs text-muted-foreground">{achievement.description}</div>
                   </div>
                   {achievement.earned && (
-                    <Badge variant="default" className="text-xs">Earned</Badge>
+                    <Badge variant="default" className="text-xs bg-green-500">Obtenido</Badge>
                   )}
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          {/* Recent Reviews */}
-          <div className="lg:col-span-2">
+          {/* Reseñas Recientes */}
+          <div className="lg:col-span-1">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-adventure" />
-                  Recent Reviews
+                  <Star className="h-5 w-5 text-yellow-500" />
+                  Reseñas Recientes
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentReviews.map((review) => (
-                  <div key={review.id} className="p-4 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-medium">{review.placeName}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Badge variant="outline" className="text-xs">{review.type}</Badge>
-                          <span>{review.date}</span>
+                {recentReviews.length > 0 ? (
+                  recentReviews.map((review) => (
+                    <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm">{review.placeName}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">{review.type}</Badge>
+                            <span className="text-xs text-muted-foreground">{review.date}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right space-y-1">
+                      <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-1">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`h-3 w-3 ${i < review.rating ? 'text-adventure fill-adventure' : 'text-muted-foreground'}`} 
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < review.rating 
+                                  ? 'text-yellow-500 fill-yellow-500' 
+                                  : 'text-gray-300'
+                              }`}
                             />
                           ))}
                         </div>
-                        <Badge 
-                          className={`text-xs bg-${getXPColor(review.xpEarned)} text-${getXPColor(review.xpEarned)}-foreground`}
-                        >
+                        <Badge className={`text-xs ${getXPColor(review.xpEarned)}`}>
                           +{review.xpEarned} XP
                         </Badge>
                       </div>
+                      <p className="text-xs text-muted-foreground mt-2">{review.excerpt}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{review.excerpt}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Aún no has escrito ninguna reseña
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* Tabla de Niveles */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Sistema de Niveles y Beneficios
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {levelBenefits.map((levelData) => (
+                <div
+                  key={levelData.level}
+                  className={`p-4 rounded-lg border transition-all ${
+                    levelData.level === currentLevel
+                      ? 'bg-primary/10 border-primary shadow-md ring-2 ring-primary/20'
+                      : levelData.level < currentLevel
+                      ? 'bg-muted/30 border-muted opacity-60'
+                      : 'bg-card border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-lg font-bold ${
+                      levelData.level === currentLevel ? 'text-primary' : ''
+                    }`}>
+                      Nivel {levelData.level}
+                    </span>
+                    {levelData.level === currentLevel && (
+                      <Badge variant="default" className="text-xs">Actual</Badge>
+                    )}
+                  </div>
+                  {levelData.discount > 0 && (
+                    <Badge variant="secondary" className="mb-2">
+                      {levelData.discount}% descuento
+                    </Badge>
+                  )}
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    {levelData.benefits.map((benefit, idx) => (
+                      <li key={idx} className="flex items-start gap-1">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

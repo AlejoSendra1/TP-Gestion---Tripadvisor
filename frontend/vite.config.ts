@@ -10,11 +10,26 @@ export default defineConfig(({ mode }) => ({
     // 1. Cambiamos el puerto de VITE (frontend) a 8081
     port: 8081,
     proxy: {
-      '/api/v1': {
-        // 2. Apuntamos al backend, que SÍ está en el 8080
+      '/publications': {
+        target: 'http://localhost:8080', // Tu backend
+        changeOrigin: true,
+      },
+      '/users': {
+        target: 'http://localhost:8080', // Tu backend
+        changeOrigin: true,
+      },
+      '/sessions': {
+        target: 'http://localhost:8080', // Tu backend
+        changeOrigin: true,
+      },
+      '/reviews': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-      }
+      },
+      '/ia': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     }
   },
   plugins: [

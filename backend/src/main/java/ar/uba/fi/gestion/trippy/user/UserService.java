@@ -3,21 +3,24 @@ package ar.uba.fi.gestion.trippy.user;
 import ar.uba.fi.gestion.trippy.common.exception.DuplicateEntityException;
 import ar.uba.fi.gestion.trippy.config.security.JwtService;
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
-import ar.uba.fi.gestion.trippy.user.email_validation.EmailService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordChangeService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordResetService;
-import ar.uba.fi.gestion.trippy.user.password_reset.PasswordResetTokenRepository;
+import ar.uba.fi.gestion.trippy.user.dto.RegistrationRequestDTO;
+import ar.uba.fi.gestion.trippy.user.dto.UserDTO;
+import ar.uba.fi.gestion.trippy.user.dto.UserLoginDTO;
+import ar.uba.fi.gestion.trippy.user.dto.RefreshDTO;
+import ar.uba.fi.gestion.trippy.user.dto.TokenDTO;
+import ar.uba.fi.gestion.trippy.user.dto.UserProfileDTO;
+import ar.uba.fi.gestion.trippy.user.dto.UserDTOFactory;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshToken;
 import ar.uba.fi.gestion.trippy.user.refresh_token.RefreshTokenService;
-
-
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -30,64 +33,46 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
-    private final EmailService emailService;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final PasswordResetService passwordResetService;
-    private final PasswordChangeService passwordChangeService;
-
 
     @Autowired
     UserService(
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
             UserRepository userRepository,
-            RefreshTokenService refreshTokenService,
-            EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, PasswordResetService passwordResetService, PasswordChangeService passwordChangeService) {
+            RefreshTokenService refreshTokenService) {
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
-        this.emailService = emailService;
-        this.passwordResetTokenRepository = passwordResetTokenRepository;
-        this.passwordResetService = passwordResetService;
-        this.passwordChangeService = passwordChangeService;
     }
 
-    public Optional<TokenDTO> createUser(UserCreateDTO data) {
-        System.out.println("se esta creando el user");
+    public Optional<UserDTO> createUser(RegistrationRequestDTO data) {
         if (userRepository.findByEmail(data.email()).isPresent()) {
             throw new DuplicateEntityException("User", "email");
         }
 
         var user = data.asUser(passwordEncoder::encode);
 
-        user.setRole("OWNER");
+        user.setRole(user.getRole());
 
         String verificationToken = UUID.randomUUID().toString();
         user.setTokenVerified(verificationToken);
-        user.setEmailVerified(false);
         userRepository.save(user);
-        //emailService.sendValidationEmail(user.getEmail(), verificationToken);
-        return Optional.of(generateTokens(user));
+        // emailService.sendValidationEmail(user.getEmail(), verificationToken);
+        TokenDTO tokens = Optional.of(generateTokens(user)).orElseThrow();
+
+        return Optional.of(UserDTOFactory.fromUser(user, tokens));
     }
 
-    public Optional<UserDTO> loginUser(UserCredentials data) {
+    public Optional<UserDTO> loginUser(UserLoginDTO data) {
+        System.out.println("el login dto: " + data.toString());
+        User maybeUser = userRepository.findByEmail(data.getEmail())
+                .filter(user -> passwordEncoder.matches(data.getPassword(), user.getPassword()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
-        Optional<User> maybeUser = userRepository.findByEmail(data.email())
-                .filter(user -> passwordEncoder.matches(data.password(), user.getPassword()));
-
-        // .filter(User::isEmailVerified); PARA VERIFICACION DE MAILS
-        // .map(this::generateTokens); POR SI QUEREMOS TOKENS ?
-
-        return maybeUser.map(user -> {
-            TokenDTO tokenDTO = generateTokens(user); // Your token generation method
-            return new UserDTO(
-                    user.getFirstname(),
-                    0, // userXP - you'll need to get this from somewhere
-                    1, // userLevel - you'll need to get this from somewhere
-                    tokenDTO
-            );
-        });
+        // Generate tokens for the user
+        TokenDTO tokenDTO = generateTokens(maybeUser);
+        return Optional.of(UserDTOFactory.fromUser(maybeUser, tokenDTO));
     }
 
     Optional<TokenDTO> refresh(RefreshDTO data) {
@@ -99,15 +84,14 @@ public class UserService {
     private TokenDTO generateTokens(User user) {
         String accessToken = jwtService.createToken(new JwtUserDetails(
                 user.getEmail(),
-                user.getRole()
-        ));
+                user.getRole()));
         RefreshToken refreshToken = refreshTokenService.createFor(user);
         return new TokenDTO(accessToken, refreshToken.value());
     }
 
     public boolean verifyEmailToken(String token) {
-        return userRepository.findByTokenVerified(token).map(user->{
-            user.setEmailVerified(true);
+        return userRepository.findByTokenVerified(token).map(user -> {
+            // user.setEmailVerified(true);
             user.setTokenVerified(null);
             userRepository.save(user);
             return true;
@@ -119,7 +103,6 @@ public class UserService {
         if (user.isEmpty()) {
             throw new EntityNotFoundException("User does not exist");
         }
-
         return user.get();
     }
 
@@ -127,8 +110,14 @@ public class UserService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JwtUserDetails userDetails = (JwtUserDetails) principal;
         User currentUser = getUserByEmail(userDetails.username());
-        return currentUser.getFirstname();
+        
+        if (currentUser instanceof Traveler traveler) {
+            return traveler.getFirstName() + " " + traveler.getLastName();
+        }
+        
+        return currentUser.getEmail();
     }
+
     public UserProfileDTO getCurrentUserProfile() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -137,5 +126,45 @@ public class UserService {
             return UserProfileDTO.fromUser(user);
         }
         throw new AccessDeniedException("User not authenticated or principal type is incorrect");
+    }
+
+    /**
+     * Añade experiencia a un usuario traveler
+     */
+    public void addXpToUser(String email, Integer xpToAdd) {
+        User user = getUserByEmail(email);
+        if (user instanceof Traveler traveler) {
+            int oldLevel = traveler.getLevel();
+            traveler.addXp(xpToAdd);
+            userRepository.save(traveler);
+            
+            int newLevel = traveler.getLevel();
+            if (newLevel > oldLevel) {
+                System.out.println("¡Usuario " + email + " subió al nivel " + newLevel + "!");
+                // Aquí podrías enviar una notificación o email
+            }
+        }
+    }
+
+    /**
+     * Calcula y añade XP por una reseña
+     */
+    public void addXpForReview(String email, int rating, boolean hasPhotos, int reviewLength) {
+        int baseXp = 50;
+        int photoBonus = hasPhotos ? 25 : 0;
+        int lengthBonus = reviewLength > 200 ? 25 : 0;
+        int ratingBonus = rating >= 4 ? 10 : 0;
+        
+        int totalXp = baseXp + photoBonus + lengthBonus + ratingBonus;
+        addXpToUser(email, totalXp);
+    }
+
+    /**
+     * Calcula y añade XP por una compra/reserva
+     */
+    public void addXpForPurchase(String email, Double purchaseAmount) {
+        // 1 XP por cada $10 gastados
+        int xpToAdd = (int) (purchaseAmount / 10);
+        addXpToUser(email, xpToAdd);
     }
 }

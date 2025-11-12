@@ -37,7 +37,7 @@ public class JwtService {
                 .compact();
     }
 
-    Optional<JwtUserDetails> extractVerifiedUserDetails(String token) {
+    public Optional<JwtUserDetails> extractVerifiedUserDetails(String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(getSigningKey())

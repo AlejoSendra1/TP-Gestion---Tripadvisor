@@ -1,11 +1,46 @@
 import { Search, MapPin, Calendar, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import heroImage from "@/assets/hero-travel.jpg";
+import { SearchFilters } from "@/components/SearchFilters";
 
-export function Hero() {
+interface HeroProps {
+  onFiltersChange?: (filters: any) => void;
+}
+
+export function Hero({ onFiltersChange }: HeroProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>('');
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (onFiltersChange) {
+      onFiltersChange({ query });
+    }
+  };
+
+  const handleCategorySelect = (category: string | undefined) => {
+    setSelectedCategory(category);
+    if (onFiltersChange) {
+      onFiltersChange({ category: category || ''});
+    }
+  };
+
+  const handleAdvancedFiltersChange = (filters: any) => {
+    if (onFiltersChange) {
+      onFiltersChange(filters);
+    }
+  };
+
+  const handleSortChange = (sortOption: string) => {
+    if (onFiltersChange) {
+      onFiltersChange({ sort: sortOption });
+    }
+  };
+
   return (
-    <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[800px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <img
@@ -16,60 +51,119 @@ export function Hero() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/60 to-adventure/70" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-          Discover & Earn
-          <span className="block text-accent">Your Adventures</span>
-        </h1>
+      {/* Content Container */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-8 space-y-12">
         
-        <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto">
-          HOLAAAAA Share your travel experiences, gain XP points, and unlock exclusive rewards while helping fellow travelers discover amazing places.
-        </p>
-
-        {/* Search Card */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-hero max-w-3xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Where to?" className="pl-10" />
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Check-in" type="date" className="pl-10" />
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Check-out" type="date" className="pl-10" />
-            </div>
-            <div className="relative">
-              <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Guests" className="pl-10" />
-            </div>
-          </div>
+        {/* PARTE 1: Descripción */}
+        <div className="text-center">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+            Animate,
+            <span className="block text-accent">Conocé! Viajá!</span>
+          </h1>
           
-          <Button variant="hero" size="lg" className="w-full md:w-auto px-8">
-            <Search className="mr-2 h-4 w-4" />
-            Search Adventures
-          </Button>
+          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
+            Contá tus aventuras, sumá XP y desbloqueá recompensas exclusivas.
+            ¡Tu historia puede inspirar el próximo viaje de alguien!
+          </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-8 mt-12 max-w-md mx-auto">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">50K+</div>
-            <div className="text-white/80">Experiences</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">25K+</div>
-            <div className="text-white/80">Travelers</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">1M+</div>
-            <div className="text-white/80">XP Earned</div>
-          </div>
-        </div>
+        {/* PARTE 2: Estadísticas */}
+        {/*<div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">*/}
+        {/*  <div className="text-center">*/}
+        {/*    <div className="text-3xl font-bold text-white">50K+</div>*/}
+        {/*    <div className="text-white/80">Experiences</div>*/}
+        {/*  </div>*/}
+        {/*  <div className="text-center">*/}
+        {/*    <div className="text-3xl font-bold text-white">25K+</div>*/}
+        {/*    <div className="text-white/80">Travelers</div>*/}
+        {/*  </div>*/}
+        {/*  <div className="text-center">*/}
+        {/*    <div className="text-3xl font-bold text-white">1M+</div>*/}
+        {/*    <div className="text-white/80">XP Earned</div>*/}
+        {/*  </div>*/}
+        {/*</div>*/}
+
+        {/* PARTE 3: SearchFilters (contiene todos los elementos de búsqueda) */}
+        <SearchFilters 
+          onSearch={handleSearch}
+          onCategorySelect={handleCategorySelect}
+          onFiltersChange={handleAdvancedFiltersChange}
+          onSortChange={handleSortChange}
+          selectedCategory={selectedCategory}
+        />
       </div>
     </section>
   );
+  
+  
+  
+  // return (
+  //   <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+  //     {/* Background Image with Overlay */}
+  //     <div className="absolute inset-0 z-0">
+  //       <img
+  //         src={heroImage}
+  //         alt="Beautiful travel destination"
+  //         className="w-full h-full object-cover"
+  //       />
+  //       <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/60 to-adventure/70" />
+  //     </div>
+
+  //     {/* Content */}
+  //     <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
+  //       <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+  //         Discover & Earn
+  //         <span className="block text-accent">Your Adventures</span>
+  //       </h1>
+        
+  //       <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto">
+  //         Share your travel experiences, gain XP points, and unlock exclusive rewards while helping fellow travelers discover amazing places.
+  //       </p>
+        
+  //       {/* Stats */}
+  //       <div className="grid grid-cols-3 gap-8 mt-12 max-w-md mx-auto">
+  //         <div className="text-center">
+  //           <div className="text-3xl font-bold text-white">50K+</div>
+  //           <div className="text-white/80">Experiences</div>
+  //         </div>
+  //         <div className="text-center">
+  //           <div className="text-3xl font-bold text-white">25K+</div>
+  //           <div className="text-white/80">Travelers</div>
+  //         </div>
+  //         <div className="text-center">
+  //           <div className="text-3xl font-bold text-white">1M+</div>
+  //           <div className="text-white/80">XP Earned</div>
+  //         </div>
+  //       </div>
+
+  //       {/* Search Card */}
+  //       <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-hero max-w-3xl mx-auto">
+  //         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+  //           <div className="relative">
+  //             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+  //             <Input placeholder="Where to?" className="pl-10" />
+  //           </div>
+  //           <div className="relative">
+  //             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+  //             <Input placeholder="Check-in" type="date" className="pl-10" />
+  //           </div>
+  //           <div className="relative">
+  //             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+  //             <Input placeholder="Check-out" type="date" className="pl-10" />
+  //           </div>
+  //           <div className="relative">
+  //             <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+  //             <Input placeholder="Guests" className="pl-10" />
+  //           </div>
+  //         </div>
+          
+  //         <Button variant="hero" size="lg" className="w-full md:w-auto px-8">
+  //           <Search className="mr-2 h-4 w-4" />
+  //           Search Adventures
+  //         </Button>
+  //       </div>
+
+  //     </div>
+  //   </section>
+  // );
 }
