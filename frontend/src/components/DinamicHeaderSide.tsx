@@ -10,10 +10,10 @@ export function DinamicHeaderSide() {
   const { user, logout, isTraveler, isBusinessOwner } = useAuth();
 
   const getLevelColor = (level: number) => {
-    if (level >= 20) return "bg-xp-platinum";
-    if (level >= 15) return "bg-xp-gold";
-    if (level >= 10) return "bg-xp-silver";
-    return "bg-xp-bronze";
+    if (level >= 10) return "bg-purple-500";
+    if (level >= 7) return "bg-yellow-500";
+    if (level >= 4) return "bg-blue-500";
+    return "bg-green-500";
   };
 
   const getUserInitials = () => {
@@ -28,6 +28,42 @@ export function DinamicHeaderSide() {
     }
 
     return user.email?.[0]?.toUpperCase() || "U";
+  };
+
+  // Calcula el XP necesario para alcanzar un nivel específico
+  const calculateXpForLevel = (level: number): number => {
+    if (level <= 1) return 0;
+    const BASE_XP = 500;
+    const XP_MULTIPLIER = 1.5;
+    let totalXp = 0;
+    for (let i = 1; i < level; i++) {
+      totalXp += Math.floor(BASE_XP * Math.pow(XP_MULTIPLIER, i - 1));
+    }
+    return totalXp;
+  };
+
+  // Calcula el progreso del nivel actual (0-100%)
+  const getLevelProgress = (currentXp: number, currentLevel: number): number => {
+    const currentLevelXp = calculateXpForLevel(currentLevel);
+    const nextLevelXp = calculateXpForLevel(currentLevel + 1);
+    const xpInCurrentLevel = currentXp - currentLevelXp;
+    const xpNeededInLevel = nextLevelXp - currentLevelXp;
+    
+    if (xpNeededInLevel === 0) return 100;
+    return Math.min((xpInCurrentLevel / xpNeededInLevel) * 100, 100);
+  };
+
+  // Calcula el XP dentro del nivel actual
+  const getXpInCurrentLevel = (currentXp: number, currentLevel: number): number => {
+    const currentLevelXp = calculateXpForLevel(currentLevel);
+    return currentXp - currentLevelXp;
+  };
+
+  // Calcula el XP necesario para el siguiente nivel
+  const getXpNeededForNextLevel = (currentLevel: number): number => {
+    const currentLevelXp = calculateXpForLevel(currentLevel);
+    const nextLevelXp = calculateXpForLevel(currentLevel + 1);
+    return nextLevelXp - currentLevelXp;
   };
 
   return (
@@ -46,24 +82,27 @@ export function DinamicHeaderSide() {
             {/* Info container that extends from avatar */}
             <div className="flex items-center bg-primary/10 pl-4 pr-6 py-2 rounded-l-full mr-[-20px] z-0">
               {/* Traveler-specific XP and Level */}
-              {isTraveler() && (
+              {isTraveler() && user.userXP !== undefined && user.userLevel !== undefined && (
                 <div className="hidden lg:block mr-4">
                   <div className="text-right mb-1">
-                    <div className="text-sm font-medium">
-                      Explorer Level {user.userLevel}
+                    <div className="text-sm font-medium flex items-center gap-1 justify-end">
+                      <Trophy className="h-3.5 w-3.5" />
+                      Nivel {user.userLevel}
                     </div>
                   </div>
-                  <div className="w-24">
+                  <div className="w-32">
                     <div className="h-2 bg-secondary rounded-full overflow-hidden mb-0.5">
                       <div
                         className={`h-full ${getLevelColor(user.userLevel)} transition-all duration-300`}
                         style={{
-                          width: `${Math.min((user.userXP % 1000) / 10, 100)}%`
+                          width: `${getLevelProgress(user.userXP, user.userLevel)}%`
                         }}
                       />
                     </div>
                     <div className="text-[10px] text-muted-foreground text-right leading-tight">
-                      {user.userXP} XP
+                      {getXpInCurrentLevel(user.userXP, user.userLevel)} / {getXpNeededForNextLevel(user.userLevel)} XP
+                      <span className="mx-1">•</span>
+                      Total: {user.userXP} XP
                     </div>
                   </div>
                 </div>
