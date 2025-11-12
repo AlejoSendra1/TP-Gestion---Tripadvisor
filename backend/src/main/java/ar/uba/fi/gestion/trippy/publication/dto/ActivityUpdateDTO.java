@@ -5,5 +5,6 @@ public record ActivityUpdateDTO(
     String meetingPoint,
     String whatIsIncluded,
     String activityLevel,
-    String language
+    String language,
+    Integer maxGroupSize // Nuevo campo opcional para patch
 ) {}
