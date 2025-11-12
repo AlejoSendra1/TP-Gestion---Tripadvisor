@@ -4,11 +4,12 @@ import ar.uba.fi.gestion.trippy.common.location.Location;
 import java.util.List;
 
 // DTO para US #24 (Publicar Restaurant)
+// ahora con openingStart y openingEnd (String, por ejemplo "09:00")
 public record RestaurantCreateDTO(
         // Campos comunes
         String title,
         String description,
-        double price, // Precio base (quizás costo promedio por persona)
+        double price,
         Location location,
         String mainImageUrl,
         List<String> imageUrls,
@@ -16,6 +17,9 @@ public record RestaurantCreateDTO(
         // Campos específicos de Restaurant
         String cuisineType,
         String priceRange, // Ej: "$$ - $$$"
-        String openingHours,
-        String menuUrl
+        String openingStart,
+        String openingEnd,
+        String menuUrl,
+        Integer capacity
+
 ) {}

@@ -1,3 +1,6 @@
+// typescript
+// File: frontend/src/pages/CreatePublication.tsx
+import { hourOptions, isOpeningBeforeClosing, normalizeToHour } from "@/lib/timeHelpers";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -39,6 +42,7 @@ const initialState = {
     whatIsIncluded: "",
     activityLevel: "",
     language: "",
+    maxGroupSize: 0, // <-- agregado
 
     // --- Coworking ---
     pricePerDay: 0,
@@ -48,7 +52,8 @@ const initialState = {
     // --- Restaurant ---
     cuisineType: "",
     priceRange: "", // Ej: "$$"
-    openingHours: "",
+    openingStart: "", // nuevo
+    openingEnd: "",   // nuevo
     menuUrl: "",
 };
 
@@ -66,7 +71,7 @@ const CreatePublication = () => {
     // Handler para campos simples (sin cambios)
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
+        setFormData((prev: any) => ({
             ...prev,
             [name]: value,
         }));
@@ -75,7 +80,7 @@ const CreatePublication = () => {
     // Handler para 'location' (sin cambios)
     const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
+        setFormData((prev: any) => ({
             ...prev,
             location: {
                 ...prev.location,
@@ -123,20 +128,56 @@ const CreatePublication = () => {
                 whatIsIncluded: formData.whatIsIncluded,
                 activityLevel: formData.activityLevel,
                 language: formData.language,
+                maxGroupSize: parseInt(String(formData.maxGroupSize), 10), // <-- agregado
             };
         } else if (publicationType === "coworking") {
+             if (formData.capacity === undefined || formData.capacity === "" ) {
+                toast({
+                    title: "Campo requerido",
+                    description: "La capacidad es obligatoria para Coworking.",
+                    variant: "destructive",
+                });
+                return;
+            }
+            const capNum = parseInt(String(formData.capacity), 10);
+            if (Number.isNaN(capNum) || capNum < 0) {
+                toast({
+                    title: "Valor inválido",
+                    description: "La capacidad debe ser un número entero válido mayor o igual a 0.",
+                    variant: "destructive",
+                });
+                return;
+            }
             specificData = {
                 pricePerDay: parseFloat(String(formData.pricePerDay)),
                 pricePerMonth: parseFloat(String(formData.pricePerMonth)),
+                capacity: parseInt(String(formData.capacity), 10), // entero obligatorio
                 // Convertimos el string "Wifi, Cafe" en un array ["Wifi", "Cafe"]
-                services: formData.services.split(",").map((s) => s.trim()).filter(s => s.length > 0),
+                services: (formData.services || "").split(",").map((s: string) => s.trim()).filter((s: string) => s.length > 0),
             };
         } else if (publicationType === "restaurant") {
+            if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
+                toast({
+                  title: "Horario inválido",
+                  description: "El horario de apertura debe ser menor que el horario de cierre.",
+                  variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+              }
+            // Normalizar horarios a hora en punto
+            const openingStart = normalizeToHour(formData.openingStart);
+            const openingEnd = normalizeToHour(formData.openingEnd);
+
             specificData = {
                 cuisineType: formData.cuisineType,
                 priceRange: formData.priceRange,
-                openingHours: formData.openingHours,
+                openingStart: openingStart || null,
+                openingEnd: openingEnd || null,
                 menuUrl: formData.menuUrl,
+               capacity: formData.capacity !== undefined && formData.capacity !== ""
+                         ? parseInt(String(formData.capacity), 10)
+                         : null,
             };
         }
 
@@ -349,6 +390,10 @@ const CreatePublication = () => {
                                             <Label htmlFor="activityLevel">Activity Level</Label>
                                             <Input id="activityLevel" name="activityLevel" value={formData.activityLevel} onChange={handleInputChange} placeholder="Ej: Moderado, Intenso" />
                                         </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="maxGroupSize">Max Group Size</Label>
+                                            <Input id="maxGroupSize" name="maxGroupSize" type="number" value={formData.maxGroupSize} onChange={handleInputChange} placeholder="Ej: 20" />
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="whatIsIncluded">What's Included</Label>
@@ -375,32 +420,108 @@ const CreatePublication = () => {
                                         <Label htmlFor="services">Services (do type separated by comma)</Label>
                                         <Input id="services" name="services" value={formData.services} onChange={handleInputChange} placeholder="Ej: Wifi, Café, Salas de reunión" />
                                     </div>
+                                    {/* Nuevo campo capacity para coworking */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="capacity">Capacidad (Personas)</Label>
+                                        <Input
+                                            id="capacity"
+                                            name="capacity"
+                                            type="number"
+                                            value={formData.capacity ?? ""}
+                                            onChange={handleInputChange}
+                                            placeholder="Ej: 50"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             )}
 
                             {/* NUEVO: Renderizado condicional para RESTAURANT */}
-                            {publicationType === 'restaurant' && (
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Restaurant Details</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="cuisineType">Cuisine Type</Label>
-                                            <Input id="cuisineType" name="cuisineType" value={formData.cuisineType} onChange={handleInputChange} placeholder="Ej: Italiana, Mexicana" required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="priceRange">Price Range</Label>
-                                            <Input id="priceRange" name="priceRange" value={formData.priceRange} onChange={handleInputChange} placeholder="Ej: $, $$, $$$" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="openingHours">Timetables</Label>
-                                        <Input id="openingHours" name="openingHours" value={formData.openingHours} onChange={handleInputChange} placeholder="Ej: Lunes a Viernes 9am-10pm" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="menuUrl">Menu URL (Optional)</Label>
-                                        <Input id="menuUrl" name="menuUrl" type="url" value={formData.menuUrl} onChange={handleInputChange} placeholder="https://ejemplo.com/menu.pdf" />
-                                    </div>
+                            {publicationType === "restaurant" && (
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-medium">Detalles del Restaurante</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="cuisineType">Tipo de Cocina</Label>
+                                    <Input
+                                      id="cuisineType"
+                                      name="cuisineType"
+                                      value={formData.cuisineType || ""}
+                                      onChange={handleInputChange}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="priceRange">Rango de Precio</Label>
+                                    <Input
+                                      id="priceRange"
+                                      name="priceRange"
+                                      value={formData.priceRange || ""}
+                                      onChange={handleInputChange}
+                                    />
+                                  </div>
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="openingStart">Horario Inicio</Label>
+                                    <select
+                                      id="openingStart"
+                                      name="openingStart"
+                                      value={formData.openingStart || ""}
+                                      onChange={handleInputChange}
+                                      className="w-full rounded-md border px-3 py-2"
+                                    >
+                                      <option value="">-- Seleccionar --</option>
+                                      {hourOptions.map((h) => (
+                                        <option key={`start-${h}`} value={h}>
+                                          {h}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="openingEnd">Horario Fin</Label>
+                                    <select
+                                      id="openingEnd"
+                                      name="openingEnd"
+                                      value={formData.openingEnd || ""}
+                                      onChange={handleInputChange}
+                                      className="w-full rounded-md border px-3 py-2"
+                                    >
+                                      <option value="">-- Seleccionar --</option>
+                                      {hourOptions.map((h) => (
+                                        <option key={`end-${h}`} value={h}>
+                                          {h}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="menuUrl">URL del Menú</Label>
+                                  <Input
+                                    id="menuUrl"
+                                    name="menuUrl"
+                                    value={formData.menuUrl || ""}
+                                    onChange={handleInputChange}
+                                  />
+                                </div>
+
+                                {/* NUEVO: campo capacity para restaurant */}
+                                <div className="space-y-2">
+                                  <Label htmlFor="capacity">Capacidad (Personas)</Label>
+                                  <Input
+                                    id="capacity"
+                                    name="capacity"
+                                    type="number"
+                                    value={formData.capacity || ""}
+                                    onChange={handleInputChange}
+                                    placeholder="Ej: 30"
+                                  />
+                                </div>
+                              </div>
                             )}
 
                             {/* --- Submit --- */}

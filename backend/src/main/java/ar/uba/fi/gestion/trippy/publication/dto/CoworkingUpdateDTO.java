@@ -5,5 +5,6 @@ import java.util.List;
 public record CoworkingUpdateDTO(
     Double pricePerDay,
     Double pricePerMonth,
+    Integer capacity, // <-- nuevo
     List<String> services
 ) {}

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
+import { isOpeningBeforeClosing } from "@/lib/timeHelpers";
 import { useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
 
@@ -50,6 +51,9 @@ const editPublicationFn = async ({
             whatIsIncluded: formData.whatIsIncluded,
             activityLevel: formData.activityLevel,
             language: formData.language,
+            maxGroupSize: formData.maxGroupSize !== undefined
+                        ? (parseInt(String(formData.maxGroupSize), 10) || null)
+                        : null, // <-- agregado
         };
     } else if (publicationType === "coworking") {
         // ✅ --- LÓGICA DE COWORKING AÑADIDA ---
@@ -62,16 +66,30 @@ const editPublicationFn = async ({
             pricePerDay: parseFloat(String(formData.pricePerDay)) || null,
             pricePerMonth: parseFloat(String(formData.pricePerMonth)) || null,
             services: servicesArray,
+            capacity: formData.capacity !== undefined && formData.capacity !== ""
+                                  ? (parseInt(String(formData.capacity), 10) || null)
+                                  : null,
         };
     } else if (publicationType === "restaurant") {
-        // ✅ --- LÓGICA DE RESTAURANT AÑADIDA ---
-        specificData = {
-            cuisineType: formData.cuisineType,
-            priceRange: formData.priceRange,
-            openingHours: formData.openingHours,
-            menuUrl: formData.menuUrl,
-        };
-    }
+        if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
+            toast({
+              title: "Horario inválido",
+              description: "El horario de apertura debe ser menor que el horario de cierre.",
+              variant: "destructive",
+            });
+            return;
+          }
+          specificData = {
+              cuisineType: formData.cuisineType,
+              priceRange: formData.priceRange,
+              openingStart: formData.openingStart ?? null,
+              openingEnd: formData.openingEnd ?? null,
+              menuUrl: formData.menuUrl,
+              capacity: formData.capacity !== undefined && formData.capacity !== ""
+                       ? (parseInt(String(formData.capacity), 10) || null)
+                       : null,
+          };
+      }
 
     // 4. Ejecutar las peticiones EN ORDEN (para evitar race conditions)
     await apiClient.patch(commonEndpoint, baseData);

@@ -1,17 +1,32 @@
 INSERT INTO users (id, email, password, agree_to_terms, user_type)
 VALUES (100, 'hotel@paradise.com', 'hashed_password_789', TRUE, 'OWNER');
 DROP TABLE IF EXISTS reservation;
+-- eliminar tablas dependientes y la tabla base con CASCADE
+DROP TABLE IF EXISTS reservation_activity, reservation_restaurant, room_type, reservation_room_details, reservation_coworking, reservation_hotel, reservation CASCADE;
+
+-- Tabla única de reservas con todos los campos (nullable los específicos)
 CREATE TABLE IF NOT EXISTS reservation (
     id SERIAL PRIMARY KEY,
     publication_id INT NOT NULL REFERENCES publication(id) ON DELETE CASCADE,
     traveler_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     reservation_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP,
+
+    reservation_type VARCHAR(20),
     total_price DECIMAL(10,2) NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN ('CONFIRMED', 'CANCELLED', 'COMPLETED')),
+    notes TEXT,
+
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    check_in DATE,
+    check_out DATE,
+    reservation_datetime TIMESTAMP,
+    start_datetime TIMESTAMP,
+
     guest_count INT,
-    notes TEXT
+    room_count INT,
+    cover_count INT,
+    participant_count INT
 );
 
 INSERT INTO business_owners (id, business_name, business_type, business_description, verified)
@@ -40,33 +55,33 @@ INSERT INTO publication (
 INSERT INTO publication (
     id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
     street_address, city, state, country, zip_code,
-    cuisine_type, price_range, opening_hours, menu_url
+    cuisine_type, price_range, opening_start, opening_end, menu_url, capacity
 ) VALUES (
              2, 'RESTAURANT', 'Restaurante La Paella', 'Auténtica comida...', 45.50, 100, 'https://images.unsplash.com/photo-1558030006-450675393462?w=600',
              'Av. de Mayo 567', 'Buenos Aires', 'CABA', 'Argentina', '1084',
-             'Española', '$$$', '12:00 - 00:00', '...'
+             'Española', '$$$', '12:00', '23:00', '...', '30'
          );
 
 -- 3. Actividad (ID 3)
 INSERT INTO publication (
     id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
     street_address, city, state, country, zip_code,
-    duration_in_hours, meeting_point, what_is_included, activity_level, language
+    duration_in_hours, meeting_point, what_is_included, activity_level, language, max_group_size
 ) VALUES (
              3, 'ACTIVITY', 'Tour de Grafitis...', 'Recorre las calles...', 25.00, 100, 'https://turismo.buenosaires.gob.ar/sites/turismo/files/field/image/ElRegreso980.jpg',
              'Honduras y Serrano', 'Buenos Aires', 'CABA', 'Argentina', '1414',
-             3, 'Esquina...', 'Guía...', 'Bajo', 'Español/Inglés'
+             3, 'Esquina...', 'Guía...', 'Bajo', 'Español/Inglés', 20
          );
 
 -- 4. Coworking (ID 4)
 INSERT INTO publication (
     id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
     street_address, city, state, country, zip_code,
-    price_per_day, price_per_month
+    price_per_day, price_per_month, capacity
 ) VALUES (
              4, 'COWORKING', 'Trippy WorkSpace', 'Oficina compartida...', 30.00, 100, 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600',
              'Av. Vélez Sarsfield 800', 'Córdoba', 'Córdoba', 'Argentina', '5000',
-             30.00, 450.00
+             30.00, 450.00, 100
          );
 
 -- --- DETALLES DE PUBLICACIONES (PARA US 11) ---

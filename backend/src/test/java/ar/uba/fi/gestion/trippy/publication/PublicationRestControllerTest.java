@@ -137,10 +137,11 @@ public class PublicationRestControllerTest {
                 "Hotel", Map.of("roomCount", 50)
         );
 
+        // Incluir maxGroupSize en los detalles esperados (p. ej. 20)
         detailDtoActivity = new PublicationDetailDTO(
                 2L, "Test Activity", "Descripción Actividad", 50.0, testLocation,
                 hostDto, Collections.emptyList(), Collections.emptyList(),
-                "Activity", Map.of("durationInHours", 3)
+                "Activity", Map.of("durationInHours", 3, "maxGroupSize", 20)
         );
 
         detailDtoCoworking = new PublicationDetailDTO(
@@ -162,22 +163,24 @@ public class PublicationRestControllerTest {
                 10, 20 // roomCount y capacity
         );
 
+        // Agregado el campo maxGroupSize al constructor (p. ej. 20)
         activityCreateDto = new ActivityCreateDTO(
                 "Actividad Creada", "Desc", 50.0, testLocation,
                 "http://img.com/act.png", Collections.emptyList(),
-                3, "Obelisco", "Guía", "Moderado", "Español"
+                3, "Obelisco", "Guía", "Moderado", "Español",
+                20
         );
 
         coworkingCreateDto = new CoworkingCreateDTO(
                 "Coworking Creado", "Desc", 15.0, testLocation,
                 "http://img.com/co.png", Collections.emptyList(),
-                25.0, 300.0, List.of("Wifi", "Café")
+                25.0, 300.0, List.of("Wifi", "Café"), 30
         );
 
         restaurantCreateDto = new RestaurantCreateDTO(
                 "Restaurant Creado", "Desc", 40.0, testLocation,
                 "http://img.com/resto.png", Collections.emptyList(),
-                "Italiana", "$$$", "12:00-23:00", "http://menu.com"
+                "Italiana", "$$$", "12:00", "23:00", "http://menu.com", 30
         );
 
         // --- Mock de Seguridad (JWT Service) ---

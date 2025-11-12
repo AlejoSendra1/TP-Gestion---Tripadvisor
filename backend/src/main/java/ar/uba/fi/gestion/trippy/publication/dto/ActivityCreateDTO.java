@@ -18,5 +18,8 @@ public record ActivityCreateDTO(
         String meetingPoint,
         String whatIsIncluded,
         String activityLevel,
-        String language
+        String language,
+
+        // Nuevo: tamaño máximo del grupo
+        int maxGroupSize
 ) {}

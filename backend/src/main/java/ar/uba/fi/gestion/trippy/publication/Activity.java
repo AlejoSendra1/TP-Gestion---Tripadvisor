@@ -17,6 +17,9 @@ public class Activity extends Publication {
     private String activityLevel;  // "nivel de actividad física"
     private String language;
 
+    // Nuevo campo: tamaño máximo del grupo
+    private int maxGroupSize;
+
     @Override
     public Map<String, Object> fetchSpecificDetails() {
         Map<String, Object> details = new HashMap<>();
@@ -46,4 +49,11 @@ public class Activity extends Publication {
         this.language = language;
     }
 
+    // Getter / Setter para maxGroupSize
+    public int getMaxGroupSize() {
+        return maxGroupSize;
+    }
+    public void setMaxGroupSize(int maxGroupSize) {
+        this.maxGroupSize = maxGroupSize;
+    }
 }
