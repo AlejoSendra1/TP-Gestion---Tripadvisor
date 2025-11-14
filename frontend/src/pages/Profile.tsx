@@ -12,13 +12,19 @@ import { useUserReservations } from "@/hooks/useUserReservations";
 // (Para el botón de "Editar")
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import ReservationList from "@/components/ReservationList";
 // --- FIN NUEVOS IMPORTS ---
 
 const Profile = () => {
   const { user, isTraveler } = useAuth();
+  const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
 
-  // Uso del hook
-const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
+  useEffect(() => {
+    if (user) {
+      fetchReservations().catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   if (!user) {
     return (
@@ -155,48 +161,6 @@ const { reservations, isLoading: reservationsLoading, error: reservationsError, 
     return "text-green-500";
   };
 
-const renderReservationSummary = (r: any) => {
-    const dateTime = r.dateTime || r.startDate || r.start_date || null;
-    const endDate = r.endDate || r.end_date || null;
-    const pubTitle =
-      r.publicationTitle ||
-      r.publicationName ||
-      r.publication?.title ||
-      (r.publicationId ? `Publicación #${r.publicationId}` : null);
-    const guests = r.guests ?? r.people ?? null;
-    const status = r.status ?? null;
-
-    if (!dateTime && !endDate && !pubTitle && !guests) {
-      return <pre className="text-xs text-muted-foreground">{JSON.stringify(r)}</pre>;
-    }
-
-    return (
-      <div className="text-sm text-muted-foreground space-y-1">
-        {pubTitle && <div className="font-medium">{pubTitle}</div>}
-        {dateTime && (
-          <div>
-            Fecha/hora: <span className="font-medium text-foreground">{dateTime}</span>
-          </div>
-        )}
-        {endDate && (
-          <div>
-            Fin: <span className="font-medium text-foreground">{endDate}</span>
-          </div>
-        )}
-        {guests !== null && (
-          <div>
-            Invitados: <span className="font-medium">{guests}</span>
-          </div>
-        )}
-        {status && (
-          <div>
-            Estado: <span className="font-medium">{status}</span>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
       <div className="min-h-screen bg-background">
         <Header userXP={currentXp} userLevel={currentLevel} />
@@ -282,30 +246,17 @@ const renderReservationSummary = (r: any) => {
           </Card>
 
           <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-primary" />
-                        Mis Reservas
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
-                      {reservationsError && <div className="text-sm text-destructive">{reservationsError}</div>}
-                      {!reservationsLoading && !reservationsError && reservations.length === 0 && (
-                        <p className="text-sm text-muted-foreground">Aún no tienes reservas</p>
-                      )}
-                      <div className="space-y-3">
-                        {reservations.map((r, idx) => (
-                          <div key={r.id ?? idx} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex-1">{renderReservationSummary(r)}</div>
-                              <div className="text-xs text-muted-foreground ml-4">{r.id ? `#${r.id}` : null}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+            <CardHeader>
+              <CardTitle>Mis reservas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
+              {reservationsError && <div className="text-sm text-destructive">Error cargando reservas: {String(reservationsError.message ?? reservationsError)}</div>}
+              {!reservationsLoading && !reservationsError && (
+                <ReservationList reservations={reservations} />
+              )}
+            </CardContent>
+          </Card>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Beneficios del Nivel Actual */}
