@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Star, Trophy, Award, Gift, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-
+// --- IMPORT DEL HOOK ---
+import { useUserReservations } from "@/hooks/useUserReservations";
 // --- ¡NUEVOS IMPORTS! ---
 // (Para el botón de "Editar")
 import { Link } from "react-router-dom";
@@ -16,7 +17,9 @@ import { Button } from "@/components/ui/button";
 const Profile = () => {
   const { user, isTraveler } = useAuth();
 
-  // Si no hay usuario o no es traveler, mostrar mensaje
+  // Uso del hook
+const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
+
   if (!user) {
     return (
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -152,7 +155,47 @@ const Profile = () => {
     return "text-green-500";
   };
 
-  // --- FIN DE SECCIÓN HARDCODEADA ---
+const renderReservationSummary = (r: any) => {
+    const dateTime = r.dateTime || r.startDate || r.start_date || null;
+    const endDate = r.endDate || r.end_date || null;
+    const pubTitle =
+      r.publicationTitle ||
+      r.publicationName ||
+      r.publication?.title ||
+      (r.publicationId ? `Publicación #${r.publicationId}` : null);
+    const guests = r.guests ?? r.people ?? null;
+    const status = r.status ?? null;
+
+    if (!dateTime && !endDate && !pubTitle && !guests) {
+      return <pre className="text-xs text-muted-foreground">{JSON.stringify(r)}</pre>;
+    }
+
+    return (
+      <div className="text-sm text-muted-foreground space-y-1">
+        {pubTitle && <div className="font-medium">{pubTitle}</div>}
+        {dateTime && (
+          <div>
+            Fecha/hora: <span className="font-medium text-foreground">{dateTime}</span>
+          </div>
+        )}
+        {endDate && (
+          <div>
+            Fin: <span className="font-medium text-foreground">{endDate}</span>
+          </div>
+        )}
+        {guests !== null && (
+          <div>
+            Invitados: <span className="font-medium">{guests}</span>
+          </div>
+        )}
+        {status && (
+          <div>
+            Estado: <span className="font-medium">{status}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
       <div className="min-h-screen bg-background">
@@ -238,7 +281,32 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* (El resto de los componentes hardcodeados) */}
+          <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-primary" />
+                        Mis Reservas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
+                      {reservationsError && <div className="text-sm text-destructive">{reservationsError}</div>}
+                      {!reservationsLoading && !reservationsError && reservations.length === 0 && (
+                        <p className="text-sm text-muted-foreground">Aún no tienes reservas</p>
+                      )}
+                      <div className="space-y-3">
+                        {reservations.map((r, idx) => (
+                          <div key={r.id ?? idx} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex-1">{renderReservationSummary(r)}</div>
+                              <div className="text-xs text-muted-foreground ml-4">{r.id ? `#${r.id}` : null}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Beneficios del Nivel Actual */}
             <Card className="border-primary/20">
