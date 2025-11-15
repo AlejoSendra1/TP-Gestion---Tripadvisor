@@ -1,6 +1,7 @@
-// File: `frontend/src/components/ReservationList.tsx`
+// File: frontend/src/components/ReservationList.tsx
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 type Props = {
   reservations: any[];
@@ -49,41 +50,65 @@ const formatTime = (v: string | number | null | undefined) => {
   return `${hours}:${minutes}`;
 };
 
+const getPublicationHref = (r: any): string | null => {
+  if (!r) return null;
+
+  return `/experience/${String(r.publicationId)}`;
+};
+
 export const ReservationList: React.FC<Props> = ({ reservations }) => {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
   const toggleDetails = (id: any) => {
-    const nid = id ? Number(id) : null;
-    setExpandedId((prev) => (prev === nid ? null : nid));
+    if (id == null) return;
+    const key = String(id);
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   if (!reservations || reservations.length === 0) {
     return <div className="text-sm text-muted-foreground">No hay reservas.</div>;
   }
 
+  const items = reservations.slice().reverse();
+
   return (
-    <div className="space-y-3">
-      {reservations.map((r: any) => {
+    <div className="flex gap-3 overflow-x-auto py-2 w-full max-w-full" role="list">
+      {items.map((r: any, idx: number) => {
         const date = formatOnlyDate(
-          r.reservationDate ||
-            r.reservation_date ||
-            r.reservation_datetime ||
-            r.reservationDateTime ||
-            r.reservation_date_time ||
-            r.reservation_dateTime
+          r.reservationDate
         );
 
-        const notes = r.notes ?? r.note ?? null;
+        // precio (se muestra en la tarjeta principal)
+        const price =
+          r.totalPrice ??
+          null;
+        const priceDisplay = price == null ? "-" : typeof price === "number" ? `$${price}` : String(price);
+
+        const notes = r.notes ?? r.note ?? null; // movidas dentro de detalles
         const status = mapStatus(r.status ?? r.statusName ?? r.state);
 
         const id = r.id ?? r._id ?? null;
-        const isExpanded = id != null && expandedId === Number(id);
+        const key = id != null ? String(id) : `idx-${idx}`;
+        const isExpanded = key != null && expandedIds.has(key);
 
         const type = String(
           r.reservationType ?? r.type ?? r.reservation_type ?? r.class ?? ""
         ).toLowerCase();
 
+        const publicationHref = getPublicationHref(r);
+        const isExternal = typeof publicationHref === "string" && /^https?:\/\//.test(publicationHref);
+
         return (
-          <div key={id ?? Math.random()} className="p-4 border rounded-md bg-card">
+          <div
+            key={key}
+            role="listitem"
+            className="p-4 border rounded-md bg-card min-w-[300px] flex-shrink min-w-0 max-w-full"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-xs text-muted-foreground">Fecha de reserva</div>
@@ -96,24 +121,53 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
               </div>
             </div>
 
-            {notes && (
-              <div className="mt-2">
-                <div className="text-xs text-muted-foreground">Notas</div>
-                <div className="text-sm whitespace-pre-wrap text-muted-foreground mt-1">{notes}</div>
-              </div>
-            )}
+            {/* Precio en la tarjeta principal */}
+            <div className="mt-2">
+              <div className="text-xs text-muted-foreground">Precio</div>
+              <div className="font-medium">{priceDisplay}</div>
+            </div>
 
             <div className="mt-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" onClick={() => toggleDetails(id)} aria-expanded={isExpanded}>
-                  {isExpanded ? "Ocultar detalles" : "Ver detalles"}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => toggleDetails(id)}
+                  aria-expanded={isExpanded}
+                >
+                  {isExpanded ? "Ocultar detalles" : "Detalles"}
                 </Button>
               </div>
-              <div className="text-xs text-muted-foreground">ID: {id ?? "-"}</div>
+
+              {/* Botón naranja del mismo tamaño para 'Ver publicación' */}
+              <div>
+                {publicationHref ? (
+                  isExternal ? (
+                    <Button size="sm" variant="ghost" asChild className="!text-orange-500">
+                      <a
+                        href={publicationHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm underline"
+                      >
+                        Ver publicación
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="ghost" asChild className="!text-orange-500">
+                      <Link to={publicationHref} className="text-sm underline">
+                        Ver publicación
+                      </Link>
+                    </Button>
+                  )
+                ) : (
+                  <div className="text-xs text-muted-foreground">Sin publicación</div>
+                )}
+              </div>
             </div>
 
             {isExpanded && (
-              <div className="mt-3 border-t pt-3 space-y-2 text-sm text-muted-foreground">
+              <div className="mt-3 border-t pt-3 space-y-2 text-sm text-muted-foreground min-w-0 w-full">
                 {(() => {
                   const typeStr = type ?? "";
 
@@ -133,21 +187,13 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
                   if (
                     typeStr.includes("activity") ||
                     typeStr.includes("reservationactivity") ||
-                    r.max ||
-                    r.participant_count ||
-                    r.participantCount ||
-                    r.participants
+                    r.participantCount
                   ) {
                     const dateTime =
                       r.dateTime ?? r.startDateTime ?? r.start_datetime ?? r.reservation_datetime;
 
-                    // buscar posibles claves y normalizar a número si es posible
                     const rawParticipants =
                       r.participantCount ??
-                      r.participant_count ??
-                      r.participants ??
-                      r.participant ??
-                      r.participant_count_total ??
                       null;
 
                     const participants = (() => {
@@ -196,6 +242,20 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
                     </div>
                   );
                 })()}
+
+                {/* Notas al final de Detalles */}
+                // TODO: Si la nota es muy larga, expandir hacia abajo
+                {notes && (
+                  <div className="pt-2">
+                    <div className="text-xs text-muted-foreground">Notas</div>
+                    <div
+                      className="text-sm mt-1 min-w-0 w-full max-w-full whitespace-pre-wrap break-words overflow-hidden text-muted-foreground"
+                      style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}
+                    >
+                      {notes}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

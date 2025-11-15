@@ -247,7 +247,10 @@ const Profile = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Mis reservas</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Mis reservas
+                </CardTitle>
             </CardHeader>
             <CardContent>
               {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
