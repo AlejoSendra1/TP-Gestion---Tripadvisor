@@ -34,7 +34,7 @@ public abstract class Reservation {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ReservationStatus status = ReservationStatus.CONFIRMED;
+    private ReservationStatus status = ReservationStatus.PENDING;
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;

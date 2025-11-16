@@ -14,7 +14,10 @@ import ExperienceDetails from "./pages/ExperienceDetails";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import CreatePublication from "@/pages/CreatePublication";
 import EditPublication from "@/pages/EditPublication";
-import EditProfile from "@/pages/EditProfile.tsx"; // Tu import está correcto
+import EditProfile from "@/pages/EditProfile.tsx";
+import Checkout from "@/pages/Checkout.tsx";
+import PaymentSuccess from "@/pages/PaymentSuccess.tsx";
+import PaymentFailure from "@/pages/PaymentFailure.tsx";
 
 const queryClient = new QueryClient();
 sessionStorage.setItem("isLoggedIn", "false");
@@ -44,6 +47,9 @@ const App = () => (
               <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/checkout/:id" element={<Checkout />} />
+                <Route path="/payment/success" element={<PaymentSuccess />} />
+                <Route path="/payment/failure" element={<PaymentFailure />} />
               </Route>
 
               {/* --- Ruta catch-all --- */}

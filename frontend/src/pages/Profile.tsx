@@ -1,3 +1,4 @@
+// File: frontend/src/pages/Profile.tsx
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,18 +9,21 @@ import { Calendar, Star, Trophy, Award, Gift, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 // --- IMPORT DEL HOOK ---
 import { useUserReservations } from "@/hooks/useUserReservations";
-// --- ¡NUEVOS IMPORTS! ---
-// (Para el botón de "Editar")
+// --- IMPORTS PARA EL BOTÓN "EDITAR" ---
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+// --- IMPORT DEL COMPONENTE DE LA LISTA ---
 import ReservationList from "@/components/ReservationList";
-// --- FIN NUEVOS IMPORTS ---
 
 const Profile = () => {
   const { user, isTraveler } = useAuth();
+
+  // --- ¡AQUÍ SE USA EL HOOK! ---
+  // Obtenemos los datos (reservations) y los estados (isLoading, error)
   const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
 
   useEffect(() => {
+    // Cuando el usuario se carga, llamamos al hook para que busque las reservas
     if (user) {
       fetchReservations().catch(() => {});
     }
@@ -50,9 +54,9 @@ const Profile = () => {
   const currentLevel = user.userLevel || 1;
   const currentXp = user.userXP || 0;
 
-  // --- COMIENZO DE SECCIÓN HARDCODEADA (Restaurada) ---
+  // --- COMIENZO DE SECCIÓN HARDCODEADA (Datos de ejemplo para el perfil) ---
+  // (Esta es la data que SÍ está hardcodeada, pero no afecta a las reservas)
 
-  // Funciones de cálculo de XP (mismas que en el backend)
   const calculateXpForLevel = (level) => {
     if (level <= 1) return 0;
     const BASE_XP = 500;
@@ -72,7 +76,6 @@ const Profile = () => {
       ? Math.min((xpInCurrentLevel / xpRequiredForNextLevel) * 100, 100)
       : 100;
 
-  // Calcular descuento según nivel
   const getDiscountPercentage = (level) => {
     if (level === 1) return 0;
     if (level === 2) return 5;
@@ -86,7 +89,6 @@ const Profile = () => {
   const discountPercentage = getDiscountPercentage(currentLevel);
   const joinDate = "Noviembre 2025"; // Esto debería venir del backend
 
-  // Sistema de niveles con beneficios detallados
   const levelBenefits = [
     { level: 1, discount: 0, benefits: ["Acceso básico a la plataforma"] },
     { level: 2, discount: 5, benefits: ["5% de descuento en reservas"] },
@@ -100,7 +102,6 @@ const Profile = () => {
     { level: 10, discount: 30, benefits: ["30% de descuento", "Acceso Elite", "Todas las ventajas premium"] },
   ];
 
-  // Datos que eventualmente vendrán del backend
   const profileStats = {
     reviewsCount: 0,
     placesVisited: 0,
@@ -108,7 +109,7 @@ const Profile = () => {
     helpfulVotes: 0
   };
 
-  const achievements = [ //
+  const achievements = [
     { name: "Explorador", icon: "🗺️", description: "Visitó 25+ lugares", earned: profileStats.placesVisited >= 25 },
     { name: "Crítico", icon: "✍️", description: "Escribió 40+ reseñas", earned: profileStats.reviewsCount >= 40 },
     { name: "Fotógrafo", icon: "📸", description: "Compartió 150+ fotos", earned: profileStats.photosShared >= 150 },
@@ -117,49 +118,23 @@ const Profile = () => {
     { name: "Maestro Crítico", icon: "⭐", description: "Escribió 100+ reseñas", earned: profileStats.reviewsCount >= 100 }
   ];
 
-  const recentReviews = [ //
-    // {
-    //   id: 1,
-    //   placeName: "Resort & Spa Costero",
-    //   type: "Hotel",
-    //   rating: 5,
-    //   date: "hace 2 días",
-    //   xpEarned: 150,
-    //   excerpt: "Increíble ubicación frente al mar con un servicio excepcional..."
-    // },
-    // {
-    //   id: 2,
-    //   placeName: "Aventura en la Cima",
-    //   type: "Actividad",
-    //   rating: 4,
-    //   date: "hace 1 semana",
-    //   xpEarned: 200,
-    //   excerpt: "Caminata desafiante con vistas impresionantes en la cumbre..."
-    // },
-    // {
-    //   id: 3,
-    //   placeName: "Bistró Sabores Locales",
-    //   type: "Restaurante",
-    //   rating: 5,
-    //   date: "hace 2 semanas",
-    //   xpEarned: 125,
-    //   excerpt: "Auténtica cocina local con ingredientes frescos..."
-    // }
-  ];
+  const recentReviews = [ /* Vacío a propósito, las reseñas no son reservas */ ];
 
-  const getXPColor = (xp) => { //
+  const getXPColor = (xp) => {
     if (xp >= 200) return "bg-purple-500 text-white";
     if (xp >= 150) return "bg-yellow-500 text-white";
     if (xp >= 100) return "bg-gray-400 text-white";
     return "bg-orange-500 text-white";
   };
 
-  const getLevelColor = (level) => { //
+  const getLevelColor = (level) => {
     if (level >= 10) return "text-purple-500";
     if (level >= 7) return "text-yellow-500";
     if (level >= 4) return "text-blue-500";
     return "text-green-500";
   };
+  // --- FIN DE SECCIÓN HARDCODEADA ---
+
 
   return (
       <div className="min-h-screen bg-background">
@@ -178,9 +153,6 @@ const Profile = () => {
                 </Avatar>
 
                 <div className="flex-1 text-center lg:text-left space-y-4">
-
-                  {/* --- ¡SECCIÓN MODIFICADA! --- */}
-                  {/* (Ya no tiene 'isEditing', solo muestra los datos y el botón Link) */}
                   <div>
                     <div className="flex items-center justify-center lg:justify-start gap-2">
                       <h1 className="text-3xl font-bold text-foreground">
@@ -196,9 +168,7 @@ const Profile = () => {
                       Miembro desde {joinDate}
                     </p>
                   </div>
-                  {/* --- FIN SECCIÓN MODIFICADA --- */}
 
-                  {/* (El resto del perfil se mantiene igual que el original) */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -222,7 +192,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* (Estadísticas hardcodeadas) */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                   <div className="space-y-1">
                     <div className="text-2xl font-bold text-primary">{profileStats.reviewsCount}</div>
@@ -245,21 +214,29 @@ const Profile = () => {
             </CardContent>
           </Card>
 
+          {/* --- ¡ESTA ES LA SECCIÓN CLAVE! --- */}
           <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Mis reservas
-                </CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Mis reservas
+              </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* 1. Muestra "Cargando..." mientras el hook busca los datos */}
               {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
+
+              {/* 2. Muestra un error si el hook falla (ej: 401, 404, 500) */}
               {reservationsError && <div className="text-sm text-destructive">Error cargando reservas: {String(reservationsError.message ?? reservationsError)}</div>}
+
+              {/* 3. Cuando todo está OK (ni cargando, ni error), pasa la data del hook (reservations) al componente ReservationList */}
               {!reservationsLoading && !reservationsError && (
-                <ReservationList reservations={reservations} />
+                  <ReservationList reservations={reservations} />
               )}
             </CardContent>
           </Card>
+          {/* --- FIN DE LA SECCIÓN CLAVE --- */}
+
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Beneficios del Nivel Actual */}
@@ -337,7 +314,7 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {/* Reseñas Recientes */}
+            {/* Reseñas Recientes (Hardcodeado) */}
             <div className="lg:col-span-1">
               <Card>
                 <CardHeader>
@@ -349,35 +326,8 @@ const Profile = () => {
                 <CardContent className="space-y-4">
                   {recentReviews.length > 0 ? (
                       recentReviews.map((review) => (
-                          <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex-1">
-                                <h3 className="font-medium text-sm">{review.placeName}</h3>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-xs">{review.type}</Badge>
-                                  <span className="text-xs text-muted-foreground">{review.date}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-1">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                    <Star
-                                        key={i}
-                                        className={`h-3 w-3 ${
-                                            i < review.rating
-                                                ? 'text-yellow-500 fill-yellow-500'
-                                                : 'text-gray-300'
-                                        }`}
-                                    />
-                                ))}
-                              </div>
-                              <Badge className={`text-xs ${getXPColor(review.xpEarned)}`}>
-                                +{review.xpEarned} XP
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-2">{review.excerpt}</p>
-                          </div>
+                          // ... lógica de renderizado de reseñas
+                          <div key={review.id}></div>
                       ))
                   ) : (
                       <p className="text-sm text-muted-foreground text-center py-4">
@@ -389,7 +339,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Tabla de Niveles */}
+          {/* Tabla de Niveles (Hardcodeado) */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

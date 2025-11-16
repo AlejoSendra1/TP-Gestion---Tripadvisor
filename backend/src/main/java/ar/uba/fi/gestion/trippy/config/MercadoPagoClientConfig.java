@@ -1,9 +1,8 @@
 package ar.uba.fi.gestion.trippy.config;
 
-public class MercadoPagoClientConfig package ar.uba.fi.gestion.trippy.config;
-
 import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.preference.PreferenceClient;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,5 +18,4 @@ public class MercadoPagoClientConfig {
     public PaymentClient paymentClient() {
         return new PaymentClient();
     }
-}{
 }

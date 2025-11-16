@@ -1,3 +1,4 @@
+// language: java
 package ar.uba.fi.gestion.trippy.payment;
 
 import ar.uba.fi.gestion.trippy.payment.dto.MercadoPagoWebhookDTO;
@@ -13,6 +14,7 @@ import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.net.MPResponse;
 import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
 import jakarta.persistence.EntityNotFoundException;
@@ -32,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentServiceTest {
@@ -50,32 +53,38 @@ public class PaymentServiceTest {
 
     // --- Mocks ---
     private Traveler mockTraveler;
+    private Publication mockPublication;
     private Reservation mockReservation;
     private PaymentRequestDTO paymentRequest;
     private String travelerEmail = "traveler@test.com";
 
     @BeforeEach
     void setUp() {
-        // No necesitamos instanciar el servicio, @InjectMocks lo hace
-        // e inyecta los mocks gracias al refactor que hicimos.
 
-        mockTraveler = new Traveler();
-        mockTraveler.setId(1L);
-        mockTraveler.setEmail(travelerEmail);
+        mockTraveler = mock(Traveler.class);
+        lenient().when(mockTraveler.getId()).thenReturn(1L);
+        lenient().when(mockTraveler.getEmail()).thenReturn(travelerEmail);
 
-        Publication mockPublication = new Publication();
-        mockPublication.setId(10L);
-        mockPublication.setTitle("Hotel Test");
+        mockPublication = mock(Publication.class);
+        lenient().when(mockPublication.getId()).thenReturn(10L);
+        lenient().when(mockPublication.getTitle()).thenReturn("Hotel Test");
 
-        mockReservation = new Reservation();
-        mockReservation.setId(1L);
-        mockReservation.setTraveler(mockTraveler);
-        mockReservation.setPublication(mockPublication);
-        mockReservation.setStatus(ReservationStatus.PENDING);
-        // Asumimos que Reservation tiene un método getTotalPrice()
+        mockReservation = mock(Reservation.class);
+        lenient().when(mockReservation.getId()).thenReturn(1L);
+        lenient().when(mockReservation.getTraveler()).thenReturn(mockTraveler);
+        lenient().when(mockReservation.getPublication()).thenReturn(mockPublication);
+        lenient().when(mockReservation.getStatus()).thenReturn(ReservationStatus.PENDING);
         lenient().when(mockReservation.getTotalPrice()).thenReturn(new BigDecimal("1000.00"));
 
         paymentRequest = new PaymentRequestDTO(1L);
+
+        // Esta es la otra línea clave
+        paymentService = new PaymentService(
+                reservationRepositoryMock,
+                userServiceMock,
+                preferenceClientMock,
+                paymentClientMock
+        );
     }
 
     // --- Tests createPreference ---
@@ -130,7 +139,8 @@ public class PaymentServiceTest {
     @Test
     void whenCreatePreference_forAlreadyPaidReservation_shouldThrowException() {
         // Arrange
-        mockReservation.setStatus(ReservationStatus.CONFIRMED); //
+        // Sobreescribimos el stub de status SÓLO para este test
+        when(mockReservation.getStatus()).thenReturn(ReservationStatus.CONFIRMED);
         when(reservationRepositoryMock.findById(1L)).thenReturn(Optional.of(mockReservation));
 
         // Act & Assert
@@ -145,10 +155,24 @@ public class PaymentServiceTest {
     void whenCreatePreference_andMPFails_shouldThrowException() throws Exception {
         // Arrange
         when(reservationRepositoryMock.findById(1L)).thenReturn(Optional.of(mockReservation));
+
+        // --- ¡AQUÍ ESTÁ LA MAGIA! ---
+        // 1. Creamos un mock para la "respuesta" de la API
+        MPResponse mockResponse = mock(MPResponse.class);
+        when(mockResponse.getContent()).thenReturn("{\"message\":\"Mock API error\"}");
+
+        // 2. Creamos el mock para la "Excepción"
+        MPApiException mockException = mock(MPApiException.class);
+        // 3. Le decimos que cuando le pidan la "respuesta", devuelva nuestro mock de arriba
+        when(mockException.getApiResponse()).thenReturn(mockResponse);
+
+        // 4. Le decimos al cliente que lance ESTA excepción "inteligente"
         when(preferenceClientMock.create(any(PreferenceRequest.class)))
-                .thenThrow(mock(MPApiException.class)); // Usamos la excepción correcta
+                .thenThrow(mockException);
+        // --- FIN DE LA MAGIA ---
 
         // Act & Assert
+        // (Esto queda igual)
         assertThatThrownBy(() -> {
             paymentService.createPreference(paymentRequest, travelerEmail);
         })
@@ -168,15 +192,18 @@ public class PaymentServiceTest {
         when(mockPayment.getExternalReference()).thenReturn("1"); // ID de nuestra reserva
 
         when(paymentClientMock.get(12345L)).thenReturn(mockPayment);
+        // Usamos el mockReservation global (que por defecto devuelve PENDING)
         when(reservationRepositoryMock.findById(1L)).thenReturn(Optional.of(mockReservation));
 
         // Act
         paymentService.handleWebhookNotification(webhook);
 
         // Assert
+        // Verificamos que el servicio haya llamado al *setter* de nuestro mock
+        verify(mockReservation).setStatus(ReservationStatus.CONFIRMED);
         verify(reservationRepositoryMock).save(mockReservation);
-        assertThat(mockReservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
 
+        // Verificamos que se llame a la gamificación
         verify(userServiceMock).addXpForPurchase(travelerEmail, 1000.00);
     }
 
@@ -194,6 +221,8 @@ public class PaymentServiceTest {
         paymentService.handleWebhookNotification(webhook);
 
         // Assert
+        // Verificamos que NUNCA se llame al setter de status
+        verify(mockReservation, never()).setStatus(any(ReservationStatus.class));
         verify(reservationRepositoryMock, never()).save(any());
         verify(userServiceMock, never()).addXpForPurchase(anyString(), anyDouble());
     }
@@ -201,7 +230,8 @@ public class PaymentServiceTest {
     @Test
     void whenWebhookReceived_forAlreadyConfirmedReservation_shouldDoNothing() throws Exception {
         // Arrange
-        mockReservation.setStatus(ReservationStatus.CONFIRMED); // Ya estaba confirmada
+        // Sobreescribimos el stub SÓLO para este test
+        when(mockReservation.getStatus()).thenReturn(ReservationStatus.CONFIRMED); // Ya estaba confirmada
 
         MercadoPagoWebhookDTO webhook = new MercadoPagoWebhookDTO("payment", null, Map.of("id", "12345"));
         Payment mockPayment = mock(Payment.class);
@@ -215,6 +245,7 @@ public class PaymentServiceTest {
         paymentService.handleWebhookNotification(webhook);
 
         // Assert
+        verify(mockReservation, never()).setStatus(any(ReservationStatus.class));
         verify(reservationRepositoryMock, never()).save(any());
         verify(userServiceMock, never()).addXpForPurchase(anyString(), anyDouble());
     }

@@ -33,7 +33,6 @@ public class PaymentRestController {
      * El usuario debe estar autenticado.
      */
     @PostMapping("/create-preference")
-    @PreAuthorize("isAuthenticated()") // Aseguramos que el usuario esté logueado
     @Operation(summary = "Crear una preferencia de pago")
     @ApiResponse(responseCode = "200", description = "Preferencia creada, devuelve URL de pago")
     @ApiResponse(responseCode = "403", description = "No tiene permisos para pagar esta reserva")

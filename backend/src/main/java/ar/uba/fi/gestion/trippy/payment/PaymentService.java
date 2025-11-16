@@ -38,18 +38,19 @@ public class PaymentService {
     private final String FRONTEND_URL = "http://localhost:5173";
 
     // URL de tu API (¡IMPORTANTE! Debe ser pública para que MP te la pueda llamar)
-    private final String API_URL = "https://tu-dominio-publico.com/api";
+//    private final String API_URL = "https://tu-dominio-publico.com/api";
+    private final String API_URL = "https://nonthreatening-alison-ungeneralized.ngrok-free.dev/api";
 
 
     @Autowired
-    public PaymentService(ReservationRepository reservationRepository, UserService userService) {
+    public PaymentService(ReservationRepository reservationRepository, UserService userService, PreferenceClient preferenceClient, PaymentClient paymentClient) {
         this.reservationRepository = reservationRepository;
         this.userService = userService;
 
         // Los clientes se inicializan automáticamente
         // gracias al @PostConstruct del MercadoPagoSetup
-        this.preferenceClient = new PreferenceClient();
-        this.paymentClient = new PaymentClient();
+        this.preferenceClient = preferenceClient;
+        this.paymentClient = paymentClient;
     }
 
     /**
@@ -95,6 +96,7 @@ public class PaymentService {
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .items(List.of(itemRequest))
                     .backUrls(backUrls)
+                    .autoReturn("approved")
                     // ¡Clave! Guardamos el ID de nuestra reserva aquí
                     .externalReference(reservation.getId().toString())
                     // ¡Clave! Le decimos a MP dónde notificarnos

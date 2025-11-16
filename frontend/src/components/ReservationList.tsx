@@ -19,6 +19,7 @@ const mapStatus = (s: any) => {
   if (up === "CONFIRMED") return "CONFIRMADO";
   if (up === "CANCELLED") return "CANCELADO";
   if (up === "COMPLETED") return "COMPLETADO";
+  if (up === "PENDING") return "PENDIENTE";
   return up;
 };
 
@@ -111,7 +112,7 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-xs text-muted-foreground">Fecha de reserva</div>
+                <div className="text-xs text-muted-foreground">Reserva creada el</div>
                 <div className="font-medium">{date ?? "-"}</div>
               </div>
 
