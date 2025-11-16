@@ -1,3 +1,4 @@
+// language: java
 package ar.uba.fi.gestion.trippy.payment;
 
 import ar.uba.fi.gestion.trippy.payment.dto.MercadoPagoWebhookDTO;
@@ -5,7 +6,7 @@ import ar.uba.fi.gestion.trippy.payment.dto.PaymentPreferenceDTO;
 import ar.uba.fi.gestion.trippy.payment.dto.PaymentRequestDTO;
 import ar.uba.fi.gestion.trippy.reservation.Reservation;
 import ar.uba.fi.gestion.trippy.reservation.ReservationRepository;
-import ar.uba.fi.gestion.trippy.reservation.ReservationStatus; // <-- Necesitarás crear este Enum
+import ar.uba.fi.gestion.trippy.reservation.ReservationStatus;
 import ar.uba.fi.gestion.trippy.user.UserService;
 
 // Imports de Mercado Pago SDK
@@ -18,6 +19,7 @@ import com.mercadopago.resources.preference.Preference;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value; // <-- Importado para inyectar propiedades
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,26 +33,34 @@ public class PaymentService {
     private final ReservationRepository reservationRepository;
     private final UserService userService;
 
+    // Clientes de Mercado Pago (inyectados)
     private final PreferenceClient preferenceClient;
     private final PaymentClient paymentClient;
 
-    // URL de tu frontend (eventualmente, pon esto en application.properties)
-    private final String FRONTEND_URL = "http://localhost:5173";
-
-    // URL de tu API (¡IMPORTANTE! Debe ser pública para que MP te la pueda llamar)
-//    private final String API_URL = "https://tu-dominio-publico.com/api";
-    private final String API_URL = "https://nonthreatening-alison-ungeneralized.ngrok-free.dev/api";
-
+    // --- URLs Externalizadas ---
+    // Estas variables se cargan desde application.properties
+    // o se sobreescriben con variables de entorno en Docker.
+    private final String FRONTEND_URL;
+    private final String API_URL;
 
     @Autowired
-    public PaymentService(ReservationRepository reservationRepository, UserService userService, PreferenceClient preferenceClient, PaymentClient paymentClient) {
+    public PaymentService(
+            ReservationRepository reservationRepository,
+            UserService userService,
+            PreferenceClient preferenceClient,
+            PaymentClient paymentClient,
+            // Inyectamos los valores desde el archivo .properties
+            @Value("${trippy.frontend.url}") String frontendUrl,
+            @Value("${trippy.api.base-url}") String apiUrl
+    ) {
         this.reservationRepository = reservationRepository;
         this.userService = userService;
-
-        // Los clientes se inicializan automáticamente
-        // gracias al @PostConstruct del MercadoPagoSetup
         this.preferenceClient = preferenceClient;
         this.paymentClient = paymentClient;
+
+        // Asignamos las URLs inyectadas
+        this.FRONTEND_URL = frontendUrl;
+        this.API_URL = apiUrl;
     }
 
     /**
@@ -69,7 +79,6 @@ public class PaymentService {
         }
 
         // 3. Validar estado de la reserva
-        // (Asumo que tienes un Enum ReservationStatus.PENDING)
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new IllegalStateException("Esta reserva ya fue pagada o está cancelada.");
         }
@@ -81,10 +90,10 @@ public class PaymentService {
                 .description("Reserva en Trippy")
                 .quantity(1) // Siempre es 1 ítem (la reserva completa)
                 .currencyId("ARS")
-                .unitPrice(reservation.getTotalPrice()) // Asumo que Reservation tiene este método
+                .unitPrice(reservation.getTotalPrice())
                 .build();
 
-        // 5. Configurar URLs de redirección
+        // 5. Configurar URLs de redirección (usando la variable inyectada)
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
                 .success(FRONTEND_URL + "/payment/success")
                 .failure(FRONTEND_URL + "/payment/failure")
@@ -96,10 +105,11 @@ public class PaymentService {
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .items(List.of(itemRequest))
                     .backUrls(backUrls)
-                    .autoReturn("approved")
-                    // ¡Clave! Guardamos el ID de nuestra reserva aquí
+                    // Forzamos la redirección automática al frontend
+//                    .autoReturn("approved")
+                    // Guardamos nuestro ID de reserva para el webhook
                     .externalReference(reservation.getId().toString())
-                    // ¡Clave! Le decimos a MP dónde notificarnos
+                    // Le decimos a MP dónde notificarnos (usando la variable inyectada)
                     .notificationUrl(API_URL + "/payments/webhook")
                     .build();
 
@@ -111,6 +121,7 @@ public class PaymentService {
             System.err.println("Error al crear preferencia de MP: " + e.getApiResponse().getContent());
             throw new IllegalStateException("Error al comunicarse con Mercado Pago");
         } catch (Exception e) {
+            System.err.println("Error inesperado en createPreference: " + e.getMessage());
             throw new IllegalStateException("Error inesperado: " + e.getMessage());
         }
     }
@@ -146,13 +157,12 @@ public class PaymentService {
                 Reservation reservation = reservationRepository.findById(reservationId)
                         .orElseThrow(() -> new EntityNotFoundException("Webhook para reserva " + reservationId + " no encontrada"));
 
-                // 4. Actualizamos el estado de nuestra reserva
+                // 4. Actualizamos el estado de nuestra reserva (¡Idempotente!)
                 if (reservation.getStatus() == ReservationStatus.PENDING) {
-                    reservation.setStatus(ReservationStatus.CONFIRMED); // Asumo Enum ReservationStatus.PAID
+                    reservation.setStatus(ReservationStatus.CONFIRMED);
                     reservationRepository.save(reservation);
 
                     // 5. ¡GAMIFICACIÓN! Damos XP al usuario
-                    // (Usamos el método que ya existe en tu UserService)
                     if (reservation.getTraveler() != null) {
                         userService.addXpForPurchase(
                                 reservation.getTraveler().getEmail(),
@@ -160,7 +170,7 @@ public class PaymentService {
                         );
                     }
                 }
-                // Si ya estaba PAID, no hacemos nada (MP puede enviar webhooks duplicados)
+                // Si ya estaba CONFIRMED, no hacemos nada (MP puede enviar webhooks duplicados)
             }
             // (Opcional) Podrías manejar "rejected" y "cancelled" para actualizar tu reserva
 
