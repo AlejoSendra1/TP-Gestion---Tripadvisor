@@ -88,7 +88,7 @@ export default function CheckoutPage() {
 
     // Lógica para mostrar la fecha (depende de si es rango o día único)
     const dateInfo = reservation.endDate
-        ? `${formatDate(reservation.startDate!)} al ${formatDate(reservation.endDate)}`
+        ? `Del ${formatDate(reservation.startDate!)} al ${formatDate(reservation.endDate)}`
         : (reservation.dateTime ? formatDate(reservation.dateTime) : formatDate(reservation.startDate!));
 
     return (
