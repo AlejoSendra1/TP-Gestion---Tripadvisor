@@ -3,32 +3,43 @@
 
 import axios from 'axios';
 
-// 1. Creamos la instancia de Axios
+// 1. Lee la variable de entorno VITE_API_BASE_URL (que pusiste en Vercel).
+//    Si no existe (porque estás en local), usa '/' como base
+//    para que el proxy de vite.config.ts funcione.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/';
+
+// 2. Creamos la instancia de Axios con la URL base correcta
 export const apiClient = axios.create({
-    // baseURL: '/api/v1', // (El proxy de Vite se encarga de esto)
+    baseURL: API_BASE_URL, // <-- ¡Lógica de Vercel!
     timeout: 10000,
 });
 
-// 2. Interceptor de Petición (Request)
-// (Este ya lo tenías, lee el token antes de CADA llamada)
-apiClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+// 3. Interceptor de Petición (Request)
+// (Lee el token antes de CADA llamada)
+apiClient.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-});
+);
 
-// --- ¡¡NUEVA SECCIÓN: Interceptor de Respuesta (Response)!! ---
+// 4. Interceptor de Respuesta (Response)
+// (Maneja los tokens expirados)
 apiClient.interceptors.response.use(
     (response) => {
-        // 1. Si la respuesta es exitosa (2xx), solo la devolvemos.
+        // Si la respuesta es exitosa (2xx), solo la devolvemos.
         return response;
     },
     async (error) => {
         const originalRequest = error.config;
 
-        // 2. Si el error es 401 (Unauthorized) Y no es un reintento.
+        // Si el error es 401 (Unauthorized) Y no es un reintento.
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true; // Marcamos para no entrar en un bucle infinito.
 
@@ -44,26 +55,26 @@ apiClient.interceptors.response.use(
             }
 
             try {
-                // 3. Intentamos obtener un nuevo token usando el refreshToken.
+                // Intentamos obtener un nuevo token usando el refreshToken.
                 // Llamamos al endpoint PUT /sessions
+                // (Usamos la instancia de apiClient, que ya tiene la baseURL correcta)
                 const response = await apiClient.put('/sessions', { refreshToken });
 
-                // 4. El backend nos da los nuevos tokens.
-                // Tu backend devuelve un TokenDTO
+                // El backend nos da los nuevos tokens.
                 const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-                // 5. Guardamos los nuevos tokens en localStorage.
+                // Guardamos los nuevos tokens en localStorage.
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', newRefreshToken);
 
-                // 6. Actualizamos el header de la petición original.
+                // Actualizamos el header de la petición original.
                 originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
 
-                // 7. Reintentamos la petición original (ej. /api/payments...)
+                // Reintentamos la petición original (ej. /api/payments...)
                 return apiClient(originalRequest);
 
             } catch (refreshError) {
-                // 8. ¡El refresh token falló! (está vencido o es inválido).
+                // ¡El refresh token falló! (está vencido o es inválido).
                 // Limpiamos todo y forzamos el logout.
                 localStorage.removeItem('userData');
                 localStorage.removeItem('accessToken');
@@ -77,4 +88,3 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-// --- FIN DE LA NUEVA SECCIÓN ---
