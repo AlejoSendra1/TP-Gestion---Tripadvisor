@@ -19,10 +19,10 @@ const Profile = () => {
   const { mutate: deleteReservation, isPending: isDeletingReservation } = useDeleteReservation();
   const [deletingReservationId, setDeletingReservationId] = useState<string | null>(null);
 
-  const handleDeleteReservation = (reservationId: string) => {
+  const handleDeleteReservation = (reservationId: string, publicationId: string) => {
     setDeletingReservationId(reservationId);
     deleteReservation(
-      { reservationId },
+      { reservationId, publicationId: String(publicationId) },
       {
         onSettled: () => {
           setDeletingReservationId(null);

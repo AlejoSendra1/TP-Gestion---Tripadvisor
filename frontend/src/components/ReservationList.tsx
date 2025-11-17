@@ -10,7 +10,7 @@ import {
 import { MoreVertical, Trash2, Loader2 } from "lucide-react";
 type Props = {
   reservations: any[];
-  onDeleteReservation?: (reservationId: string) => void;
+  onDeleteReservation?: (reservationId: string, publicationId: string) => void;
   deletingReservationId?: string | null;
 };
 
@@ -62,6 +62,32 @@ const getPublicationHref = (r: any): string | null => {
   return `/experience/${String(r.publicationId)}`;
 };
 
+const getStatusColor = (status: string | null) => {
+  if (!status) return "text-gray-600";
+  
+  const statusUpper = status.toUpperCase();
+  if (statusUpper === "CONFIRMADO") return "text-green-600 font-semibold";
+  if (statusUpper === "CANCELADO") return "text-red-600 font-semibold";
+  if (statusUpper === "COMPLETADO") return "text-blue-600 font-semibold";
+  return "text-gray-600";
+};
+  
+const getReservationDate = (r: any) => {
+  // Prioridad: fecha de la reserva (checkIn, dateTime, etc.)
+  if (r.checkIn) return formatOnlyDate(r.checkIn);
+  if (r.dateTime) return formatOnlyDate(r.dateTime);
+  if (r.startDate) return formatOnlyDate(r.startDate);
+  if (r.start_date) return formatOnlyDate(r.start_date);
+  if (r.reservation_datetime) return formatOnlyDate(r.reservation_datetime);
+  
+  // Si no hay fecha específica de la reserva, usar la fecha de creación
+  return formatOnlyDate(r.reservationDate);
+};
+
+const getCreationDate = (r: any) => {
+  return formatOnlyDate(r.reservationDate);
+};
+
 export const ReservationList: React.FC<Props> = ({ 
   reservations, 
   onDeleteReservation, 
@@ -80,9 +106,9 @@ export const ReservationList: React.FC<Props> = ({
     });
   };
 
-  const handleDeleteReservation = (reservationId: string) => {
+  const handleDeleteReservation = (reservationId: string, publicationId: string) => {
     if (onDeleteReservation) {
-      onDeleteReservation(reservationId);
+      onDeleteReservation(reservationId, publicationId);
     }
   };
 
@@ -95,7 +121,8 @@ export const ReservationList: React.FC<Props> = ({
   return (
     <div className="flex gap-3 overflow-x-auto py-2 w-full max-w-full" role="list">
       {items.map((r: any, idx: number) => {
-        const date = formatOnlyDate(r.reservationDate);
+        const reservationDate = getReservationDate(r);
+        const creationDate = getCreationDate(r);
         const price = r.totalPrice ?? null;
         const priceDisplay = price == null ? "-" : typeof price === "number" ? `$${price}` : String(price);
 
@@ -118,20 +145,20 @@ export const ReservationList: React.FC<Props> = ({
           <div
             key={key}
             role="listitem"
-            className="p-4 border rounded-md bg-card min-w-[300px] flex-shrink min-w-0 max-w-full relative"
+            className={`p-4 border rounded-md bg-card flex-shrink-0 transition-all`}
           >
             {/* --- CABECERA MODIFICADA --- */}
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="text-xs text-muted-foreground">Fecha de reserva</div>
-                <div className="font-medium">{date ?? "-"}</div>
+                <div className="font-medium">{reservationDate ?? "-"}</div>
               </div>
 
               {/* --- ESTADO Y DROPDOWN JUNTOS --- */}
               <div className="flex items-center gap-2">
                 <div className="text-right">
                   <div className="text-xs text-muted-foreground">Estado</div>
-                  <div className="font-medium">{status ?? "-"}</div>
+                  <div className={`font-medium ${getStatusColor(status)}`}>{status ?? "-"}</div>
                 </div>
                 
                 {/* DROPDOWN MENU AL LADO DEL ESTADO */}
@@ -155,7 +182,7 @@ export const ReservationList: React.FC<Props> = ({
                       {canDelete && (
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteReservation(key)}
+                          onClick={() => handleDeleteReservation(key, r.publicationId)}
                           disabled={deletingReservationId === key}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -215,6 +242,13 @@ export const ReservationList: React.FC<Props> = ({
 
             {isExpanded && (
               <div className="mt-3 border-t pt-3 space-y-2 text-sm text-muted-foreground min-w-0 w-full">
+                {/* --- DETALLES EXPANDIDOS --- */}
+                <div>
+                  <div className="text-xs text-muted-foreground">Fecha de creación</div>
+                  <div className="font-medium">{creationDate ?? "-"}</div>
+                </div>
+
+                {/* Información específica por tipo de reserva */}
                 {(() => {
                   const typeStr = type ?? "";
 
@@ -223,7 +257,7 @@ export const ReservationList: React.FC<Props> = ({
                     const checkOut = r.checkOut ?? r.check_out ?? r.end_date ?? r.endDate;
                     const rooms = r.roomCount ?? r.room_count ?? r.rooms ?? null;
                     return (
-                      <div>
+                      <div className="space-y-2">
                         <div>Check-in: <span className="font-medium">{formatOnlyDate(checkIn) ?? "-"}</span></div>
                         <div>Check-out: <span className="font-medium">{formatOnlyDate(checkOut) ?? "-"}</span></div>
                         <div>Habitaciones: <span className="font-medium">{rooms ?? "-"}</span></div>
@@ -231,18 +265,9 @@ export const ReservationList: React.FC<Props> = ({
                     );
                   }
 
-                  if (
-                    typeStr.includes("activity") ||
-                    typeStr.includes("reservationactivity") ||
-                    r.participantCount
-                  ) {
-                    const dateTime =
-                      r.dateTime ?? r.startDateTime ?? r.start_datetime ?? r.reservation_datetime;
-
-                    const rawParticipants =
-                      r.participantCount ??
-                      null;
-
+                  if (typeStr.includes("activity") || typeStr.includes("reservationactivity") || r.participantCount) {
+                    const dateTime = r.dateTime ?? r.startDateTime ?? r.start_datetime ?? r.reservation_datetime;
+                    const rawParticipants = r.participantCount ?? null;
                     const participants = (() => {
                       if (rawParticipants == null) return null;
                       const n = typeof rawParticipants === "string" ? parseInt(rawParticipants, 10) : Number(rawParticipants);
@@ -250,8 +275,9 @@ export const ReservationList: React.FC<Props> = ({
                     })();
 
                     return (
-                      <div>
-                        <div>Fecha: <span className="font-medium">{formatOnlyDate(dateTime) ?? "-"}</span></div>
+                      <div className="space-y-2">
+                        <div>Fecha actividad: <span className="font-medium">{formatOnlyDate(dateTime) ?? "-"}</span></div>
+                        <div>Hora: <span className="font-medium">{formatTime(dateTime)}</span></div>
                         <div>Participantes: <span className="font-medium">{participants ?? "-"}</span></div>
                       </div>
                     );
@@ -261,8 +287,8 @@ export const ReservationList: React.FC<Props> = ({
                     const dateTime = r.dateTime ?? r.reservation_datetime ?? r.startDateTime ?? r.start_datetime;
                     const guests = r.guestCount ?? r.guest_count ?? r.guests ?? null;
                     return (
-                      <div>
-                        <div>Fecha: <span className="font-medium">{formatDate(dateTime)}</span></div>
+                      <div className="space-y-2">
+                        <div>Fecha reserva: <span className="font-medium">{formatDate(dateTime)}</span></div>
                         <div>Hora: <span className="font-medium">{formatTime(dateTime)}</span></div>
                         <div>Invitados: <span className="font-medium">{guests ?? "-"}</span></div>
                       </div>
@@ -274,7 +300,7 @@ export const ReservationList: React.FC<Props> = ({
                     const end = r.endDate ?? r.end_date ?? r.checkOut;
                     const people = r.guestCount ?? r.guest_count ?? r.people ?? null;
                     return (
-                      <div>
+                      <div className="space-y-2">
                         <div>Inicio: <span className="font-medium">{formatOnlyDate(start) ?? "-"}</span></div>
                         <div>Fin: <span className="font-medium">{formatOnlyDate(end) ?? "-"}</span></div>
                         <div>Personas: <span className="font-medium">{people ?? "-"}</span></div>
@@ -283,7 +309,7 @@ export const ReservationList: React.FC<Props> = ({
                   }
 
                   return (
-                    <div>
+                    <div className="space-y-2">
                       <div>Fecha / Hora: <span className="font-medium">{formatDate(r.dateTime ?? r.reservation_datetime) ?? "-"}</span></div>
                       <div>Personas / Invitados: <span className="font-medium">{r.guestCount ?? r.guest_count ?? "-"}</span></div>
                     </div>
@@ -291,7 +317,6 @@ export const ReservationList: React.FC<Props> = ({
                 })()}
 
                 {/* Notas al final de Detalles */}
-                {/* TODO: Si la nota es muy larga, expandir hacia abajo*/}
                 {notes && (
                   <div className="pt-2">
                     <div className="text-xs text-muted-foreground">Notas</div>

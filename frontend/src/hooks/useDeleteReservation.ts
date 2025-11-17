@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 
 interface DeleteReservationParams {
   reservationId: string;
+  publicationId: string;
 }
 
 type ErrorResponse = {
@@ -17,11 +18,11 @@ export function useDeleteReservation() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ reservationId }: DeleteReservationParams) => {
-      console.log("Canceling reservation:", { reservationId });
+    mutationFn: async ({ reservationId, publicationId }: DeleteReservationParams) => {
+      console.log("Canceling reservation:", { reservationId, publicationId });
       
       const response = await apiClient.delete(
-        `/reservations/${reservationId}`
+        `/publications/${publicationId}/reservations/${reservationId}`
       );
 
       return { reservationId };
