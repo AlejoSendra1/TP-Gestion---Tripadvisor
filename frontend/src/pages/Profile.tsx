@@ -12,8 +12,10 @@ import { useDeleteReservation } from "@/hooks/useDeleteReservation";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ReservationList from "@/components/ReservationList";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, isTraveler } = useAuth();
   const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
   const { mutate: deleteReservation, isPending: isDeletingReservation } = useDeleteReservation();
@@ -24,6 +26,11 @@ const Profile = () => {
     deleteReservation(
       { reservationId, publicationId: String(publicationId) },
       {
+        onSuccess: () => {
+          // Fuerza recarga de reservas y redirige al perfil para asegurar actualización
+          fetchReservations().catch(() => {});
+          navigate("/profile", { replace: true });
+        },
         onSettled: () => {
           setDeletingReservationId(null);
         },

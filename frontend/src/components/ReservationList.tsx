@@ -145,53 +145,55 @@ export const ReservationList: React.FC<Props> = ({
           <div
             key={key}
             role="listitem"
-            className={`p-4 border rounded-md bg-card flex-shrink-0 transition-all`}
+            className={`p-4 border rounded-md bg-card flex-shrink-0 w-80 transition-all`}
           >
             {/* --- CABECERA MODIFICADA --- */}
             <div className="flex items-start justify-between mb-2">
-              <div>
-                <div className="text-xs text-muted-foreground">Fecha de reserva</div>
-                <div className="font-medium">{reservationDate ?? "-"}</div>
-              </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Fecha de creación</div>
+                            <div className="font-medium">{creationDate ?? "-"}</div>
+                          </div>
 
               {/* --- ESTADO Y DROPDOWN JUNTOS --- */}
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <div className="text-xs text-muted-foreground">Estado</div>
-                  <div className={`font-medium ${getStatusColor(status)}`}>{status ?? "-"}</div>
-                </div>
+              <div className="flex items-start gap-2">
+                                <div className="text-right flex flex-col items-end">
+                                  <div className="text-xs text-muted-foreground">Estado</div>
+                                  <div className={`font-medium ${getStatusColor(status)}`}>{status ?? "-"}</div>
+                                </div>
                 
                 {/* DROPDOWN MENU AL LADO DEL ESTADO */}
                 {(canDelete || onDeleteReservation) && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 mt-4" // mt-4 para alinearlo con el texto del estado
-                        disabled={deletingReservationId === key}
-                      >
-                        {deletingReservationId === key ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <MoreVertical className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {canDelete && (
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteReservation(key, r.publicationId)}
-                          disabled={deletingReservationId === key}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Cancelar reserva
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                      <div className="flex items-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0" // sin mt-4
+                              disabled={deletingReservationId === key}
+                            >
+                              {deletingReservationId === key ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <MoreVertical className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canDelete && (
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteReservation(key, r.publicationId)}
+                                disabled={deletingReservationId === key}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Cancelar reserva
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
               </div>
             </div>
 
@@ -243,10 +245,6 @@ export const ReservationList: React.FC<Props> = ({
             {isExpanded && (
               <div className="mt-3 border-t pt-3 space-y-2 text-sm text-muted-foreground min-w-0 w-full">
                 {/* --- DETALLES EXPANDIDOS --- */}
-                <div>
-                  <div className="text-xs text-muted-foreground">Fecha de creación</div>
-                  <div className="font-medium">{creationDate ?? "-"}</div>
-                </div>
 
                 {/* Información específica por tipo de reserva */}
                 {(() => {
@@ -266,18 +264,17 @@ export const ReservationList: React.FC<Props> = ({
                   }
 
                   if (typeStr.includes("activity") || typeStr.includes("reservationactivity") || r.participantCount) {
-                    const dateTime = r.dateTime ?? r.startDateTime ?? r.start_datetime ?? r.reservation_datetime;
-                    const rawParticipants = r.participantCount ?? null;
-                    const participants = (() => {
-                      if (rawParticipants == null) return null;
-                      const n = typeof rawParticipants === "string" ? parseInt(rawParticipants, 10) : Number(rawParticipants);
-                      return Number.isNaN(n) ? null : n;
-                    })();
+                                      const dateTime = r.dateTime ?? r.startDateTime ?? r.start_datetime ?? r.reservation_datetime;
+                                      const rawParticipants = r.participantCount ?? null;
+                                      const participants = (() => {
+                                        if (rawParticipants == null) return null;
+                                        const n = typeof rawParticipants === "string" ? parseInt(rawParticipants, 10) : Number(rawParticipants);
+                                        return Number.isNaN(n) ? null : n;
+                                      })();
 
                     return (
                       <div className="space-y-2">
                         <div>Fecha actividad: <span className="font-medium">{formatOnlyDate(dateTime) ?? "-"}</span></div>
-                        <div>Hora: <span className="font-medium">{formatTime(dateTime)}</span></div>
                         <div>Participantes: <span className="font-medium">{participants ?? "-"}</span></div>
                       </div>
                     );
@@ -318,13 +315,13 @@ export const ReservationList: React.FC<Props> = ({
 
                 {/* Notas al final de Detalles */}
                 {notes && (
-                  <div className="pt-2">
-                    <div className="text-xs text-muted-foreground">Notas</div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Notas</div>
                     <div
-                      className="text-sm mt-1 min-w-0 w-full max-w-full whitespace-pre-wrap break-words overflow-hidden text-muted-foreground"
+                      className="mt-1 min-w-0 w-full max-w-full whitespace-pre-wrap break-words overflow-hidden"
                       style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}
                     >
-                      {notes}
+                      <div className="font-medium">{notes}</div>
                     </div>
                   </div>
                 )}
