@@ -88,7 +88,6 @@ export function Hero({ onFiltersChange }: HeroProps) {
           onSearch={handleSearch}
           onCategorySelect={handleCategorySelect}
           onFiltersChange={handleAdvancedFiltersChange}
-          onSortChange={handleSortChange}
           selectedCategory={selectedCategory}
         />
       </div>
