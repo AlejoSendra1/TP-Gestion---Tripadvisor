@@ -8,5 +8,6 @@ public record ReviewResponseDTO(
         String reviewerEmail,
         Short rating,
         String reviewContent,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        int
 ) {}
