@@ -6,18 +6,30 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Star, Trophy, Award, Gift, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-// --- IMPORT DEL HOOK ---
 import { useUserReservations } from "@/hooks/useUserReservations";
-// --- ¡NUEVOS IMPORTS! ---
+import { useDeleteReservation } from "@/hooks/useDeleteReservation";
 // (Para el botón de "Editar")
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ReservationList from "@/components/ReservationList";
-// --- FIN NUEVOS IMPORTS ---
 
 const Profile = () => {
   const { user, isTraveler } = useAuth();
   const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
+  const { mutate: deleteReservation, isPending: isDeletingReservation } = useDeleteReservation();
+  const [deletingReservationId, setDeletingReservationId] = useState<string | null>(null);
+
+  const handleDeleteReservation = (reservationId: string) => {
+    setDeletingReservationId(reservationId);
+    deleteReservation(
+      { reservationId },
+      {
+        onSettled: () => {
+          setDeletingReservationId(null);
+        },
+      }
+    );
+  };
 
   useEffect(() => {
     if (user) {
@@ -163,7 +175,7 @@ const Profile = () => {
 
   return (
       <div className="min-h-screen bg-background">
-        <Header userXP={currentXp} userLevel={currentLevel} />
+        <Header/>
 
         <main className="container py-8 space-y-8">
           {/* Encabezado del Perfil */}
@@ -244,7 +256,8 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
-
+          
+          {/* Reservas del Usuario */}
           <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -256,7 +269,11 @@ const Profile = () => {
               {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
               {reservationsError && <div className="text-sm text-destructive">Error cargando reservas: {String(reservationsError.message ?? reservationsError)}</div>}
               {!reservationsLoading && !reservationsError && (
-                <ReservationList reservations={reservations} />
+                <ReservationList 
+                  reservations={reservations} 
+                  onDeleteReservation={handleDeleteReservation}
+                  deletingReservationId={deletingReservationId}
+                />
               )}
             </CardContent>
           </Card>

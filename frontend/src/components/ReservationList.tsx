@@ -1,10 +1,17 @@
-// File: frontend/src/components/ReservationList.tsx
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Trash2, Loader2 } from "lucide-react";
 type Props = {
   reservations: any[];
+  onDeleteReservation?: (reservationId: string) => void;
+  deletingReservationId?: string | null;
 };
 
 const parseDate = (v: string | number | null | undefined) => {
@@ -52,11 +59,14 @@ const formatTime = (v: string | number | null | undefined) => {
 
 const getPublicationHref = (r: any): string | null => {
   if (!r) return null;
-
   return `/experience/${String(r.publicationId)}`;
 };
 
-export const ReservationList: React.FC<Props> = ({ reservations }) => {
+export const ReservationList: React.FC<Props> = ({ 
+  reservations, 
+  onDeleteReservation, 
+  deletingReservationId 
+}) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const toggleDetails = (id: any) => {
@@ -70,6 +80,12 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
     });
   };
 
+  const handleDeleteReservation = (reservationId: string) => {
+    if (onDeleteReservation) {
+      onDeleteReservation(reservationId);
+    }
+  };
+
   if (!reservations || reservations.length === 0) {
     return <div className="text-sm text-muted-foreground">No hay reservas.</div>;
   }
@@ -79,17 +95,11 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
   return (
     <div className="flex gap-3 overflow-x-auto py-2 w-full max-w-full" role="list">
       {items.map((r: any, idx: number) => {
-        const date = formatOnlyDate(
-          r.reservationDate
-        );
-
-        // precio (se muestra en la tarjeta principal)
-        const price =
-          r.totalPrice ??
-          null;
+        const date = formatOnlyDate(r.reservationDate);
+        const price = r.totalPrice ?? null;
         const priceDisplay = price == null ? "-" : typeof price === "number" ? `$${price}` : String(price);
 
-        const notes = r.notes ?? r.note ?? null; // movidas dentro de detalles
+        const notes = r.notes ?? r.note ?? null;
         const status = mapStatus(r.status ?? r.statusName ?? r.state);
 
         const id = r.id ?? r._id ?? null;
@@ -102,22 +112,59 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
 
         const publicationHref = getPublicationHref(r);
         const isExternal = typeof publicationHref === "string" && /^https?:\/\//.test(publicationHref);
+        const canDelete = status === "CONFIRMADO" && onDeleteReservation;
 
         return (
           <div
             key={key}
             role="listitem"
-            className="p-4 border rounded-md bg-card min-w-[300px] flex-shrink min-w-0 max-w-full"
+            className="p-4 border rounded-md bg-card min-w-[300px] flex-shrink min-w-0 max-w-full relative"
           >
-            <div className="flex items-start justify-between">
+            {/* --- CABECERA MODIFICADA --- */}
+            <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="text-xs text-muted-foreground">Fecha de reserva</div>
                 <div className="font-medium">{date ?? "-"}</div>
               </div>
 
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">Estado</div>
-                <div className="font-medium">{status ?? "-"}</div>
+              {/* --- ESTADO Y DROPDOWN JUNTOS --- */}
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">Estado</div>
+                  <div className="font-medium">{status ?? "-"}</div>
+                </div>
+                
+                {/* DROPDOWN MENU AL LADO DEL ESTADO */}
+                {(canDelete || onDeleteReservation) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 mt-4" // mt-4 para alinearlo con el texto del estado
+                        disabled={deletingReservationId === key}
+                      >
+                        {deletingReservationId === key ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <MoreVertical className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canDelete && (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDeleteReservation(key)}
+                          disabled={deletingReservationId === key}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Cancelar reserva
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
 
@@ -244,7 +291,7 @@ export const ReservationList: React.FC<Props> = ({ reservations }) => {
                 })()}
 
                 {/* Notas al final de Detalles */}
-                // TODO: Si la nota es muy larga, expandir hacia abajo
+                {/* TODO: Si la nota es muy larga, expandir hacia abajo*/}
                 {notes && (
                   <div className="pt-2">
                     <div className="text-xs text-muted-foreground">Notas</div>
