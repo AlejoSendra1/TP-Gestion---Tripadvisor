@@ -10,12 +10,12 @@ public class ReviewQualification {
     @Id
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "review_id", nullable = false)
-    private Review review;  // Removed "final"
+    private Review review;  
 
     @Id
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
-    private Traveler qualifier;  // Removed "final"
+    private Traveler qualifier;  
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -22,7 +22,7 @@ export type ReviewDTO = {
 export type ReviewPageResponse = {
     content: ReviewDTO[];
     totalPages: number;
-    number: number; // current page number (0-indexed)
+    number: number;
     size: number;
     totalElements: number;
     last: boolean;

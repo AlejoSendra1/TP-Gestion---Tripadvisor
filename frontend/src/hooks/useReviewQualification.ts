@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface ReviewQualificationDTO {
@@ -13,7 +13,13 @@ interface UseReviewQualificationReturn {
   handleLike: (reviewerEmail: string) => Promise<void>;
   handleDislike: (reviewerEmail: string) => Promise<void>;
   isUpdating: boolean;
+  isLoadingInitial: boolean;
 }
+
+interface InitialQualificationResponse {
+  reviewerEmail: string;
+  feedbackType: 'USEFULL' | 'NOT_USEFULL' | 'NONE';
+}  
 
 export function useReviewQualification(
   publicationId: string | undefined,
@@ -21,6 +27,52 @@ export function useReviewQualification(
 ): UseReviewQualificationReturn {
   const [qualifications, setQualifications] = useState<Record<string, { liked: boolean; disliked: boolean }>>({});
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+
+  // Helper function to transform API response into state format
+  const transformQualifications = (data: InitialQualificationResponse[]) => {
+    return data.reduce((acc, current) => {
+      acc[current.reviewerEmail] = {
+        liked: current.feedbackType === 'USEFULL',
+        disliked: current.feedbackType === 'NOT_USEFULL',
+      };
+      return acc;
+    }, {} as Record<string, { liked: boolean; disliked: boolean }>);
+  };
+
+  //Fetch initial qualifications 
+  useEffect(() => {
+    const fetchInitialQualifications = async () => {
+      if (!currentUserEmail || !publicationId) {
+        // If we don't have the required data, stop loading and return
+        setQualifications({});
+        setIsLoadingInitial(false);
+        return;
+      }
+
+      setIsLoadingInitial(true);
+      try {
+        // NOTE: You will need to create a new API endpoint for fetching 
+        // the current user's qualifications for a given publication.
+        // I'm assuming an endpoint like '/reviews/qualification/publicationId/qualificatorEmail'
+        const url = `/reviews/qualification/${publicationId}/${currentUserEmail}`;
+        
+        const response = await axios.get<InitialQualificationResponse[]>(url);
+        
+        // 3. Initialize state with fetched data
+        const initialQualifications = transformQualifications(response.data);
+        setQualifications(initialQualifications);
+
+      } catch (err) {
+        console.error('Error fetching initial qualifications:', err);
+        // Handle error state if necessary
+      } finally {
+        setIsLoadingInitial(false);
+      }
+    };
+
+    fetchInitialQualifications();
+  }, [publicationId, currentUserEmail]);
 
   const updateQualification = async (reviewerEmail: string, feedbackType: 'USEFULL' | 'NOT_USEFULL' | 'NONE') => {
     if (!currentUserEmail || !publicationId) return;
@@ -107,5 +159,6 @@ export function useReviewQualification(
     handleLike,
     handleDislike,
     isUpdating,
+    isLoadingInitial,
   };
 }

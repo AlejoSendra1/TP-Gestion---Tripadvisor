@@ -16,6 +16,15 @@ public interface ReviewQualificationRepository extends JpaRepository<ReviewQuali
 
     List<ReviewQualification> findByQualifierId(Long travelerId);
 
+    @Query("SELECT rq FROM ReviewQualification rq " +
+            "JOIN FETCH rq.review r " +
+            "JOIN FETCH r.publication " +
+            "WHERE r.publication.id = :publicationId " +
+            "AND rq.qualifier.id = :userId")
+    List<ReviewQualification> findByPublicationIdAndQualifierId(
+            @Param("publicationId") Long publicationId,
+            @Param("userId") Long userId);
+
     // Count likes for a specific review
     @Query("SELECT COUNT(rq) FROM ReviewQualification rq WHERE rq.review.id = :reviewId AND rq.feedbackType = 'USEFULL'")
     long countPositiveQualifByReviewId(@Param("reviewId") Long reviewId);
