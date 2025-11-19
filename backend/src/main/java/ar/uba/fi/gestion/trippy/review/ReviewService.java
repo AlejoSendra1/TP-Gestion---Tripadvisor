@@ -72,14 +72,24 @@ public class ReviewService {
                 .map(this::mapToResponseDTO);
     }
 
-  public void deleteReview(Long publicationId, String reviewerEmail) {
-      Publication publication = publicationService.getPublicationById_(publicationId);
-      Traveler reviewer = (Traveler) userService.getUserByEmail(reviewerEmail);
+    public void deleteReview(Long publicationId, String reviewerEmail) {
+        Publication publication = publicationService.getPublicationById_(publicationId);
+        Traveler reviewer = (Traveler) userService.getUserByEmail(reviewerEmail);
 
-      Review review = reviewRepository.findByPublicationAndReviewer(publication, reviewer)
+        Review review = reviewRepository.findByPublicationAndReviewer(publication, reviewer)
               .orElseThrow(() -> new RuntimeException(
                       "Review not found for publication " + publicationId + " and user " + reviewerEmail));
 
-      reviewRepository.delete(review);
-  }
+        reviewRepository.delete(review);
+    }
+
+    public Review getReviewByPublicationIdAndReviewerEmail(Long publicationId, String reviewerEmail){
+        Publication publication = publicationService.getPublicationById_(publicationId);
+        Traveler reviewer = (Traveler) userService.getUserByEmail(reviewerEmail);
+
+        return reviewRepository.findByPublicationAndReviewer(publication, reviewer)
+                .orElseThrow(() -> new RuntimeException(
+                        "Review not found for publication " + publicationId + " and user " + reviewerEmail));
+    }
+
 }

@@ -6,7 +6,7 @@ import { AxiosResponse } from 'axios';
 type PageableInput = {
     page?: number;
     size?: number;
-    sort?: string; // e.g., "date,desc" or "rating,asc"
+    sort?: string;
 };
 
 // DTO structure you expected for a single review
@@ -19,16 +19,14 @@ export type ReviewDTO = {
     createdAt: string;
 };
 
-// This matches the typical response structure of a Spring Data Page
 export type ReviewPageResponse = {
     content: ReviewDTO[];
     totalPages: number;
-    number: number; // current page number (0-indexed)
+    number: number;
     size: number;
     totalElements: number;
     last: boolean;
     first: boolean;
-    // You can add more Page fields here if needed (e.g., sort, pageable)
 };
 
 // Function to fetch reviews for a specific publication ID
