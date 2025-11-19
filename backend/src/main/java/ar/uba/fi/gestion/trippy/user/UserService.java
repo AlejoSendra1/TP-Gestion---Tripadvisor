@@ -128,6 +128,17 @@ public class UserService {
         throw new AccessDeniedException("User not authenticated or principal type is incorrect");
     }
 
+    public User getCurrentAuthenticatedUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof JwtUserDetails userDetails) {
+            return userRepository.findByEmail(userDetails.username())
+                    .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found in database"));
+        }
+        // Este caso no debería ocurrir si el filtro de seguridad funciona correctamente
+        throw new AccessDeniedException("User not authenticated or principal type is incorrect");
+    }
+
+
     /**
      * Añade experiencia a un usuario traveler
      */
