@@ -8,6 +8,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import ar.uba.fi.gestion.trippy.user.dto.UpdateProfileRequestDTO;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +50,17 @@ class UserRestController {
     public ResponseEntity<UserProfileDTO> getCurrentUserProfile() {
         UserProfileDTO profile = userService.getCurrentUserProfile();
         return ResponseEntity.ok(profile);
+    }
+
+    @PutMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update current user profile")
+    @ApiResponse(responseCode = "200", description = "Profile updated successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid request data")
+    @ApiResponse(responseCode = "401", description = "User not authenticated")
+    public ResponseEntity<UserProfileDTO> updateUserProfile(@Valid @RequestBody UpdateProfileRequestDTO data) {
+        UserProfileDTO updatedProfile = userService.updateUserProfile(data);
+        return ResponseEntity.ok(updatedProfile);
     }
 
     @PostMapping("/{email}/xp")
