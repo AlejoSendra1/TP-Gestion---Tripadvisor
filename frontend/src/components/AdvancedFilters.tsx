@@ -6,20 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface AdvancedFiltersProps {
   onFiltersChange: (filters: any) => void;
-  onSortChange?: (sortBy: string, sortOrder: string) => void;
 }
 
-export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFiltersProps) {
+export function AdvancedFilters({ onFiltersChange }: AdvancedFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     location: '',
     minPrice: '',
-    maxPrice: '',
-    guests: '',
-    minRating: '',
-    checkIn: '',
-    checkOut: '',
-    duration: ''
+    maxPrice: ''
   });
 
   const [sortBy, setSortBy] = useState('');
@@ -31,38 +25,14 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
     onFiltersChange(newFilters);
   };
 
-  const handleSortChange = (value: string) => {
-    setSortBy(value);
-    if (onSortChange) {
-      onSortChange(value, sortOrder);
-    }
-  };
-
-  const handleSortOrderChange = (value: string) => {
-    setSortOrder(value);
-    if (onSortChange) {
-      onSortChange(sortBy, value);
-    }
-  };
-
   const clearFilters = () => {
     const emptyFilters = {
       location: '',
       minPrice: '',
-      maxPrice: '',
-      guests: '',
-      minRating: '',
-      checkIn: '',
-      checkOut: '',
-      duration: ''
+      maxPrice: ''
     };
     setFilters(emptyFilters);
     onFiltersChange(emptyFilters);
-    setSortBy('');
-    setSortOrder('');
-    if (onSortChange) {
-      onSortChange('', '');
-    }
   };
 
   return (
@@ -74,21 +44,6 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
           <h3 className="text-lg font-semibold text-white">Filtros Avanzados</h3>
         </div>
         <div className="flex gap-2">
-          {/* Selector de Ordenamiento */}
-          <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-[180px] bg-white/20 border-white/30 text-white">
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="title-asc">A-Z</SelectItem>
-              <SelectItem value="title-desc">Z-A</SelectItem>
-              <SelectItem value="price-asc">Precio ↑</SelectItem>
-              <SelectItem value="price-desc">Precio ↓</SelectItem>
-              <SelectItem value="rating-desc">Rating ↓</SelectItem>
-              <SelectItem value="rating-asc">Rating ↑</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button 
             variant="outline" 
             size="sm" 
@@ -111,9 +66,9 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
 
       {/* Filtros - Se muestran/ocultan */}
       {showFilters && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Primera fila de filtros */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* Location */}
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
@@ -146,72 +101,6 @@ export function AdvancedFilters({ onFiltersChange, onSortChange }: AdvancedFilte
                 className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
                 value={filters.maxPrice}
                 onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-              />
-            </div>
-
-            {/* Guests */}
-            <div className="relative">
-              <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
-              <Input 
-                placeholder="Cantidad de Personas"
-                type="number"
-                className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
-                value={filters.guests}
-                onChange={(e) => handleFilterChange('guests', e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Segunda fila de filtros */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Rating */}
-            <div className="relative">
-              <Star className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
-              <Input 
-                placeholder="Rating MÍN"
-                type="number"
-                min="1"
-                max="5"
-                step="0.1"
-                className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
-                value={filters.minRating}
-                onChange={(e) => handleFilterChange('minRating', e.target.value)}
-              />
-            </div>
-
-            {/* Duration */}
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
-              <Input 
-                placeholder="Duración (días)"
-                type="number"
-                className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
-                value={filters.duration}
-                onChange={(e) => handleFilterChange('duration', e.target.value)}
-              />
-            </div>
-
-            {/* Check-in */}
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
-              <Input 
-                placeholder="Check-in" 
-                type="date" 
-                className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
-                value={filters.checkIn}
-                onChange={(e) => handleFilterChange('checkIn', e.target.value)}
-              />
-            </div>
-
-            {/* Check-out */}
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-4 w-4" />
-              <Input 
-                placeholder="Check-out" 
-                type="date" 
-                className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
-                value={filters.checkOut}
-                onChange={(e) => handleFilterChange('checkOut', e.target.value)}
               />
             </div>
           </div>

@@ -248,6 +248,8 @@ public class PublicationService {
         newActivity.setWhatIsIncluded(dto.whatIsIncluded());
         newActivity.setActivityLevel(dto.activityLevel());
         newActivity.setLanguage(dto.language());
+        // Mapear nuevo campo
+        newActivity.setMaxGroupSize(dto.maxGroupSize());
 
         // 5. Asignar el Host
         newActivity.setHost((BusinessOwner) hostUser);
@@ -289,6 +291,9 @@ public class PublicationService {
         newCoworking.setPricePerMonth(dto.pricePerMonth());
         newCoworking.setServices(dto.services() != null ? dto.services() : Collections.emptyList());
 
+        // mapear capacity si viene
+        newCoworking.setCapacity(dto.capacity());
+
         // 5. Asignar el Host
         newCoworking.setHost((BusinessOwner) hostUser);
 
@@ -324,12 +329,18 @@ public class PublicationService {
         newRestaurant.setMainImageUrl(dto.mainImageUrl());
         newRestaurant.setImageUrls(dto.imageUrls() != null ? dto.imageUrls() : Collections.emptyList());
 
+        // Validación de horarios
+        if (!isOpeningBeforeClosing(dto.openingStart(), dto.openingEnd())) {
+            throw new IllegalArgumentException("Horario inválido: openingStart debe ser menor que openingEnd.");
+        }
+
         // 4. Mapear campos específicos (de Restaurant.java)
         newRestaurant.setCuisineType(dto.cuisineType());
         newRestaurant.setPriceRange(dto.priceRange());
-        newRestaurant.setOpeningHours(dto.openingHours());
+        newRestaurant.setOpeningStart(dto.openingStart());
+        newRestaurant.setOpeningEnd(dto.openingEnd());
         newRestaurant.setMenuUrl(dto.menuUrl());
-
+        newRestaurant.setCapacity(dto.capacity());
         // 5. Asignar el Host
         newRestaurant.setHost((BusinessOwner) hostUser);
 
@@ -442,7 +453,8 @@ public class PublicationService {
         if (dto.whatIsIncluded()  != null) a.setWhatIsIncluded(dto.whatIsIncluded());
         if (dto.activityLevel()   != null) a.setActivityLevel(dto.activityLevel());
         if (dto.language()        != null) a.setLanguage(dto.language());
-
+        // Manejo del nuevo campo
+        if (dto.maxGroupSize()    != null) a.setMaxGroupSize(dto.maxGroupSize());
         return convertToDetailDTO(publicationRepository.save(a));
     }
 
@@ -464,6 +476,9 @@ public class PublicationService {
         if (dto.pricePerMonth() != null) c.setPricePerMonth(dto.pricePerMonth());
         if (dto.services()      != null) c.setServices(dto.services());
 
+        // actualizar capacity si se envía
+        if (dto.capacity() != null) c.setCapacity(dto.capacity());
+
         return convertToDetailDTO(publicationRepository.save(c));
     }
 
@@ -478,7 +493,8 @@ public class PublicationService {
 
         if (dto.cuisineType() != null)  r.setCuisineType(dto.cuisineType());
         if (dto.priceRange()  != null)  r.setPriceRange(dto.priceRange());
-        if (dto.openingHours()!= null)  r.setOpeningHours(dto.openingHours());
+        if (dto.openingStart()!= null)  r.setOpeningStart(dto.openingStart());
+        if (dto.openingEnd()  != null)  r.setOpeningEnd(dto.openingEnd());
         if (dto.menuUrl()     != null)  r.setMenuUrl(dto.menuUrl());
 
         return convertToDetailDTO(publicationRepository.save(r));
@@ -503,4 +519,19 @@ public class PublicationService {
         publicationRepository.delete(publication);
     }
 
+    private Integer timeToMinutes(String t) {
+        if (t == null || t.isBlank()) return null;
+        String[] parts = t.split(":");
+        if (parts.length < 1) return null;
+        int hh = Integer.parseInt(parts[0]);
+        int mm = (parts.length > 1) ? Integer.parseInt(parts[1]) : 0;
+        return hh * 60 + mm;
+    }
+
+    private boolean isOpeningBeforeClosing(String opening, String closing) {
+        Integer o = timeToMinutes(opening);
+        Integer c = timeToMinutes(closing);
+        if (o == null || c == null) return true; // si falta alguno, no validamos aquí
+        return o < c;
+    }
 }

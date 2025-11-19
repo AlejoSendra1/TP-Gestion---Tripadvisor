@@ -16,5 +16,7 @@ public record CoworkingCreateDTO(
         // Campos específicos de Coworking
         double pricePerDay,
         double pricePerMonth,
-        List<String> services
+        List<String> services,
+
+        Integer capacity // <-- nuevo
 ) {}

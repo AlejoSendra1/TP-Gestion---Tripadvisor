@@ -15,6 +15,8 @@ public class Coworking extends Publication {
 
     private double pricePerDay;
     private double pricePerMonth;
+    // Nuevo campo: capacidad (puede ser null => sin límite)
+    private Integer capacity;
 
     @ElementCollection // Lista de servicios
     @CollectionTable(name = "coworking_services", joinColumns = @JoinColumn(name = "publication_id"))
@@ -30,7 +32,7 @@ public class Coworking extends Publication {
 
         List<String> serviceList = new ArrayList<>(this.services);
         details.put("services", serviceList);
-
+        details.put("capacity", this.capacity);
         return details;
     }
 
@@ -43,5 +45,11 @@ public class Coworking extends Publication {
     public void setServices(List<String> services) {
         this.services = services;
     }
-
+    // Getter / Setter para capacity
+    public Integer getCapacity() {
+        return capacity;
+    }
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
 }

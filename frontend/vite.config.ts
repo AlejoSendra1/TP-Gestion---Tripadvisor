@@ -21,7 +21,15 @@ export default defineConfig(({ mode }) => ({
       '/sessions': {
         target: 'http://localhost:8080', // Tu backend
         changeOrigin: true,
-      }
+      },
+      '/reviews': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/ia': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     }
   },
   plugins: [

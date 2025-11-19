@@ -49,13 +49,13 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(30 30% 98%));
     --gradient-experience: linear-gradient(90deg, hsl(var(--adventure)), hsl(var(--experience)));
-    
+
     /* XP and gaming colors */
     --xp-bronze: 30 100% 50%;
     --xp-silver: 240 6% 75%;
     --xp-gold: 45 93% 58%;
     --xp-platinum: 280 87% 65%;
-    
+
     /* Shadows and effects */
     --shadow-card: 0 4px 20px -2px hsl(215 25% 15% / 0.1);
     --shadow-hero: 0 20px 40px -10px hsl(217 91% 60% / 0.3);

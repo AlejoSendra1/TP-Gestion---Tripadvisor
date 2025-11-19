@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import ar.uba.fi.gestion.trippy.user.dto.UpdateProfileRequestDTO;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -138,6 +139,28 @@ public class UserService {
         throw new AccessDeniedException("User not authenticated or principal type is incorrect");
     }
 
+
+    /**
+     * Actualiza el perfil de un usuario (Traveler)
+     */
+    public UserProfileDTO updateUserProfile(UpdateProfileRequestDTO data) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (!(principal instanceof JwtUserDetails userDetails)) {
+            throw new AccessDeniedException("User not authenticated or principal type is incorrect");
+        }
+
+        User user = getUserByEmail(userDetails.username());
+
+        if (user instanceof Traveler traveler) {
+            traveler.setFirstName(data.firstName());
+            traveler.setLastName(data.lastName());
+            userRepository.save(traveler);
+            return UserProfileDTO.fromUser(traveler);
+        } else {
+            throw new IllegalStateException("El perfil solo puede ser actualizado por usuarios de tipo Traveler.");
+        }
+    }
 
     /**
      * Añade experiencia a un usuario traveler
