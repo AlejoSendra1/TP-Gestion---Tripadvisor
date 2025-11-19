@@ -48,4 +48,5 @@ public class ReviewRestController {
     ) {
         reviewService.deleteReview(publicationId, reviewerEmail);
     }
+
 }

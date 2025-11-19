@@ -48,10 +48,10 @@ import BookingModal from "@/components/BookingModal"; // <-- nuevo
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
-  id: string; // <-- Asegurarse de tener el ID
+  id: string;
   username: string;
   userLastname: string;
-  reviewerEmail: string; // <-- NUEVO: para verificar propiedad
+  reviewerEmail: string;
   avatar: string;
   rating: number;
   createdAt: string;

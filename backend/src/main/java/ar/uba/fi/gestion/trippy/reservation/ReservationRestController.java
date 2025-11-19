@@ -9,6 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import java.util.stream.Collectors;
+
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/publications/{publicationId}/reservations")
@@ -21,6 +25,16 @@ public class ReservationRestController {
         this.reservationService = reservationService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<ReservationResponseDTO>> getMyReservations(
+            @AuthenticationPrincipal JwtUserDetails me
+    ) {
+        var reservations = reservationService.getReservationsForTraveler(me.username());
+        var dtoList = reservations.stream()
+                .map(ReservationResponseDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
+    }
     @PostMapping
     public ResponseEntity<ReservationResponseDTO> createReservation(
             @PathVariable Long publicationId,
@@ -30,4 +44,17 @@ public class ReservationRestController {
         Reservation saved = reservationService.createReservation(publicationId, dto, me.username());
         return ResponseEntity.status(HttpStatus.CREATED).body(ReservationResponseDTO.from(saved));
     }
+
+
+    @DeleteMapping("/{reservationId}")
+    public ResponseEntity<ReservationResponseDTO> cancelReservation(
+            @PathVariable Long publicationId,
+            @PathVariable Long reservationId,
+            @AuthenticationPrincipal JwtUserDetails me
+    ) {
+        Reservation cancelled = reservationService.cancelReservation(publicationId, reservationId, me.username());
+        return ResponseEntity.ok(ReservationResponseDTO.from(cancelled));
+    }
+
+    
 }
