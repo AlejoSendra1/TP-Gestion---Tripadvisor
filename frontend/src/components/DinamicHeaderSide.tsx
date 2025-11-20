@@ -66,6 +66,8 @@ export function DinamicHeaderSide() {
     return nextLevelXp - currentLevelXp;
   };
 
+  const profilePath = isBusinessOwner() ? "/host-profile" : "/profile";
+
   return (
     <>
       {user ? (
@@ -127,8 +129,7 @@ export function DinamicHeaderSide() {
               </div>
             </div>
 
-            {/* Avatar on top with higher z-index */}
-            <Link to="/profile" className="relative z-10">
+            <Link to={profilePath} className="relative z-10">
               <Avatar className="w-12 h-12 border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
                 <AvatarImage src="/placeholder-avatar.jpg" />
                 <AvatarFallback className="bg-gradient-hero text-white">
