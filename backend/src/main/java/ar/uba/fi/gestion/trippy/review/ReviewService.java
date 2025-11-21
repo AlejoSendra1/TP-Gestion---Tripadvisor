@@ -73,7 +73,7 @@ public class ReviewService {
     /**
      * Calcula y otorga XP al usuario por crear una reseña
      * El XP se calcula basándose en:
-     * - XP base: 50 puntos
+     * - XP base: 60 puntos
      * - Bonus por fotos: 25 puntos (si incluye fotos)
      * - Bonus por longitud: 25 puntos (si tiene más de 200 caracteres)
      * - Bonus por calificación alta: 10 puntos (si rating >= 4)

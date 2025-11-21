@@ -68,7 +68,7 @@ export function useCreateReview() {
 
       toast({
         title: '✅ ¡Reseña enviada!',
-        description: `¡Ganaste 50 XP por compartir tu experiencia!`,
+        description: `¡Ganaste puntos XP por compartir tu experiencia!`,
       });
     },
 

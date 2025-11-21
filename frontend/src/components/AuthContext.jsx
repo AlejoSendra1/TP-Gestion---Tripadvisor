@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import apiClient from '../lib/apiClient'; // Importamos el apiClient
 
 export const AuthContext = createContext(null);
 
@@ -6,34 +7,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore user from memory storage on mount
+  // Restore user from sessionStorage on mount
   useEffect(() => {
-    // En lugar de localStorage, usa sessionStorage del navegador
-    // o mejor aún, simplemente mantén el estado en memoria
     const restoreSession = async () => {
       try {
-        // Intenta obtener el token del sessionStorage
         const accessToken = sessionStorage.getItem("accessToken");
-        
-        if (accessToken) {
-          // Valida el token obteniendo el perfil
-          const response = await fetch("http://localhost:8080/sessions/profile", {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
-          });
 
-          if (response.ok) {
-            const userData = await response.json();
+        if (accessToken) {
+          // Usamos apiClient en lugar de fetch
+          const response = await apiClient.get("/sessions/profile");
+          const userData = response.data; // Con Axios, los datos están en response.data
+            console.log("📥 Datos del profile endpoint:", userData);
             const normalizedUser = normalizeUserData(userData);
+            console.log("✅ Usuario normalizado:", normalizedUser);
             setUser(normalizedUser);
-          } else {
-            // Token inválido, limpiar
-            sessionStorage.removeItem("accessToken");
-            sessionStorage.removeItem("refreshToken");
-          }
         }
       } catch (error) {
         console.error("Error restoring session:", error);
@@ -46,10 +33,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (userData) => {
-    // userData can be either TravelerDTO or BusinessOwnerDTO
+    console.log("🔐 Login - datos recibidos:", userData);
     const normalizedUser = normalizeUserData(userData);
+    console.log("🔐 Login - usuario normalizado:", normalizedUser);
 
-    // Save token to sessionStorage for persistence
     if (userData.tokenDTO) {
       sessionStorage.setItem("accessToken", userData.tokenDTO.accessToken);
       sessionStorage.setItem("refreshToken", userData.tokenDTO.refreshToken);
@@ -68,7 +55,6 @@ export function AuthProvider({ children }) {
     login(userData);
   };
 
-  // *** FUNCIÓN CORREGIDA: Refrescar datos del usuario desde el backend ***
   const refreshUser = async () => {
     try {
       const accessToken = sessionStorage.getItem("accessToken");
@@ -78,25 +64,12 @@ export function AuthProvider({ children }) {
         return null;
       }
 
-      // ✅ ENDPOINT CORREGIDO: /sessions/profile
-      const response = await fetch("http://localhost:8080/sessions/profile", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to refresh user data");
-      }
-
-      const userData = await response.json();
-      console.log("📥 Datos recibidos del backend:", userData);
+      // Usamos apiClient también aquí
+      const response = await apiClient.get("/sessions/profile");
+      const userData = response.data;
+      console.log("🔄 refreshUser - datos recibidos:", userData);
       
       const normalizedUser = normalizeUserData(userData);
-      
-      // Actualizar en el estado
       setUser(normalizedUser);
       
       console.log("✅ Usuario refrescado:", normalizedUser);
@@ -107,11 +80,12 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Helper function to normalize user data from backend DTOs
+  // ✅ FUNCIÓN CORREGIDA: Normaliza datos del backend
   const normalizeUserData = (userData) => {
-    // Si ya viene con tokenDTO, es del login/signup
+    // CASO 1: Datos del LOGIN/SIGNUP (tienen tokenDTO)
     if (userData.tokenDTO) {
       const baseUser = {
+        id: userData.id,
         email: userData.email,
         userType: userData.userType,
         verified: userData.verified,
@@ -123,8 +97,9 @@ export function AuthProvider({ children }) {
           ...baseUser,
           firstName: userData.firstName,
           lastName: userData.lastName,
-          userXP: userData.userXP,
-          userLevel: userData.userLevel,
+          // Del login, pueden venir como userXP/userLevel o xp/level
+          userXP: userData.userXP ?? userData.xp ?? 0,
+          userLevel: userData.userLevel ?? userData.level ?? 1,
         };
       } else if (userData.userType === "OWNER") {
         return {
@@ -137,41 +112,56 @@ export function AuthProvider({ children }) {
       return baseUser;
     }
 
-    // Si es del endpoint /profile, la estructura es diferente
+    // CASO 2: Datos del endpoint /sessions/profile (estructura diferente)
+    // Tiene levelInfo como objeto anidado
+    const isTraveler = userData.levelInfo !== null && userData.levelInfo !== undefined;
+    
     const baseUser = {
+      id: userData.id,
       email: userData.email,
-      userType: userData.userType,
-      verified: userData.verified || false,
-      role: userData.role || "USER"
+      userType: isTraveler ? "TRAVELER" : "OWNER",
+      verified: true,
+      role: "USER"
     };
 
-    if (userData.userType === "TRAVELER") {
+    if (isTraveler && userData.levelInfo) {
       return {
         ...baseUser,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        // ✅ IMPORTANTE: Asegurarse de usar los campos correctos
-        userXP: userData.xp, // El endpoint /profile devuelve 'xp'
-        userLevel: userData.level, // El endpoint /profile devuelve 'level'
-      };
-    } else if (userData.userType === "OWNER") {
-      return {
-        ...baseUser,
-        businessName: userData.businessName,
-        businessType: userData.businessType,
+        photo: userData.photo,
+        // ✅ EXTRAER DE levelInfo (campos del LevelInfoDTO.java)
+        userXP: userData.levelInfo.currentXp,
+        userLevel: userData.levelInfo.currentLevel,
+        // Campos adicionales útiles
+        xpForNextLevel: userData.levelInfo.xpForNextLevel,
+        xpRequiredForNextLevel: userData.levelInfo.xpRequiredForNextLevel,
+        progressPercentage: userData.levelInfo.progressPercentage,
+        discountPercentage: userData.levelInfo.discountPercentage,
+        levelBenefits: userData.levelInfo.benefits,
+        // Stats del perfil
+        reviewsCount: userData.reviewsCount ?? 0,
+        placesVisited: userData.placesVisited ?? 0,
+        photosShared: userData.photosShared ?? 0,
+        helpfulVotes: userData.helpfulVotes ?? 0,
       };
     }
 
-    return baseUser;
+    // Usuario sin levelInfo (BusinessOwner)
+    return {
+      ...baseUser,
+      firstName: userData.firstName || "Usuario",
+      lastName: userData.lastName || "",
+    };
   };
 
-  // Helper functions to check user type
   const isTraveler = () => user?.userType === "TRAVELER";
   const isBusinessOwner = () => user?.userType === "OWNER";
 
-  // Prevent rendering until we check session
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>;
   }
 
   return (
