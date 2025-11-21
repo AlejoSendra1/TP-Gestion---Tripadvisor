@@ -1,9 +1,18 @@
 // frontend/src/pages/HostProfile.tsx
 import React from "react";
 import { Header } from "@/components/Header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
+import { List } from "lucide-react";
+
+type Publication = {
+  id?: string;
+  title?: string;
+  description?: string;
+  createdAt?: string;
+  status?: string;
+};
 
 const HostProfile: React.FC = () => {
   const { user, isBusinessOwner } = useAuth();
@@ -35,13 +44,15 @@ const HostProfile: React.FC = () => {
   })();
 
   const reviewsCount = (user as any).reviewsCount ?? 0;
-  const publicationsCount = (user as any).publicationsCount ?? (user as any).publications ?? 0;
+  const publicationsFromUser = (user as any).publications ?? (user as any).myPublications ?? [];
+  const publications: Publication[] = Array.isArray(publicationsFromUser) ? publicationsFromUser : [];
+  const publicationsCount = (user as any).publicationsCount ?? (Array.isArray(publicationsFromUser) ? publicationsFromUser.length : Number(publicationsFromUser) || 0);
   const reservationsCount = (user as any).reservationsCount ?? (user as any).reservations ?? 0;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container py-8">
+      <main className="container py-8 space-y-6">
         <Card className="max-w-3xl mx-auto">
           <CardContent className="p-8">
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
@@ -74,6 +85,38 @@ const HostProfile: React.FC = () => {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Sección: Mis publicaciones (sin consultar al backend) */}
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <List className="h-5 w-5 text-primary" />
+              Mis publicaciones
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {publications.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-4">No tienes publicaciones aún</div>
+            ) : (
+              <div className="space-y-3">
+                {publications.map((pub) => (
+                  <div key={pub.id ?? pub.title} className="p-4 rounded-lg border bg-card hover:shadow transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-sm">{pub.title ?? "Sin título"}</h3>
+                        <p className="text-xs text-muted-foreground mt-1">{pub.description ?? ""}</p>
+                      </div>
+                      <div className="text-xs text-muted-foreground text-right">
+                        <div>{pub.status ?? "Publicado"}</div>
+                        <div>{pub.createdAt ? new Date(pub.createdAt).toLocaleDateString() : ""}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
