@@ -34,4 +34,8 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
         @Param("minPrice") BigDecimal minPrice,
         @Param("maxPrice") BigDecimal maxPrice
     );
+
+    // Nuevo: buscar publicaciones por email del host
+    @Query("SELECT p FROM Publication p WHERE p.host.email = :email")
+    List<Publication> findByHostEmail(@Param("email") String email);
 }

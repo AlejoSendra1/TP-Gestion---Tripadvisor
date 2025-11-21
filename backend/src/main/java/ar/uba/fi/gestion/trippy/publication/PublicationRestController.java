@@ -235,4 +235,13 @@ public class PublicationRestController {
         return ResponseEntity.noContent().build();
     }
 
+    // Nuevo endpoint: mis publicaciones (del host autenticado)
+    @GetMapping("/mine")
+    public ResponseEntity<List<PublicationListDTO>> getMyPublications(
+            @AuthenticationPrincipal JwtUserDetails authenticatedUser
+    ) {
+        String hostEmail = authenticatedUser.username();
+        List<PublicationListDTO> publications = publicationService.getPublicationsByHostEmail(hostEmail);
+        return ResponseEntity.ok(publications);
+    }
 }

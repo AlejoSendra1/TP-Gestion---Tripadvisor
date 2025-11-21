@@ -534,4 +534,12 @@ public class PublicationService {
         if (o == null || c == null) return true; // si falta alguno, no validamos aquí
         return o < c;
     }
+
+    // Nuevo método: obtener publicaciones del host (por email)
+    public List<PublicationListDTO> getPublicationsByHostEmail(String hostEmail) {
+        List<Publication> pubs = publicationRepository.findByHostEmail(hostEmail);
+        return pubs.stream()
+                .map(this::convertToListDTO)
+                .collect(Collectors.toList());
+    }
 }
