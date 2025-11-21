@@ -34,22 +34,45 @@ const HostProfile: React.FC = () => {
     return ((fn[0] ?? "") + (ln[0] ?? "")).toUpperCase() || "U";
   })();
 
+  const reviewsCount = (user as any).reviewsCount ?? 0;
+  const publicationsCount = (user as any).publicationsCount ?? (user as any).publications ?? 0;
+  const reservationsCount = (user as any).reservationsCount ?? (user as any).reservations ?? 0;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-8">
         <Card className="max-w-3xl mx-auto">
-          <CardContent className="p-8 flex items-center gap-6">
-            <Avatar className="h-24 w-24 ring-4 ring-primary/20">
-              <AvatarImage src={avatar} alt={name} />
-              <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+          <CardContent className="p-8">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
+              <Avatar className="h-24 w-24 ring-4 ring-primary/20">
+                <AvatarImage src={avatar} alt={name} />
+                <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
 
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">{name || "Nombre no disponible"}</h1>
-              <p className="text-sm text-muted-foreground mt-1">{email}</p>
+              <div className="flex-1 text-center lg:text-left space-y-2">
+                <div className="flex items-center justify-center lg:justify-start gap-2">
+                  <h1 className="text-2xl font-bold text-foreground">{name || "Nombre no disponible"}</h1>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">{email}</p>
+
+                <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-primary">{reviewsCount}</div>
+                    <div className="text-xs text-muted-foreground">Reseñas</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-500">{publicationsCount}</div>
+                    <div className="text-xs text-muted-foreground">Publicaciones</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-500">{reservationsCount}</div>
+                    <div className="text-xs text-muted-foreground">Reservaciones</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
