@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth'; // 🔥 NUEVO IMPORT
 import { apiClient } from "@/lib/apiClient";
 import { AxiosError } from 'axios';
 
@@ -44,11 +45,12 @@ async function createReview(input: CreateReviewInput): Promise<ReviewResponse> {
 export function useCreateReview() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { refreshUser } = useAuth(); // 🔥 OBTENER refreshUser del contexto
 
   return useMutation({
     mutationFn: createReview,
 
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => { // 🔥 Ahora es ASYNC
       console.log("✅ Review submission successful:", data);
 
       // Invalidate the publication detail query to refetch with new review
@@ -59,9 +61,14 @@ export function useCreateReview() {
         queryKey: ['reviews', variables.publicationId]
       });
 
+      // 🔥 REFRESCAR USUARIO PARA ACTUALIZAR XP Y NIVEL
+      console.log("🔄 Refrescando datos del usuario...");
+      await refreshUser();
+      console.log("✅ Usuario refrescado - XP y nivel actualizados");
+
       toast({
         title: '✅ ¡Reseña enviada!',
-        description: `¡Ganaste 50 XP por compartir tu experiencia!`,
+        description: `¡Ganaste puntos XP por compartir tu experiencia!`,
       });
     },
 

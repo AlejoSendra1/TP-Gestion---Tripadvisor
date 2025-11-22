@@ -1,4 +1,3 @@
-// java
 package ar.uba.fi.gestion.trippy.reservation;
 
 import ar.uba.fi.gestion.trippy.publication.Publication;
@@ -13,8 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,6 +21,10 @@ public class ReservationService {
     private final PublicationRepository publicationRepository;
     private final UserRepository userRepository;
     private final ReservationFactory reservationFactory;
+
+    // Constantes para el sistema de XP por reserva
+    private static final int BASE_XP_PER_RESERVATION = 100;
+    private static final int XP_PER_10_DOLLARS = 1;  // 1 XP por cada $10
 
     @Autowired
     public ReservationService(ReservationRepository reservationRepository,
@@ -44,7 +45,7 @@ public class ReservationService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + userEmail));
 
-        if (!(user instanceof Traveler))
+        if (!(user instanceof Traveler traveler))
             throw new IllegalStateException("Solo Travelers pueden crear reservas.");
 
         if (pub.getHost() != null && pub.getHost().getEmail().equals(userEmail))
@@ -55,9 +56,45 @@ public class ReservationService {
         // Delegar validación a la instancia concreta antes de persistir
         reservation.validateCapacity(reservationRepository);
 
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // ✅ NUEVO: Otorgar XP al Traveler por la reserva
+        awardXpForReservation(traveler, savedReservation.getTotalPrice());
+
+        return savedReservation;
     }
-    
+
+    /**
+     * Calcula y otorga XP al usuario por crear una reserva.
+     * El XP se calcula basándose en:
+     * - XP base: 30 puntos por reserva
+     * - XP por monto: 1 XP por cada $10 del precio total
+     */
+    private void awardXpForReservation(Traveler traveler, BigDecimal totalPrice) {
+        int totalXp = BASE_XP_PER_RESERVATION;
+
+        // Bonus por monto de la reserva
+        if (totalPrice != null && totalPrice.compareTo(BigDecimal.ZERO) > 0) {
+            int priceXp = totalPrice.divide(BigDecimal.TEN, 0, java.math.RoundingMode.DOWN).intValue();
+            totalXp += priceXp;
+        }
+
+        // Guardar nivel anterior para detectar subida
+        int oldLevel = traveler.getLevel();
+
+        // Añadir XP
+        traveler.addXp(totalXp);
+        userRepository.save(traveler);
+
+        // Log
+        System.out.println("✅ XP otorgado a " + traveler.getEmail() + " por reserva: " + totalXp + " puntos");
+
+        // Verificar si subió de nivel
+        int newLevel = traveler.getLevel();
+        if (newLevel > oldLevel) {
+            System.out.println("🎉 ¡" + traveler.getFirstName() + " subió al nivel " + newLevel + "!");
+        }
+    }
 
     @Transactional(readOnly = true)
     public List<Reservation> getReservationsForTraveler(String userEmail) {
@@ -84,11 +121,4 @@ public class ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         return reservationRepository.save(reservation);
     }
-
-
-
-
-
-
-
 }
