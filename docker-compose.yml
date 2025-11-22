@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: "${DB_USERNAME}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
-      - "${VOLUME_DIR}/data/postgres:/var/lib/postgresql/data"
+      - "db_data:/var/lib/postgresql/data"
     ports:
       - "127.0.0.1:${DB_EXTERNAL_PORT}:5432"
 
@@ -44,3 +44,6 @@ services:
     restart: "on-failure:3"
     ports:
       - "${ADMINER_EXTERNAL_PORT}:8080"
+
+volumes:
+  db_data:
