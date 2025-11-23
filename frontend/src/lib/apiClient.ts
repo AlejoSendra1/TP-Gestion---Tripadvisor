@@ -2,20 +2,33 @@
 
 import axios from 'axios';
 
-// 1. Creamos la instancia de Axios
 export const apiClient = axios.create({
-    // baseURL: '/api/v1', // (Asegúrate que tu proxy de Vite maneje esto)
+    baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:30002',
     timeout: 10000,
 });
 
-// 2. --- ¡LA SOLUCIÓN! ---
-// Descomentamos el interceptor de peticiones
+// ✅ IMPORTANTE: Debe ser sessionStorage (NO localStorage)
 apiClient.interceptors.request.use((config) => {
-    // 3. Leemos el token que guardamos en AuthContext
-    const token = localStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken');
+    
+    // Debug temporal - remover después
+    console.log('🔑 apiClient - Token:', token ? 'encontrado' : 'NO encontrado');
+    
     if (token) {
-        // 4. Si existe, lo ponemos en la cabecera 'Authorization'
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 });
+
+// Interceptor para manejar errores 401
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.error('🚫 Error 401 - Verificá el token');
+        }
+        return Promise.reject(error);
+    }
+);
+
+export default apiClient;
