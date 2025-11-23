@@ -45,6 +45,18 @@ public class ReservationRestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ReservationResponseDTO.from(saved));
     }
 
+    // Listar todas las reservas de la publicación (solo host)
+    @GetMapping("/all")
+    public ResponseEntity<List<ReservationResponseDTO>> getReservationsForPublication(
+            @PathVariable Long publicationId,
+            @AuthenticationPrincipal JwtUserDetails me
+    ) {
+        var reservations = reservationService.getReservationsForPublication(publicationId, me.username());
+        var dtoList = reservations.stream()
+                .map(ReservationResponseDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
+    }
 
     @DeleteMapping("/{reservationId}")
     public ResponseEntity<ReservationResponseDTO> cancelReservation(

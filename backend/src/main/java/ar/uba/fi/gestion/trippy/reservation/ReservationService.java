@@ -85,10 +85,16 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
+    @Transactional(readOnly = true)
+    public List<Reservation> getReservationsForPublication(Long publicationId, String requestingUserEmail) {
+        Publication pub = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + publicationId));
 
+        // política: sólo el host puede ver todas las reservas de su publicación
+        if (pub.getHost() == null || !pub.getHost().getEmail().equals(requestingUserEmail)) {
+            throw new SecurityException("No tenés permiso para ver las reservas de esta publicación.");
+        }
 
-
-
-
-
+        return reservationRepository.findByPublicationId(publicationId);
+    }
 }

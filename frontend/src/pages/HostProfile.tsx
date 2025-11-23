@@ -16,6 +16,16 @@ const HostProfile: React.FC = () => {
   const [loadingPubs, setLoadingPubs] = useState(false);
   const [pubsError, setPubsError] = useState<string | null>(null);
 
+  // Nuevo estado para contadores de reseñas por publicación
+  const [reviewsCounts, setReviewsCounts] = useState<Record<string, number>>({});
+  const [loadingReviewsCount, setLoadingReviewsCount] = useState(false);
+  const [reviewsCountError, setReviewsCountError] = useState<string | null>(null);
+
+    // Agregar estos estados cerca de los otros useState (después de los estados de reviews)
+    const [reservationsCountsByPub, setReservationsCountsByPub] = useState<Record<string, number>>({});
+    const [loadingReservationsCount, setLoadingReservationsCount] = useState(false);
+    const [reservationsCountError, setReservationsCountError] = useState<string | null>(null);
+
   const mapToSummary = (item: any): PublicationSummary => {
     return {
       id: item.id?.toString() ?? "",
@@ -56,6 +66,16 @@ const HostProfile: React.FC = () => {
               .map(mapToSummary)
               .sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
       setFetchedPublications(data);
+
+      // Después de obtener publicaciones, obtener contadores de reseñas
+        const ids = data.map(d => d.id).filter(id => id);
+        if (ids.length > 0) {
+          fetchReviewCountsForPublications(ids, authToken, signal).catch(() => { /* manejado internamente */ });
+          fetchReservationsCountsForPublications(ids, authToken, signal).catch(() => { /* manejado internamente */ });
+        } else {
+          setReviewsCounts({});
+          setReservationsCountsByPub({});
+        }
       return data;
     } catch (err: any) {
       if (
@@ -85,7 +105,99 @@ const HostProfile: React.FC = () => {
       setLoadingPubs(false);
     }
   }
+  // Nueva función: obtiene el contador de reseñas por publicación (solo metadata)
+    async function fetchReviewCountsForPublications(ids: string[], token?: string | null, signal?: AbortSignal) {
+      setLoadingReviewsCount(true);
+      setReviewsCountError(null);
 
+      try {
+        const defaultToken =
+          (user as any)?.token ??
+          (user as any)?.accessToken ??
+          (user as any)?.access_token ??
+          null;
+        const authToken = token ?? defaultToken;
+
+        const headers: any = {};
+        if (authToken) headers.Authorization = `Bearer ${authToken}`;
+
+        // Pedimos size=1 para minimizar payload y leemos totalElements
+        const promises = ids.map(id =>
+          apiClient.get(`/reviews/publication/${id}`, {
+            params: { page: 0, size: 1 },
+            headers,
+            signal,
+          })
+        );
+
+        const results = await Promise.all(promises);
+        const counts: Record<string, number> = {};
+        results.forEach((r, idx) => {
+          const id = ids[idx];
+          const total = (r?.data?.totalElements ?? 0);
+          counts[id] = typeof total === "number" ? total : Number(total || 0);
+        });
+
+        setReviewsCounts(counts);
+      } catch (err: any) {
+        if (
+          err?.name === "CanceledError" ||
+          err?.message === "canceled" ||
+          err?.name === "AbortError"
+        ) {
+          return;
+        }
+        setReviewsCountError("Error al cargar contadores de reseñas");
+        // no lanzo, solo registro el error en estado
+      } finally {
+        setLoadingReviewsCount(false);
+      }
+    }
+// Nueva función: obtiene todas las reservas de cada publicación y guarda su cantidad
+    async function fetchReservationsCountsForPublications(ids: string[], token?: string | null, signal?: AbortSignal) {
+      setLoadingReservationsCount(true);
+      setReservationsCountError(null);
+
+      try {
+        const defaultToken =
+          (user as any)?.token ??
+          (user as any)?.accessToken ??
+          (user as any)?.access_token ??
+          null;
+        const authToken = token ?? defaultToken;
+
+        const headers: any = {};
+        if (authToken) headers.Authorization = `Bearer ${authToken}`;
+
+        const promises = ids.map(id =>
+          apiClient.get(`/publications/${id}/reservations/all`, {
+            headers,
+            signal,
+          })
+        );
+
+        const results = await Promise.all(promises);
+        const counts: Record<string, number> = {};
+        results.forEach((r, idx) => {
+          const id = ids[idx];
+          const data = r?.data ?? [];
+          counts[id] = Array.isArray(data) ? data.length : Number(data || 0);
+        });
+
+        setReservationsCountsByPub(counts);
+      } catch (err: any) {
+        if (
+          err?.name === "CanceledError" ||
+          err?.message === "canceled" ||
+          err?.name === "AbortError"
+        ) {
+          return;
+        }
+        setReservationsCountError("Error al cargar contadores de reservas");
+      } finally {
+        setLoadingReservationsCount(false);
+      }
+    }
   useEffect(() => {
     if (!user) {
       setFetchedPublications([]);
@@ -107,6 +219,19 @@ const HostProfile: React.FC = () => {
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Total de reseñas calculado desde los contadores por publicación
+  const totalReviewsCount = Object.values(reviewsCounts).reduce((acc, v) => acc + (Number(v) || 0), 0);
+
+  // Mostrar número de reseñas: preferir conteo real cuando ya terminó la carga de contadores
+  const displayedReviewsCount = !loadingReviewsCount
+    ? totalReviewsCount
+    : (user as any).reviewsCount ?? 0;
+
+  // Luego, calcular el total de reservas y elegir qué mostrar en el UI
+  const totalReservationsCount = Object.values(reservationsCountsByPub).reduce((acc, v) => acc + (Number(v) || 0), 0);
+  const fallbackReservationsCount = (user as any).reservationsCount ?? (user as any).reservations ?? 0;
+  const displayedReservationsCount = !loadingReservationsCount ? totalReservationsCount : fallbackReservationsCount;
 
   if (!user) {
     return (
@@ -134,13 +259,11 @@ const HostProfile: React.FC = () => {
     return ((fn[0] ?? "") + (ln[0] ?? "")).toUpperCase() || "U";
   })();
 
-  const reviewsCount = (user as any).reviewsCount ?? 0;
   const publicationsFromUser = (user as any).publications ?? (user as any).myPublications ?? [];
-  // Nuevo: preferir el conteo real desde el backend cuando ya terminó la carga.
+
   const publicationsCount = !loadingPubs
     ? fetchedPublications.length
     : (user as any).publicationsCount ?? (Array.isArray(publicationsFromUser) ? publicationsFromUser.length : Number(publicationsFromUser) || 0);
-  const reservationsCount = (user as any).reservationsCount ?? (user as any).reservations ?? 0;
 
   return (
       <div className="min-h-screen bg-background">
@@ -169,12 +292,12 @@ const HostProfile: React.FC = () => {
                   </div>
 
                   <div className="p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-accent">{reservationsCount}</div>
+                    <div className="text-2xl font-bold text-accent">{displayedReservationsCount}</div>
                     <div className="text-sm text-muted-foreground mt-1">Reservas</div>
                   </div>
 
                   <div className="p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-amber-500">{reviewsCount}</div>
+                    <div className="text-2xl font-bold text-amber-500">{displayedReviewsCount}</div>
                     <div className="text-sm text-muted-foreground mt-1">Reseñas</div>
                   </div>
                 </div>
