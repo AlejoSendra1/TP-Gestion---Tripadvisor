@@ -121,9 +121,6 @@ export function DinamicHeaderSide() {
                 {isBusinessOwner() && (
                   <>
                     <div className="text-sm font-medium">{user.businessName}</div>
-                    <div className="text-[10px] text-muted-foreground leading-tight">
-                      {user.businessType}
-                    </div>
                   </>
                 )}
               </div>
