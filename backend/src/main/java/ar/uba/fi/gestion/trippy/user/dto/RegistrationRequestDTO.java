@@ -30,15 +30,14 @@ public record RegistrationRequestDTO (
     Boolean agreeToTerms,
 
     // Business-specific fields (optional)
-    String businessName,
-    String businessType
+    String businessName
     ){
     // TODO despues implementar polimorfismo y verificacion de campos
     public User asUser(Function<String, String> encryptPassword){
         if (this.userType.equals("TRAVELER")) {
             return new Traveler(this.email, encryptPassword.apply(this.password),this.firstName,this.lastName);
         }
-        return new BusinessOwner(this.email,encryptPassword.apply(this.password),this.businessName, this.businessType);
+        return new BusinessOwner(this.email,encryptPassword.apply(this.password),this.businessName);
     }
 }
 

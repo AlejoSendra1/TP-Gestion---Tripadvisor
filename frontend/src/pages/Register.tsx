@@ -35,15 +35,7 @@ const Register = () => {
     confirmPassword: "",
     agreeToTerms: false,
     businessName: "",
-    businessType: "",
   });
-
-  const businessTypeOptions = [
-    { value: "Hotel", label: "Hotel" },
-    { value: "Restaurant", label: "Restaurante" },
-    { value: "Tour", label: "Operador de Tours" },
-    { value: "Office", label: "Espacio de Oficina" },
-  ];
 
   // --- Función handleSubmit (Reescrita) ---
   const handleSubmit = async (e: React.FormEvent) => {
@@ -250,24 +242,6 @@ const Register = () => {
                             required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="businessType">Tipo de Negocio</Label>
-                        <Select
-                            value={formData.businessType}
-                            onValueChange={(value) => handleFieldChange("businessType", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccioná tu tipo de negocio" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Hotel">Hotel</SelectItem>
-                            <SelectItem value="Restaurant">Restaurante</SelectItem>
-                            <SelectItem value="Tour">Operador de Tours</SelectItem>
-                            <SelectItem value="Office">Espacio de Oficina</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
                     </>
                 )}
 

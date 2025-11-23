@@ -66,6 +66,8 @@ export function DinamicHeaderSide() {
     return nextLevelXp - currentLevelXp;
   };
 
+  const profilePath = isBusinessOwner() ? "/host-profile" : "/profile";
+
   return (
     <>
       {user ? (
@@ -119,16 +121,12 @@ export function DinamicHeaderSide() {
                 {isBusinessOwner() && (
                   <>
                     <div className="text-sm font-medium">{user.businessName}</div>
-                    <div className="text-[10px] text-muted-foreground leading-tight">
-                      {user.businessType}
-                    </div>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Avatar on top with higher z-index */}
-            <Link to="/profile" className="relative z-10">
+            <Link to={profilePath} className="relative z-10">
               <Avatar className="w-12 h-12 border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
                 <AvatarImage src="/placeholder-avatar.jpg" />
                 <AvatarFallback className="bg-gradient-hero text-white">

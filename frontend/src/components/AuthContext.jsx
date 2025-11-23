@@ -105,7 +105,6 @@ export function AuthProvider({ children }) {
         return {
           ...baseUser,
           businessName: userData.businessName,
-          businessType: userData.businessType,
         };
       }
 
