@@ -1,6 +1,10 @@
 package ar.uba.fi.gestion.trippy.review;
 
+import ar.uba.fi.gestion.trippy.review.dto.ReviewHistoryRegisterDTO;
 import ar.uba.fi.gestion.trippy.review.dto.ReviewResponseDTO;
+import ar.uba.fi.gestion.trippy.reviewQualification.ReviewQualification;
+import ar.uba.fi.gestion.trippy.reviewQualification.ReviewQualificationRepository;
+import ar.uba.fi.gestion.trippy.reviewQualification.ReviewQualificationService;
 import ar.uba.fi.gestion.trippy.user.Traveler;
 import jakarta.persistence.EntityNotFoundException;
 import ar.uba.fi.gestion.trippy.publication.Publication;
@@ -15,6 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 public class ReviewService {
@@ -23,6 +31,7 @@ public class ReviewService {
     private final PublicationService publicationService;
     private final UserService userService;
     private final UserRepository userRepository;
+    private final ReviewQualificationRepository qualificationRepository;
 
     // Constantes para el sistema de XP
     private static final int BASE_XP_PER_REVIEW = 50;
@@ -35,11 +44,13 @@ public class ReviewService {
     public ReviewService(ReviewRepository reviewRepository, 
                         PublicationService publicationService, 
                         UserService userService,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                         ReviewQualificationRepository qualificationRepository ) {
         this.reviewRepository = reviewRepository;
         this.publicationService = publicationService;
         this.userService = userService;
         this.userRepository = userRepository;
+        this.qualificationRepository = qualificationRepository;
     }
 
     public ReviewResponseDTO createReview(CreateReviewDTO data) {
@@ -175,5 +186,26 @@ public class ReviewService {
         return reviewRepository.findByPublicationAndReviewer(publication, reviewer)
                 .orElseThrow(() -> new RuntimeException(
                         "Review not found for publication " + publicationId + " and user " + reviewerEmail));
+    }
+
+    public Page<ReviewHistoryRegisterDTO> getUserReviews(Pageable pageable) {
+        Page<Review> userReviews = reviewRepository.findByReviewerId(userService.getCurrentAuthenticatedUser().getId(),pageable);
+        return userReviews.map(this::mapToReviewHistoryRegisterDTO);
+    }
+
+    private ReviewHistoryRegisterDTO mapToReviewHistoryRegisterDTO(Review review){
+        Publication publication = review.getPublication();
+        Long qualification = this.qualificationRepository.countPositiveQualifByReviewId(review.getId()) - this.qualificationRepository.countNegativeQualifByReviewId(review.getId());
+
+        System.out.println("qualification to send in the dto: "+ qualification);
+        return new ReviewHistoryRegisterDTO(
+                publication.getTitle(),
+                publication.getId(),
+                review.getPublicationRating(),
+                review.getReviewContent(),
+                review.getCreatedAt(),
+                qualification
+        );
+
     }
 }

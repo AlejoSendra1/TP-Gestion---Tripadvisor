@@ -25,7 +25,7 @@ public class ReviewQualificationRestController {
     }
 
     @GetMapping("/qualification/{publicationId}/{currentUserEmail}") // deberia obtener el mail del contexto y quitarlo del path, pero bueno, es todo un tema
-    public ResponseEntity<List<ReviewQualificationStatusDTO>> getUserReviewQualifications(
+    public ResponseEntity<List<ReviewQualificationStatusDTO>> getUserReviewQualificationsByPublication(
             @PathVariable Long publicationId,
             @PathVariable String currentUserEmail) {
         return ResponseEntity.ok(

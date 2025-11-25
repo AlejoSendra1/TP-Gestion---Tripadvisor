@@ -1,12 +1,14 @@
 package ar.uba.fi.gestion.trippy.review;
 
 import ar.uba.fi.gestion.trippy.publication.Publication;
+import ar.uba.fi.gestion.trippy.reviewQualification.ReviewQualification;
 import ar.uba.fi.gestion.trippy.user.Traveler;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "review")

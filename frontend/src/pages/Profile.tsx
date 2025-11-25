@@ -4,22 +4,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Star, Trophy, Award, Gift, TrendingUp } from "lucide-react";
+import { Calendar, Star, Trophy, Award, Gift, TrendingUp, ThumbsUp, ThumbsDown ,ChevronLeft , ChevronRight} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserReservations } from "@/hooks/useUserReservations";
 import { useDeleteReservation } from "@/hooks/useDeleteReservation";
+import { useActualUserReviews, ReviewHistoryRegister } from '@/hooks/useReviews';
 // (Para el botón de "Editar")
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ReservationList from "@/components/ReservationList";
 import { useNavigate } from "react-router-dom";
-
 const Profile = () => {
   const navigate = useNavigate();
+  const [page, setPage] = useState(0);
+  const pageSize = 3;
   const { user, isTraveler } = useAuth();
   const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
   const { mutate: deleteReservation, isPending: isDeletingReservation } = useDeleteReservation();
   const [deletingReservationId, setDeletingReservationId] = useState<string | null>(null);
+
+  const { data: userReviewsData, isLoading: reviewsLoading, error: reviewsError } =
+        useActualUserReviews({ page, size: pageSize });
+
+  // New useEffect hook to log the error
+  useEffect(() => {
+      if (reviewsError) {
+          console.error("Error fetching user reviews:", reviewsError);
+
+          // If it's an Axios error, you might want more detail:
+          if (reviewsError.response) {
+              console.error("Axios Response Data:", reviewsError.response.data);
+              console.error("Axios Status:", reviewsError.response.status);
+          }
+      }
+  }, [reviewsError]);
 
   const handleDeleteReservation = (reservationId: string, publicationId: string) => {
     setDeletingReservationId(reservationId);
@@ -136,44 +154,34 @@ const Profile = () => {
     { name: "Maestro Crítico", icon: "⭐", description: "Escribió 100+ reseñas", earned: profileStats.reviewsCount >= 100 }
   ];
 
-  const recentReviews = [ //
-    // {
-    //   id: 1,
-    //   placeName: "Resort & Spa Costero",
-    //   type: "Hotel",
-    //   rating: 5,
-    //   date: "hace 2 días",
-    //   xpEarned: 150,
-    //   excerpt: "Increíble ubicación frente al mar con un servicio excepcional..."
-    // },
-    // {
-    //   id: 2,
-    //   placeName: "Aventura en la Cima",
-    //   type: "Actividad",
-    //   rating: 4,
-    //   date: "hace 1 semana",
-    //   xpEarned: 200,
-    //   excerpt: "Caminata desafiante con vistas impresionantes en la cumbre..."
-    // },
-    // {
-    //   id: 3,
-    //   placeName: "Bistró Sabores Locales",
-    //   type: "Restaurante",
-    //   rating: 5,
-    //   date: "hace 2 semanas",
-    //   xpEarned: 125,
-    //   excerpt: "Auténtica cocina local con ingredientes frescos..."
-    // }
-  ];
+  const recentReviews = userReviewsData?.content.map(review => ({
+      id: review.publicationId,
+      publicationId: review.publicationId,
+      placeName: review.placeName,
+      rating: review.rating,
+      content: review.reviewContent,
+      date: new Date(review.createdAt).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      qualification: review.qualification,
+    })) || [];
 
-  const getXPColor = (xp) => { //
+const getQualificationColor = (qualification) => {
+    const q = qualification ?? 0;
+    if (q > 0) return "bg-green-500 text-white";
+    if (q < 0) return "bg-red-500 text-white";
+    return "bg-gray-500 text-white";
+}
+  const getXPColor = (xp) => {
     if (xp >= 200) return "bg-purple-500 text-white";
     if (xp >= 150) return "bg-yellow-500 text-white";
     if (xp >= 100) return "bg-gray-400 text-white";
     return "bg-orange-500 text-white";
   };
 
-  const getLevelColor = (level) => { //
+  const getLevelColor = (level) => {
     if (level >= 10) return "text-purple-500";
     if (level >= 7) return "text-yellow-500";
     if (level >= 4) return "text-blue-500";
@@ -198,8 +206,6 @@ const Profile = () => {
 
                 <div className="flex-1 text-center lg:text-left space-y-4">
 
-                  {/* --- ¡SECCIÓN MODIFICADA! --- */}
-                  {/* (Ya no tiene 'isEditing', solo muestra los datos y el botón Link) */}
                   <div>
                     <div className="flex items-center justify-center lg:justify-start gap-2">
                       <h1 className="text-3xl font-bold text-foreground">
@@ -215,9 +221,7 @@ const Profile = () => {
                       Miembro desde {joinDate}
                     </p>
                   </div>
-                  {/* --- FIN SECCIÓN MODIFICADA --- */}
 
-                  {/* (El resto del perfil se mantiene igual que el original) */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -371,43 +375,100 @@ const Profile = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {recentReviews.length > 0 ? (
-                      recentReviews.map((review) => (
-                          <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex-1">
-                                <h3 className="font-medium text-sm">{review.placeName}</h3>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-xs">{review.type}</Badge>
-                                  <span className="text-xs text-muted-foreground">{review.date}</span>
+                    {reviewsLoading && <p className="text-sm text-muted-foreground text-center py-4">Cargando reseñas...</p>}
+                    {reviewsError && <p className="text-sm text-destructive text-center py-4">Error cargando reseñas: {String(reviewsError.message ?? reviewsError)}</p>}
+
+                    {!reviewsLoading && !reviewsError && (recentReviews.length > 0 ? (
+                        recentReviews.map((review) => (
+                            <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow" onClick={() => navigate(`/experience/${review.publicationId}#personal-review`)}>
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <h3 className="font-medium text-sm">{review.placeName}</h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs text-muted-foreground">{review.date}</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-1">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                    <Star
-                                        key={i}
-                                        className={`h-3 w-3 ${
-                                            i < review.rating
-                                                ? 'text-yellow-500 fill-yellow-500'
-                                                : 'text-gray-300'
-                                        }`}
-                                    />
-                                ))}
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center gap-1">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                      <Star
+                                          key={i}
+                                          className={`h-3 w-3 ${
+                                              i < review.rating
+                                                  ? 'text-yellow-500 fill-yellow-500'
+                                                  : 'text-gray-300'
+                                          }`}
+                                      />
+                                  ))}
+                                </div>
+                                <Badge className={`text-xs flex items-center gap-1 ${getQualificationColor(review.qualification ?? 0)}`}>
+                                  {(review.qualification ?? 0) > 0 ? ( // Safely check qualification
+                                      <>
+                                        <ThumbsUp className="h-3 w-3" />
+                                        {(review.qualification ?? 0)}
+                                      </>
+                                    ) : (review.qualification ?? 0) < 0 ? ( // Safely check qualification
+                                      <>
+                                        <ThumbsDown className="h-3 w-3" />
+                                        {(review.qualification ?? 0)}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {0}
+                                        <ThumbsUp className="h-3 w-3" />
+                                        <ThumbsDown className="h-3 w-3" />
+                                      </>
+                                    )}
+                                </Badge>
                               </div>
-                              <Badge className={`text-xs ${getXPColor(review.xpEarned)}`}>
-                                +{review.xpEarned} XP
-                              </Badge>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {review.content.length > 50
+                                  ? review.content.substring(0, 50) + '...'
+                                  : review.content
+                                }
+                              </p>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-2">{review.excerpt}</p>
-                          </div>
-                      ))
-                  ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        Aún no has escrito ninguna reseña
-                      </p>
-                  )}
+                        ))
+                    ) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          Aún no has escrito ninguna reseña
+                        </p>
+                    ))}
+                    {userReviewsData && userReviewsData.totalPages > 1 && (
+                        <div className="flex items-center justify-between pt-4 border-t mt-4">
+                            {/* Previous Button */}
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                                disabled={userReviewsData.first || reviewsLoading}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+
+                            {/* Page Status */}
+                            <span className="text-sm text-muted-foreground">
+                                Página {userReviewsData.number + 1} de {userReviewsData.totalPages}
+                            </span>
+
+                            {/* Next Button */}
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setPage(prev => prev + 1)}
+                                disabled={userReviewsData.last || reviewsLoading}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
+
+                    {reviewsLoading && (
+                        <p className="text-sm text-muted-foreground text-center py-4 border-t mt-4">
+                            Cargando reseñas...
+                        </p>
+                    )}
                 </CardContent>
               </Card>
             </div>
