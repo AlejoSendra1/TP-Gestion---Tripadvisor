@@ -13,9 +13,6 @@ public class BusinessOwner extends User {
     @Column(nullable = false)
     private String businessName;
 
-    @Column(nullable = false)
-    private String businessType;
-
     @Column
     private String businessDescription;
 
@@ -24,16 +21,13 @@ public class BusinessOwner extends User {
 
     public BusinessOwner(){}
 
-    public BusinessOwner(String email,String password,String businessName,String businessType){
+    public BusinessOwner(String email,String password,String businessName){
         super(email,password);
         this.setRole("HOST");
         this.businessName = businessName;
-        this.businessType = businessType;
     }
 
     public String getBusinessName() { return this.businessName; }
-
-    public String getBusinessType() { return this.businessType; }
 
     public Boolean getVerified() { return this.verified;  }
 

@@ -6,7 +6,7 @@ import { AxiosResponse } from 'axios';
 type PageableInput = {
     page?: number;
     size?: number;
-    sort?: string; // e.g., "date,desc" or "rating,asc"
+    sort?: string;
 };
 
 // DTO structure you expected for a single review
@@ -19,16 +19,33 @@ export type ReviewDTO = {
     createdAt: string;
 };
 
-// This matches the typical response structure of a Spring Data Page
 export type ReviewPageResponse = {
     content: ReviewDTO[];
     totalPages: number;
-    number: number; // current page number (0-indexed)
+    number: number;
     size: number;
     totalElements: number;
     last: boolean;
     first: boolean;
-    // You can add more Page fields here if needed (e.g., sort, pageable)
+};
+
+export type ReviewHistoryRegister = {
+    placeName: string;
+    publicationId: number;
+    rating: number;
+    reviewContent: string;
+    createdAt: string;
+    qualification: number;
+};
+
+export type UserReviewHistory = {
+    content: ReviewHistoryRegister[];
+    totalPages: number;
+    number: number;
+    size: number;
+    totalElements: number;
+    last: boolean;
+    first: boolean;
 };
 
 // Function to fetch reviews for a specific publication ID
@@ -73,5 +90,35 @@ export function useReviews(publicationId: string | undefined, pageable: Pageable
 
         // Only run the query if we have a valid ID
         enabled: !!publicationId,
+    });
+}
+
+
+// Function to fetch reviews for a specific user
+async function fetchUserReviews(
+        pageable: PageableInput
+    ): Promise<UserReviewHistory> {
+
+    const url = `/reviews`;
+
+    const response: AxiosResponse<UserReviewHistory> = await apiClient.get(url, {
+        params: {
+            // This spreads the page, size, and sort into the query string
+            ...pageable
+        }
+    });
+
+
+    console.log("received user reviews",response.data);
+    return response.data;
+}
+
+export function useActualUserReviews(pageable: PageableInput = {}) {
+    return useQuery<UserReviewHistory>({
+        queryKey: ['actualUserReviews',pageable],
+
+        queryFn: () => fetchUserReviews(pageable),
+
+        keepPreviousData: true,
     });
 }

@@ -3,6 +3,9 @@ package ar.uba.fi.gestion.trippy.review;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
+
+import ar.uba.fi.gestion.trippy.reviewQualification.ReviewQualificationService;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -12,12 +15,14 @@ import java.net.http.HttpResponse;
 public class IAReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ReviewQualificationService reviewQualificationService;
 
     private static final String GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
     private static final String GEMINI_API_KEY = "AIzaSyDQshZdvbiOK9-QZhOcM8nJ28ojrf1ojf4";
 
-    public IAReviewService(ReviewRepository reviewRepository) {
+    public IAReviewService(ReviewRepository reviewRepository, ReviewQualificationService reviewQualificationService) {
         this.reviewRepository = reviewRepository;
+        this.reviewQualificationService = reviewQualificationService;
     }
 
     public String summarizeReviews(Long publicationId) {
@@ -27,9 +32,13 @@ public class IAReviewService {
 
         StringBuilder reviewText = new StringBuilder();
         for (var r : reviews) {
+            Long qualification = reviewQualificationService.getReviewQualification(r.getId());
             reviewText.append("/5: ")
                     .append(r.getReviewContent())
+                    .append("\n Users qualification:")
+                    .append(qualification)
                     .append("\n");
+
         }
 
         String prompt = """

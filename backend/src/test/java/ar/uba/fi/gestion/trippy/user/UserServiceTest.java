@@ -65,7 +65,7 @@ public class UserServiceTest {
 
         // --- Configuración de datos ---
         testTraveler = new Traveler("traveler@test.com", "pass", "Nombre", "Viejo");
-        testHost = new BusinessOwner("host@test.com", "pass", "Host Negocio", "HOTEL");
+        testHost = new BusinessOwner("host@test.com", "pass", "Host Negocio");
 
         updateDto = new UpdateProfileRequestDTO("Nombre", "Nuevo");
 

@@ -29,11 +29,10 @@ CREATE TABLE IF NOT EXISTS reservation (
     participant_count INT
 );
 
-INSERT INTO business_owners (id, business_name, business_type, business_description, verified)
+INSERT INTO business_owners (id, business_name, business_description, verified)
 VALUES (
     100,
     'Paradise resorts',
-    'Accommodation',
     'Luxury beachfront hotel with spa and restaurant',
     TRUE
 );

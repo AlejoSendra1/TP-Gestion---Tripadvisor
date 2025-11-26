@@ -1,4 +1,4 @@
-// File: `frontend/src/hooks/useUserReservations.ts`
+
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@/hooks/use-auth';

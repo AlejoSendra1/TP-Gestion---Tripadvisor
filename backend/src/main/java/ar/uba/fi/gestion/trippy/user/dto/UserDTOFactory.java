@@ -22,7 +22,6 @@ public class UserDTOFactory {
                     tokenDTO,
                     owner.getEmail(),
                     owner.getBusinessName(),
-                    owner.getBusinessType(),
                     owner.getVerified(),
                     owner.getUserType(),
                     "HOST"

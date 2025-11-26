@@ -4,7 +4,6 @@ public record BusinessOwnerDTO(
         TokenDTO tokenDTO,
         String email,
         String businessName,
-        String businessType,
         Boolean verified,
         String userType,
         String role

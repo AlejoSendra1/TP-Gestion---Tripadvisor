@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/AuthContext";
 
+import HostProfile from './pages/HostProfile';
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
@@ -40,7 +41,7 @@ const App = () => (
               <Route element={<ProtectedRoute allowedRoles={["HOST"]} />}>
                 <Route path="/experience/:id/edit" element={<EditPublication />} />
                 <Route path="/create-publication" element={<CreatePublication />} />
-                {/* Quitamos /profile y /edit-profile de aquí */}
+                <Route path="/host-profile" element={<HostProfile />} />
               </Route>
 
               {/* --- 🔒 Rutas protegidas para Travelers (Users) --- */}

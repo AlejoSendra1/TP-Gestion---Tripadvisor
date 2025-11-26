@@ -1,6 +1,7 @@
 package ar.uba.fi.gestion.trippy.review;
 
 import ar.uba.fi.gestion.trippy.review.dto.CreateReviewDTO;
+import ar.uba.fi.gestion.trippy.review.dto.ReviewHistoryRegisterDTO;
 import ar.uba.fi.gestion.trippy.review.dto.ReviewResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/reviews")
@@ -40,6 +43,14 @@ public class ReviewRestController {
         return ResponseEntity.ok(reviews);
     }
 
+    @GetMapping
+    public ResponseEntity<Page<ReviewHistoryRegisterDTO>> getReviews(
+            @Valid @ParameterObject Pageable pageable
+    ) {
+        Page<ReviewHistoryRegisterDTO> reviews = reviewService.getUserReviews(pageable);
+        return ResponseEntity.ok(reviews);
+    }
+
     @DeleteMapping("/{publicationId}/{reviewerEmail}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReview(
@@ -48,4 +59,5 @@ public class ReviewRestController {
     ) {
         reviewService.deleteReview(publicationId, reviewerEmail);
     }
+
 }

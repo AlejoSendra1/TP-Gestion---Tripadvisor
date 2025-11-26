@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Star, Trophy, Trash2, Loader2, MoreVertical, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useReviewSummary } from "@/hooks/useReviewSummary";
+import { useReviewQualification } from "@/hooks/useReviewQualification";
 import {formatDate} from "@/lib/datesFormater";
 
 type DisplayReview = {
@@ -46,10 +47,12 @@ export function ReviewsSection({
 }: ReviewsSectionProps) {
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
-  const [reviewLikes, setReviewLikes] = useState<Record<string, { liked: boolean; disliked: boolean }>>({});
 
   // Fetch summary from API
   const { summaryText, isLoading: isSummaryLoading, error: summaryError } = useReviewSummary(publicationId);
+
+  // Handle like/dislike feedback
+  const { qualifications, handleLike, handleDislike, isLoadingInitial } = useReviewQualification(publicationId,currentUserEmail,);
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
@@ -58,34 +61,15 @@ export function ReviewsSection({
     setRating(5);
   };
 
-  const handleLike = (reviewId: string) => {
-    setReviewLikes(prev => ({
-      ...prev,
-      [reviewId]: {
-        liked: !prev[reviewId]?.liked,
-        disliked: false
-      }
-    }));
-  };
-
-  const handleDislike = (reviewId: string) => {
-    setReviewLikes(prev => ({
-      ...prev,
-      [reviewId]: {
-        liked: false,
-        disliked: !prev[reviewId]?.disliked
-      }
-    }));
-  };
-
   // Separar la review del usuario actual de las demás
   const userReview = reviews.find(review => review.reviewerEmail === currentUserEmail);
   const otherReviews = reviews.filter(review => review.reviewerEmail !== currentUserEmail);
 
   const renderReview = (comment: DisplayReview, isUserReview: boolean = false) => {
     const isOwner = currentUserEmail === comment.reviewerEmail;
-    const isLiked = reviewLikes[comment.id]?.liked || false;
-    const isDisliked = reviewLikes[comment.id]?.disliked || false;
+    const qualification = qualifications[comment.reviewerEmail];
+    const isLiked = qualification?.liked || false;
+    const isDisliked = qualification?.disliked || false;
 
     return (
       <div
@@ -128,7 +112,7 @@ export function ReviewsSection({
                 variant="ghost"
                 size="sm"
                 className={`h-8 gap-1 ${isLiked ? 'text-green-600' : ''}`}
-                onClick={() => handleLike(comment.id)}
+                onClick={() => handleLike(comment.reviewerEmail)}
               >
                 <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
@@ -136,7 +120,7 @@ export function ReviewsSection({
                 variant="ghost"
                 size="sm"
                 className={`h-8 gap-1 ${isDisliked ? 'text-red-600' : ''}`}
-                onClick={() => handleDislike(comment.id)}
+                onClick={() => handleDislike(comment.reviewerEmail)}
               >
                 <ThumbsDown className={`h-4 w-4 ${isDisliked ? 'fill-current' : ''}`} />
               </Button>
@@ -254,10 +238,17 @@ export function ReviewsSection({
 
         {/* Lista de Comentarios */}
         <div className="space-y-4">
+          {isLoadingInitial && (
+            <div className="flex justify-center items-center p-8 border rounded-lg bg-gray-50">
+              <Loader2 className="h-6 w-6 mr-2 animate-spin text-primary" />
+              <span className="text-muted-foreground">Cargando calificaciones de reseñas...</span>
+            </div>
+          )}
+
           {/* Mostrar primero la reseña del usuario actual */}
-          {userReview && (
+          {!isLoadingInitial && userReview && (
             <>
-              <h4 className="font-semibold text-sm text-muted-foreground">Tu reseña</h4>
+              <h4 id="personal-review" className="font-semibold text-sm text-muted-foreground ">Tu reseña</h4>
               {renderReview(userReview, true)}
               {otherReviews.length > 0 && (
                 <div className="border-t pt-4 mt-4">
@@ -270,7 +261,7 @@ export function ReviewsSection({
           )}
           
           {/* Mostrar las demás reseñas */}
-          {otherReviews.map((comment) => renderReview(comment, false))}
+          {!isLoadingInitial && otherReviews.map((comment) => renderReview(comment, false))}
         </div>
       </CardContent>
     </Card>
