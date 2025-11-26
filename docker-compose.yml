@@ -17,12 +17,14 @@ services:
       - "db"
     restart: "on-failure:3"
     environment:
+      # Configuración de DB
       SPRING_DATASOURCE_USERNAME: "${DB_USERNAME}"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/${DB_NAME}"
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
-      #SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
-      #SPRING_JPA_SHOW_SQL: "true"
+
+      # --- INYECCIÓN DE VARIABLES DEL SCRIPT ---
+      TRIPPY_FRONTEND_URL: "${TRIPPY_FRONTEND_URL}"
+      TRIPPY_API_BASE_URL: "${TRIPPY_API_BASE_URL}"
     ports:
       - "${BACKEND_EXTERNAL_PORT}:8080"
 
@@ -32,8 +34,9 @@ services:
       - "backend"
     restart: "on-failure:3"
     environment:
-      BACKEND_EXTERNAL_URL: "${BACKEND_EXTERNAL_URL}"
-      #VITE_BASE_API_URL: "${VITE_BASE_API_URL}"
+      # URL pública del Backend (browser -> backend)
+      # Usamos la misma variable calculada: puede ser localhost:30002 o ngrok
+      VITE_API_BASE_URL: "${TRIPPY_API_BASE_URL}"
     ports:
       - "${FRONTEND_EXTERNAL_PORT}:80"
 

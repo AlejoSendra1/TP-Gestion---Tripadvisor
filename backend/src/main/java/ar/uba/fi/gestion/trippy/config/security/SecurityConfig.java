@@ -52,31 +52,42 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // --- ¡LÍNEAS CLAVE AÑADIDAS! ---
-                // Desactivamos el login por formulario
                 .formLogin(formLogin -> formLogin.disable())
-                // Desactivamos el pop-up de Basic Auth (¡este causaba el 401!)
                 .httpBasic(httpBasic -> httpBasic.disable())
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/publications/**").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/publications/hotel").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/activity").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/coworking").hasRole("HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/restaurant").hasRole("HOST")
                         .requestMatchers(HttpMethod.PATCH, "/publications/**").hasRole("HOST")
                         .requestMatchers(HttpMethod.DELETE, "/publications/{id}").hasRole("HOST")
+
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sessions").permitAll()
+
+                        // --- ¡CORREGIDO A hasAnyRole! ---
                         .requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.DELETE, "/reviews").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/reviews/**").permitAll()// borrar
                         .requestMatchers(HttpMethod.PUT, "/users/profile").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/ia/reviews/**").permitAll()
-                        .anyRequest().authenticated())
+
+                        .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll() // Webhook es público
+
+                        // --- ¡CORREGIDO A hasAnyRole! ---
+                        .requestMatchers(HttpMethod.GET, "/reservations/me").hasAnyRole("TRAVELER", "USER")
+                        .requestMatchers(HttpMethod.GET, "/reservations/{id}").hasAnyRole("TRAVELER", "USER", "HOST")
+                        .requestMatchers(HttpMethod.POST, "/publications/{publicationId}/reservations").hasAnyRole("TRAVELER", "USER")
+                        .requestMatchers(HttpMethod.POST, "/payments/create-preference").hasAnyRole("TRAVELER", "USER")
+                        // --- FIN DE LOS CAMBIOS ---
+
+                        .anyRequest().authenticated()
+                )
                 //
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(
                         (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED,

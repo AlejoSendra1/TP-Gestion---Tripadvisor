@@ -144,7 +144,7 @@ const Register = () => {
                     type="button"
                     variant={formData.userType === "TRAVELER" ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => handleFieldChange("userType","TRAVELEL")}
+                    onClick={() => handleFieldChange("userType","TRAVELER")}
                     className="flex-1 gap-2"
                 >
                   <Plane className="h-4 w-4" />

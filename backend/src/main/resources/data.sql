@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS reservation (
 
     reservation_type VARCHAR(20),
     total_price DECIMAL(10,2) NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('CONFIRMED', 'CANCELLED', 'COMPLETED')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('CONFIRMED', 'CANCELLED', 'COMPLETED', 'PENDING')),
     notes TEXT,
 
     start_date TIMESTAMP,
