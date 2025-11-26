@@ -191,7 +191,8 @@ export default function BookingModal({ publicationId, publicationType, open, onC
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
     setError(null);
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    // const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) { setError('Debes iniciar sesión para reservar.'); return; }
 
     // 1. Validar y construir el body de la reserva

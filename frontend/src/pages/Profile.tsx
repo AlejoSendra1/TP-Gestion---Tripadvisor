@@ -162,7 +162,7 @@ const Profile = () => {
   ];
 
 
-//  const recentReviews = [ /* Vacío a propósito, las reseñas no son reservas */ ];
+// const recentReviews = [ /* Vacío a propósito, las reseñas no son reservas */ ];
 
 
   const recentReviews = userReviewsData?.content.map(review => ({
@@ -399,16 +399,16 @@ const getQualificationColor = (qualification) => {
                 </CardHeader>
                 <CardContent className="space-y-4">
 
-<!--                   {recentReviews.length > 0 ? (
-                      recentReviews.map((review) => (
-                          // ... lógica de renderizado de reseñas
-                          <div key={review.id}></div>
-                      ))
-                  ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        Aún no has escrito ninguna reseña
-                      </p>
-                  )} -->
+  {/*{recentReviews.length > 0 ? (*/}
+  {/*                  recentReviews.map((review) => (*/}
+  {/*                       // ... lógica de renderizado de reseñas*/}
+  {/*                      <div key={review.id}></div>*/}
+  {/*                  ))*/}
+  {/*              ) : (*/}
+  {/*                   <p className="text-sm text-muted-foreground text-center py-4">*/}
+  {/*                   Aún no has escrito ninguna reseña*/}
+  {/*                 </p>*/}
+  {/*              )}*/}
 
                     {reviewsLoading && <p className="text-sm text-muted-foreground text-center py-4">Cargando reseñas...</p>}
                     {reviewsError && <p className="text-sm text-destructive text-center py-4">Error cargando reseñas: {String(reviewsError.message ?? reviewsError)}</p>}
