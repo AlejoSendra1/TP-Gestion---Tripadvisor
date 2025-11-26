@@ -248,7 +248,7 @@ export function ReviewsSection({
           {/* Mostrar primero la reseña del usuario actual */}
           {!isLoadingInitial && userReview && (
             <>
-              <h4 className="font-semibold text-sm text-muted-foreground">Tu reseña</h4>
+              <h4 id="personal-review" className="font-semibold text-sm text-muted-foreground ">Tu reseña</h4>
               {renderReview(userReview, true)}
               {otherReviews.length > 0 && (
                 <div className="border-t pt-4 mt-4">
