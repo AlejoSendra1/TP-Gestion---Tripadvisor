@@ -26,6 +26,7 @@ const mapStatus = (s: any) => {
   if (up === "CONFIRMED") return "CONFIRMADO";
   if (up === "CANCELLED") return "CANCELADO";
   if (up === "COMPLETED") return "COMPLETADO";
+  if (up === "PENDING") return "PENDIENTE";
   return up;
 };
 
@@ -147,6 +148,7 @@ export const ReservationList: React.FC<Props> = ({
             role="listitem"
             className={`p-4 border rounded-md bg-card flex-shrink-0 w-80 transition-all`}
           >
+
             {/* --- CABECERA MODIFICADA --- */}
             <div className="flex items-start justify-between mb-2">
                           <div>
@@ -194,6 +196,7 @@ export const ReservationList: React.FC<Props> = ({
                         </DropdownMenu>
                       </div>
                     )}
+
               </div>
             </div>
 

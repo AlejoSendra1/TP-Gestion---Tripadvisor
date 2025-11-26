@@ -30,6 +30,14 @@ export default defineConfig(({ mode }) => ({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      '/reservations': {
+        target: 'http://localhost:8080', // Tu backend
+        changeOrigin: true,
+      },
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     }
   },
   plugins: [
