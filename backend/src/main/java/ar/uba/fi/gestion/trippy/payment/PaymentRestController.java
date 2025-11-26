@@ -17,7 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/payments") // Usamos /api/ para consistencia
+@RequestMapping("/payments") // Usamos /api/ para consistencia
 @Tag(name = "7 - Payments") // Un nuevo tag para Swagger
 public class PaymentRestController {
 

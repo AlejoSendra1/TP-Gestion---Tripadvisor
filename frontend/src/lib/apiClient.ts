@@ -6,7 +6,7 @@ import axios from 'axios';
 // 1. Lee la variable de entorno VITE_API_BASE_URL (que pusiste en Vercel).
 //    Si no existe (porque estás en local), usa '/' como base
 //    para que el proxy de vite.config.ts funcione.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:30002';
 
 // 2. Creamos la instancia de Axios con la URL base correcta
 export const apiClient = axios.create({

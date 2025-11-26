@@ -69,7 +69,12 @@ export default function CheckoutPage() {
             </div>
         );
     }
-
+    const statusNormalized = reservation.status ? String(reservation.status).trim().toUpperCase() : '';
+    console.log("--- DEBUG RESERVA ---");
+    // Imprimimos el objeto entero como JSON para ver su estructura real
+    console.log(JSON.stringify(reservation, null, 2));
+    console.log("Keys disponibles:", Object.keys(reservation));
+    console.log("---------------------");
     // Si la reserva no está PENDIENTE
     if (reservation.status !== 'PENDING') {
         return (

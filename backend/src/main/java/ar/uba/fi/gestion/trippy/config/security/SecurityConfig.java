@@ -76,13 +76,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/users/profile").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/ia/reviews/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/payments/webhook").permitAll() // Webhook es público
+                        .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll() // Webhook es público
 
                         // --- ¡CORREGIDO A hasAnyRole! ---
                         .requestMatchers(HttpMethod.GET, "/reservations/me").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/reservations/{id}").hasAnyRole("TRAVELER", "USER", "HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/{publicationId}/reservations").hasAnyRole("TRAVELER", "USER")
-                        .requestMatchers(HttpMethod.POST, "/api/payments/create-preference").hasAnyRole("TRAVELER", "USER")
+                        .requestMatchers(HttpMethod.POST, "/payments/create-preference").hasAnyRole("TRAVELER", "USER")
                         // --- FIN DE LOS CAMBIOS ---
 
                         .anyRequest().authenticated()

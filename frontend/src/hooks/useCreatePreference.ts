@@ -23,7 +23,7 @@ export function useCreatePreference() {
         try {
             // El interceptor de apiClient se encarga del token
             const res = await apiClient.post<PreferenceResponse>(
-                '/api/payments/create-preference',
+                '/payments/create-preference',
                 { reservationId } // El DTO que espera el backend
             );
             return res.data; // Devuelve { preferenceId, initPointUrl }
