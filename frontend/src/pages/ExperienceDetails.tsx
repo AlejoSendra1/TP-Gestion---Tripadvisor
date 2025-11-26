@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCreateReview } from "@/hooks/useCreateReview";
 import { ReviewsSection } from "@/components/ReviewsSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // --- Hooks de datos ---
 import {
   usePublicationDetail,
@@ -10,6 +11,8 @@ import { useDeletePublication } from "@/hooks/useDeletePublication";
 import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 
+import ReservationList from "@/components/ReservationList";
+import { useUserReservations } from "@/hooks/useUserReservations";
 // --- Hooks de UI y Auth ---
 import { useAuth } from "@/hooks/use-auth";
 
@@ -48,7 +51,7 @@ import BookingModal from "@/components/BookingModal"; // <-- nuevo
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
-  id: string;
+  //id: string;
   username: string;
   userLastname: string;
   reviewerEmail: string;
@@ -62,6 +65,7 @@ export default function ExperienceDetails() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
 
   // --- Hook para OBTENER datos de la publicación ---
   const {
@@ -105,7 +109,7 @@ export default function ExperienceDetails() {
 
   const reviewsArray = reviewPage?.content || [];
   const displayReviews: DisplayReview[] = reviewsArray.map((review: ReviewDTO) => ({
-    id: review.id,
+    //id: review.id,
     username: review.username,
     userLastname: review.userLastname,
     reviewerEmail: review.reviewerEmail,
@@ -135,7 +139,7 @@ export default function ExperienceDetails() {
 
   const handleSubmitComment = (rating: number, content: string) => {
     createReview({
-      publicationId: id,
+      publicationId: publication.id,
       reviewerEmail: user.email,
       rating: rating,
       reviewContent: content,
@@ -145,7 +149,7 @@ export default function ExperienceDetails() {
   const handleDeleteReview = (userEmail: string) => {
     setDeletingReviewId(userEmail);
     deleteReview(
-      { reviewerEmail: userEmail, publicationId: id },
+      { reviewerEmail: userEmail, publicationId: publication.id },
       {
         onSettled: () => {
           setDeletingReviewId(null);
@@ -322,6 +326,21 @@ export default function ExperienceDetails() {
                   <RenderSpecificDetails details={publication.specificDetails} />
                 </CardContent>
               </Card>
+
+              {/* Reservas de la publicaion */}
+              {canEdit && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      Reservas de esta publicación
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ReservationList isOwner={true} publicationId={publication.id} />
+                  </CardContent>
+                </Card>
+              )}
 
               <ReviewsSection
                 reviews={displayReviews}

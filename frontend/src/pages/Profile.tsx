@@ -271,21 +271,13 @@ const getQualificationColor = (qualification) => {
           {/* Reservas del Usuario */}
           <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Mis reservas
-                </CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Mis reservas
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
-              {reservationsError && <div className="text-sm text-destructive">Error cargando reservas: {String(reservationsError.message ?? reservationsError)}</div>}
-              {!reservationsLoading && !reservationsError && (
-                <ReservationList 
-                  reservations={reservations} 
-                  onDeleteReservation={handleDeleteReservation}
-                  deletingReservationId={deletingReservationId}
-                />
-              )}
+              <ReservationList isOwner={false} />
             </CardContent>
           </Card>
 
