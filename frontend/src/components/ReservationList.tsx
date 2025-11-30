@@ -7,11 +7,13 @@ import ReservationCard from "./ReservationCard";
 type ReservationListProps = {
   isOwner?: boolean;
   publicationId?: string;
+  reservations?: any[]; 
 };
 
 export const ReservationList: React.FC<ReservationListProps> = ({ 
   isOwner = false, 
-  publicationId 
+  publicationId,
+  reservations: externalReservations
 }) => {
   // Usar el hook correspondiente según el contexto
   const userReservations = useUserReservations();
@@ -32,7 +34,9 @@ export const ReservationList: React.FC<ReservationListProps> = ({
   } = ownerReservations;
 
   // Seleccionar datos según el contexto
-  const currentReservations = isOwner ? ownerReservationsData : reservations;
+  const currentReservations = externalReservations 
+    ? externalReservations 
+    : (isOwner ? ownerReservationsData : reservations);
   const currentLoading = isOwner ? isLoadingOwner : isLoading;
   const currentError = isOwner ? errorOwner : error;
   const refetch = isOwner ? fetchOwnerReservations : fetchUserReservations;

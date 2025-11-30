@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ReservationList from "@/components/ReservationList";
 import { useNavigate } from "react-router-dom";
+import ReservationCalendar from "@/components/ReservationCalendar";
 const Profile = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
@@ -277,7 +278,7 @@ const getQualificationColor = (qualification) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ReservationList isOwner={false} />
+              <ReservationCalendar isOwner={false} />
             </CardContent>
           </Card>
 

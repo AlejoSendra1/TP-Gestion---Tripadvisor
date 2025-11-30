@@ -12,13 +12,13 @@ import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 
 import ReservationList from "@/components/ReservationList";
+import ReservationCalendar from "@/components/ReservationCalendar";
 import { useUserReservations } from "@/hooks/useUserReservations";
 // --- Hooks de UI y Auth ---
 import { useAuth } from "@/hooks/use-auth";
 
 // --- Componentes de UI (shadcn/ui) ---
 import { Header } from "@/components/Header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -337,7 +337,7 @@ export default function ExperienceDetails() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ReservationList isOwner={true} publicationId={publication.id} />
+                    <ReservationCalendar isOwner={true} publicationId={publication.id} />
                   </CardContent>
                 </Card>
               )}
