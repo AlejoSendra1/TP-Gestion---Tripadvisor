@@ -104,7 +104,7 @@ public class ReservationService {
         if (!(user instanceof Traveler traveler))
             throw new IllegalStateException("Solo los viajeros pueden tener reservas");
 
-        return reservationRepository.findByTravelerId(traveler.getId());
+        return reservationRepository.findByTravelerIdWithAssociations(traveler.getId());
     }
 
     @Transactional
@@ -132,6 +132,6 @@ public class ReservationService {
             throw new SecurityException("No tenés permiso para ver las reservas de esta publicación.");
         }
 
-        return reservationRepository.findByPublicationId(publicationId);
+        return reservationRepository.findByPublicationIdWithAssociations(publicationId);
     }
 }

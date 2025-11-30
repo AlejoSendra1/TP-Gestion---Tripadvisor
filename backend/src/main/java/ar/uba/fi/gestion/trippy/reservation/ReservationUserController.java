@@ -19,13 +19,13 @@ import java.util.stream.Collectors;
 @RequestMapping("/reservations")
 public class ReservationUserController {
 
-    private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final ReservationService reservationService;
 
     @Autowired
-    public ReservationUserController(ReservationRepository reservationRepository,
+    public ReservationUserController(ReservationService reservationService,
                                      UserRepository userRepository) {
-        this.reservationRepository = reservationRepository;
+        this.reservationService = reservationService;
         this.userRepository = userRepository;
     }
 
@@ -43,7 +43,7 @@ public class ReservationUserController {
             return ResponseEntity.notFound().build();
         }
 
-        List<Reservation> reservations = reservationRepository.findByTravelerId(user.getId());
+        List<Reservation> reservations = reservationService.getReservationsForTraveler(me.username());
         List<ReservationResponseDTO> dto = reservations.stream()
                 .map(ReservationResponseDTO::from)
                 .collect(Collectors.toList());

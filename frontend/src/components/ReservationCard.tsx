@@ -1,4 +1,3 @@
-// components/ReservationCard.tsx
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -88,14 +87,22 @@ const getCreationDate = (r: any) => {
   return formatOnlyDate(r.reservationDate);
 };
 
+const getUserName = (r: any): string => {
+  return r.travelerName || "Cliente";
+};
+
+const getPublicationName = (r: any): string => {
+  return r.pubName || "Publicación";
+};
+
 export const ReservationCard: React.FC<ReservationCardProps> = ({ 
   reservation, 
   isOwner = false,
   onReservationUpdate 
 }) => {
-  const [expanded, setExpanded] = useState(false);
-  const { mutate: deleteReservation, isPending: isDeleting } = useDeleteReservation();
-
+    const [expanded, setExpanded] = useState(false);
+    const { mutate: deleteReservation, isPending: isDeleting } = useDeleteReservation();
+    
   const handleDeleteReservation = (reservationId: string, publicationId: string) => {
     deleteReservation(
       { reservationId, publicationId: String(publicationId) },
@@ -128,11 +135,19 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   // Lógica de permisos: solo se puede cancelar si está confirmado
   const canDelete = status === "CONFIRMADO" && !isOwner; // Los owners no pueden cancelar, solo los usuarios
 
+  const displayName = isOwner ? getUserName(reservation) : getPublicationName(reservation);
+  const displayLabel = isOwner ? "Cliente" : "Publicación";
+
   return (
     <div
       key={key}
       className="p-4 border rounded-md bg-card flex-shrink-0 w-80 transition-all"
     >
+      {/* PRIMERA LÍNEA: Nombre del cliente o publicación */}
+      <div className="mb-3">
+        <div className="text-xs text-muted-foreground">{displayLabel}</div>
+        <div className="font-medium text-base">{displayName}</div>
+      </div>
       {/* Cabecera */}
       <div className="flex items-start justify-between mb-2">
         <div>
