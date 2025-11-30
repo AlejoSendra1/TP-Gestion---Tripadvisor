@@ -71,6 +71,12 @@ public class Traveler extends User {
         updateLevel();
     }
 
+    // ✅ MÉTODO PARA RESTAR XP (usado en la tienda)
+    public void subtractXp(Integer xpToSubtract) {
+        this.xp = Math.max(0, this.xp - xpToSubtract);
+        updateLevel();
+    }
+
     public Integer getLevel() { 
         return this.level;
     }
@@ -83,8 +89,15 @@ public class Traveler extends User {
         return "TRAVELER"; 
     }
 
+    // ✅ CONSISTENCIA: getUserXP() debe devolver this.xp
     public Integer getUserXP() { 
         return this.xp; 
+    }
+
+    // ✅ MÉTODO ADICIONAL: setUserXP para la tienda
+    public void setUserXP(Integer xp) {
+        this.xp = xp;
+        updateLevel();
     }
 
     public Integer getUserLevel() { 
