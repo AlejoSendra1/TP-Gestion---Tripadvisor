@@ -1,4 +1,4 @@
-// File: `frontend/src/components/HostProfileHeader.tsx`
+// File: frontend/src/components/HostProfileHeader.tsx
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -23,7 +23,7 @@ const HostProfileHeader: React.FC<Props> = ({
   const initials = (name && name[0]) ? name[0].toUpperCase() : "U";
 
   return (
-    <Card className="max-w-3xl mx-auto">
+    <Card className="max-w-4xl mx-auto bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
       <CardContent className="p-8">
         <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
           <Avatar className="h-24 w-24 ring-4 ring-primary/20">
@@ -35,25 +35,25 @@ const HostProfileHeader: React.FC<Props> = ({
 
           <div className="flex-1 text-center lg:text-left space-y-2">
             <div className="flex items-center justify-center lg:justify-start gap-2">
-              <h1 className="text-2xl font-bold text-foreground">{name || "Nombre no disponible"}</h1>
+              <h1 className="text-3xl font-bold text-foreground">{name || "Nombre no disponible"}</h1>
             </div>
             <p className="text-sm text-muted-foreground mt-1">{email}</p>
+          </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-              <div className="p-4 rounded-lg">
-                <div className="text-2xl font-bold text-primary">{publicationsCount}</div>
-                <div className="text-sm text-muted-foreground mt-1">Publicaciones</div>
-              </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="space-y-1 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-primary">{publicationsCount}</div>
+              <div className="text-sm text-muted-foreground">Publicaciones</div>
+            </div>
 
-              <div className="p-4 rounded-lg">
-                <div className="text-2xl font-bold text-accent">{displayedReservationsCount}</div>
-                <div className="text-sm text-muted-foreground mt-1">Reservas</div>
-              </div>
+            <div className="space-y-1 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-accent">{displayedReservationsCount}</div>
+              <div className="text-sm text-muted-foreground">Reservas</div>
+            </div>
 
-              <div className="p-4 rounded-lg">
-                <div className="text-2xl font-bold text-amber-500">{displayedReviewsCount}</div>
-                <div className="text-sm text-muted-foreground mt-1">Reseñas</div>
-              </div>
+            <div className="space-y-1 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-amber-500">{displayedReviewsCount}</div>
+              <div className="text-sm text-muted-foreground">Reseñas</div>
             </div>
           </div>
         </div>

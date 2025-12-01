@@ -8,6 +8,7 @@ import HostProfileHeader from "@/components/HostProfileHeader";
 import PublicationsCarousel from "@/components/PublicationsCarousel";
 import useReviewCounts from "@/hooks/useReviewCounts";
 import useReservationsCounts from "@/hooks/useReservationsCounts";
+import HostPerformance from "@/components/HostPerformance";
 
 const mapToSummary = (item: any): PublicationSummary => ({
   id: item.id?.toString() ?? "",
@@ -137,6 +138,8 @@ const HostProfile: React.FC = () => {
           loadingPubs={loadingPubs}
           pubsError={pubsError}
         />
+
+        <HostPerformance />
       </main>
     </div>
   );
