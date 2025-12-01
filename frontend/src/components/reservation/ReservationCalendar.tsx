@@ -66,78 +66,114 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
   const currentError = isOwner ? errorOwner : error;
   const refetch = isOwner ? fetchOwnerReservations : fetchUserReservations;
 
+  const addOneDay = (dateString: string): string => {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
+  };
+
   const [currentView, setCurrentView] = useState<CalendarView>('calendar');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateReservations, setSelectedDateReservations] = useState<ReservationDTO[]>([]);
   const calendarRef = useRef<any>(null);
 
+  // Función para normalizar una fecha a la zona horaria local - CORREGIDA
+  const normalizeDate = (date: Date): Date => {
+    // Crear una nueva fecha usando los componentes locales
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    return new Date(year, month, day, 0, 0, 0, 0);
+  };
+
+  // Función para convertir string a fecha normalizada - CORREGIDA
+  const parseAndNormalizeDate = (dateString: string): Date => {
+    if (!dateString) return new Date();
+    
+    // Parsear la fecha string a objeto Date
+    const date = new Date(dateString);
+    
+    // Usar los componentes locales para evitar problemas de zona horaria
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    
+    return new Date(year, month, day, 0, 0, 0, 0);
+  };
+
+  // Función para obtener fecha de FullCalendar sin problemas de zona horaria
+  const getDateFromFullCalendar = (arg: any): Date => {
+    // arg.dateStr viene en formato YYYY-MM-DD (sin zona horaria)
+    if (arg.dateStr) {
+      const [year, month, day] = arg.dateStr.split('-').map(Number);
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
+    }
+    
+    // Si no hay dateStr, usar arg.date pero normalizar
+    return normalizeDate(new Date(arg.date));
+  };
+
   // Función para obtener la fecha de display según el tipo de reserva
   const getDisplayDate = (reservation: ReservationDTO): Date => {
     switch (reservation.reservationType) {
       case 'RESERVATIONHOTEL':
-        return reservation.checkIn ? new Date(reservation.checkIn) : new Date(reservation.reservationDate);
+        return reservation.checkIn ? parseAndNormalizeDate(reservation.checkIn) : parseAndNormalizeDate(reservation.reservationDate);
       
       case 'RESERVATIONRESTAURANT':
       case 'RESERVATIONACTIVITY':
-        return reservation.dateTime ? new Date(reservation.dateTime) : new Date(reservation.reservationDate);
+        return reservation.dateTime ? parseAndNormalizeDate(reservation.dateTime) : parseAndNormalizeDate(reservation.reservationDate);
       
       case 'RESERVATIONCOWORKING':
-        return reservation.startDate ? new Date(reservation.startDate) : new Date(reservation.reservationDate);
+        return reservation.startDate ? parseAndNormalizeDate(reservation.startDate) : parseAndNormalizeDate(reservation.reservationDate);
       
       default:
-        return new Date(reservation.reservationDate);
+        return parseAndNormalizeDate(reservation.reservationDate);
     }
   };
 
   // Función para verificar si una fecha está dentro del rango de una reserva
   const isDateInReservationRange = (date: Date, reservation: ReservationDTO): boolean => {
-    const targetDate = new Date(date);
-    targetDate.setHours(0, 0, 0, 0);
+    const targetDate = normalizeDate(date);
     
     // Para reservas de hotel (rango de fechas)
     if (reservation.reservationType === 'RESERVATIONHOTEL' && reservation.checkIn && reservation.checkOut) {
-      const checkIn = new Date(reservation.checkIn);
-      const checkOut = new Date(reservation.checkOut);
+      const checkIn = parseAndNormalizeDate(reservation.checkIn);
+      const checkOut = parseAndNormalizeDate(reservation.checkOut);
       
-      checkIn.setHours(0, 0, 0, 0);
-      checkOut.setHours(0, 0, 0, 0);
+      // La fecha objetivo debe estar entre checkIn (inclusive) y checkOut (inclusive)
+      const isInRange = targetDate > checkIn && targetDate <= checkOut;
       
-      // La fecha objetivo debe estar entre checkIn (inclusive) y checkOut (exclusive)
-      // Es decir, desde el día de check-in hasta el día anterior al check-out
-      return targetDate >= checkIn && targetDate <= checkOut;
+      return isInRange;
     }
 
     // Para coworking (rango de fechas)
     if (reservation.reservationType === 'RESERVATIONCOWORKING' && reservation.startDate && reservation.endDate) {
-      const startDate = new Date(reservation.startDate);
-      const endDate = new Date(reservation.endDate);
+      const startDate = parseAndNormalizeDate(reservation.startDate);
+      const endDate = parseAndNormalizeDate(reservation.endDate);
       
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(0, 0, 0, 0);
-      
-      return targetDate >= startDate && targetDate <= endDate;
+      return targetDate > startDate && targetDate <= endDate;
     }
 
     // Para restaurantes y actividades (fecha específica)
     if (reservation.dateTime) {
-      const reservationDate = new Date(reservation.dateTime);
-      reservationDate.setHours(0, 0, 0, 0);
+      const reservationDate = parseAndNormalizeDate(reservation.dateTime);
       return targetDate.getTime() === reservationDate.getTime();
     }
 
     // Reserva por defecto (solo fecha)
     const displayDate = getDisplayDate(reservation);
-    displayDate.setHours(0, 0, 0, 0);
     return targetDate.getTime() === displayDate.getTime();
   };
 
-  // Función para filtrar reservas por fecha específica - CORREGIDA
+  // Función para filtrar reservas por fecha específica
   const getReservationsForDate = (date: Date): ReservationDTO[] => {
     if (!currentReservations) return [];
     
+    const normalizedDate = normalizeDate(date);
+    
     return currentReservations.filter((reservation: ReservationDTO) => {
       try {
-        return isDateInReservationRange(date, reservation);
+        return isDateInReservationRange(normalizedDate, reservation);
       } catch (error) {
         console.warn('Error procesando reserva para filtrado:', reservation, error);
         return false;
@@ -145,7 +181,7 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
     });
   };
 
-  // Función para obtener el título del evento - MODIFICADA
+  // Función para obtener el título del evento
   const getEventTitle = (reservation: ReservationDTO): string => {
     // Si es owner, mostrar el nombre del viajero
     if (isOwner) {
@@ -181,11 +217,12 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
 
       // Para reservas de hotel (rango de fechas)
       if (reservation.reservationType === 'RESERVATIONHOTEL' && reservation.checkIn && reservation.checkOut) {
+        const adjustedCheckOut = addOneDay(reservation.checkOut);
         return {
           id: reservation.id.toString(),
           title: title,
           start: reservation.checkIn,
-          end: reservation.checkOut,
+          end: adjustedCheckOut, // Para visualización en calendario
           backgroundColor: color,
           borderColor: color,
           extendedProps: { reservation }
@@ -194,11 +231,12 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
 
       // Para coworking (rango de fechas)
       if (reservation.reservationType === 'RESERVATIONCOWORKING' && reservation.startDate && reservation.endDate) {
+        const adjustedEndDate = addOneDay(reservation.endDate);
         return {
           id: reservation.id.toString(),
           title: title,
           start: reservation.startDate,
-          end: reservation.endDate,
+          end: adjustedEndDate, // Para visualización en calendario
           backgroundColor: color,
           borderColor: color,
           extendedProps: { reservation }
@@ -221,7 +259,7 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
       return {
         id: reservation.id.toString(),
         title: title,
-        start: displayDate,
+        start: displayDate.toISOString().split('T')[0], // Solo la parte de la fecha
         allDay: true,
         backgroundColor: color,
         borderColor: color,
@@ -234,20 +272,27 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
     refetch().catch(() => {});
   };
 
-  // Función para manejar el click en una fecha (días vacíos)
+  // Función para manejar el click en una fecha (días vacíos o con eventos) - CORREGIDA
   const handleDateClick = (arg: any) => {
-    const dateReservations = getReservationsForDate(arg.date);
-    setSelectedDate(arg.date);
+    // Usar la función que maneja correctamente la zona horaria
+    const clickedDate = getDateFromFullCalendar(arg);
+    const dateReservations = getReservationsForDate(clickedDate);
+    
+    setSelectedDate(clickedDate);
     setSelectedDateReservations(dateReservations);
     setCurrentView('dayList');
   };
 
-  // Función para manejar el click en un evento (reserva existente)
+  // Función para manejar el click en un evento (reserva existente) - CORREGIDA
   const handleEventClick = (info: any) => {
     info.jsEvent.preventDefault();
-    const reservationDate = info.event.start;
-    const dateReservations = getReservationsForDate(reservationDate);
-    setSelectedDate(reservationDate);
+    info.jsEvent.stopPropagation();
+    
+    // Obtener la fecha del evento usando la fecha de inicio
+    const eventDate = normalizeDate(new Date(info.event.start));
+    const dateReservations = getReservationsForDate(eventDate);
+    
+    setSelectedDate(eventDate);
     setSelectedDateReservations(dateReservations);
     setCurrentView('dayList');
   };
@@ -303,7 +348,7 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
         <ReservationList
           isOwner={isOwner}
           publicationId={publicationId}
-          reservations={selectedDateReservations} // Pasar solo las reservas del día seleccionado
+          reservations={selectedDateReservations}
         />
       </div>
     );
@@ -367,6 +412,10 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
           navLinks={true}
           navLinkDayClick="day"
           moreLinkClick="day"
+          selectOverlap={false}
+          eventOverlap={false}
+          // Configuración importante para manejo de fechas
+          timeZone="local"
         />
       </div>
 
