@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiClient } from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
 import axios, { AxiosError } from "axios";
+import { ListIcon } from "lucide-react"; // Icono para la lista de archivos
 
 // MODIFICADO: El "molde" ahora incluye TODOS los campos posibles
 const initialState = {
@@ -68,8 +69,8 @@ const CreatePublication = () => {
     // NUEVO: Estado para el tipo de publicación
     const [publicationType, setPublicationType] = useState<PublicationType>("hotel");
 
-    // --- NUEVO: Estado para el archivo de imagen ---
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    // --- MODIFICADO: Estado para un array de archivos seleccionados ---
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     // Handler para campos simples
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -100,10 +101,13 @@ const CreatePublication = () => {
         setPublicationType(value as PublicationType);
     };
 
-    // --- NUEVO: Handler para el input de archivo ---
+    // --- MODIFICADO: Handler para seleccionar múltiples archivos ---
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
+        if (e.target.files) {
+            // Convierte FileList a Array y actualiza el estado
+            setSelectedFiles(Array.from(e.target.files));
+        } else {
+            setSelectedFiles([]);
         }
     };
 
@@ -128,32 +132,24 @@ const CreatePublication = () => {
         setIsLoading(true);
 
         try {
-            // 1. Subir la imagen primero si existe
-            let uploadedImageUrl = "";
-
-            if (selectedFile) {
-                try {
-                    uploadedImageUrl = await uploadImage(selectedFile);
-                    console.log("Imagen subida:", uploadedImageUrl);
-                } catch (error) {
-                    console.error("Error subiendo imagen", error);
-                    toast({
-                        title: "Error de Imagen",
-                        description: "No se pudo subir la imagen. Intenta de nuevo.",
-                        variant: "destructive",
-                    });
-                    setIsLoading(false);
-                    return;
-                }
-            } else {
+            // 1. Validar que haya al menos una imagen
+            if (selectedFiles.length === 0) {
                 toast({
-                    title: "Imagen requerida",
-                    description: "Por favor selecciona una imagen principal.",
+                    title: "Imágenes requeridas",
+                    description: "Por favor selecciona al menos una imagen.",
                     variant: "destructive",
                 });
                 setIsLoading(false);
                 return;
             }
+
+            // 2. Subir todas las imágenes
+            const uploadedUrls: string[] = [];
+            for (const file of selectedFiles) {
+                const url = await uploadImage(file);
+                uploadedUrls.push(url);
+            }
+            console.log(`Subidas ${uploadedUrls.length} imágenes.`);
 
             // 2. Determinar el endpoint dinámicamente
             const endpoint = `/publications/${publicationType}`;
@@ -164,8 +160,9 @@ const CreatePublication = () => {
                 description: formData.description,
                 price: parseFloat(String(formData.price)),
                 location: formData.location,
-                mainImageUrl: uploadedImageUrl, // Usamos la URL real del servidor
-                imageUrls: [uploadedImageUrl], // Por ahora la galería es la misma imagen
+                mainImageUrl: uploadedUrls[0],
+                // Todos los elementos son la galería
+                imageUrls: uploadedUrls,
             };
 
             // 4. Construir el DTO específico basado en el tipo
@@ -348,24 +345,36 @@ const CreatePublication = () => {
                                             required
                                         />
                                     </div>
-                                    {/* --- MODIFICADO: Input de Archivo --- */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="mainImage">Main Image</Label>
+                                    {/* --- MODIFICADO: Input para MÚLTIPLES Archivos --- */}
+                                    <div className="space-y-2 col-span-2">
+                                        <Label htmlFor="imageUrls">Fotos de la Publicación (Principal + Galería)</Label>
                                         <Input
-                                            id="mainImage"
-                                            name="mainImage"
+                                            id="imageUrls"
+                                            name="imageUrls"
                                             type="file"
                                             accept="image/*"
+                                            multiple // Permite seleccionar varios archivos
                                             onChange={handleFileChange}
                                             required
                                         />
-                                        {selectedFile && (
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Archivo: {selectedFile.name}
-                                            </p>
-                                        )}
                                     </div>
                                 </div>
+                                {/* --- NUEVO: Visualización de archivos seleccionados --- */}
+                                {selectedFiles.length > 0 && (
+                                    <div className="space-y-2 p-3 bg-gray-100 rounded-lg">
+                                        <h4 className="text-sm font-semibold flex items-center">
+                                            <ListIcon className="w-4 h-4 mr-2" />
+                                            {selectedFiles.length} archivos listos para subir:
+                                        </h4>
+                                        <ul className="text-sm text-gray-600 list-disc list-inside space-y-0.5 max-h-32 overflow-y-auto">
+                                            {selectedFiles.map((file, index) => (
+                                                <li key={index} className={index === 0 ? "font-medium text-primary" : ""}>
+                                                    {file.name} ({index === 0 ? "Principal" : "Galería"})
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
 
                             <Separator />
