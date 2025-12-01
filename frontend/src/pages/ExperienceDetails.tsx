@@ -11,8 +11,8 @@ import { useDeletePublication } from "@/hooks/useDeletePublication";
 import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 
-import ReservationList from "@/components/ReservationList";
-import ReservationCalendar from "@/components/ReservationCalendar";
+import ReservationList from "@/components/reservation/ReservationList";
+import ReservationCalendar from "@/components/reservation/ReservationCalendar";
 import { useUserReservations } from "@/hooks/useUserReservations";
 // --- Hooks de UI y Auth ---
 import { useAuth } from "@/hooks/use-auth";
@@ -395,14 +395,6 @@ export default function ExperienceDetails() {
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Reservá Ahora
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Guardar en Favoritos
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Users className="h-4 w-4 mr-2" />
-                      Contactar a {publication.host?.name || "Host"}
                     </Button>
                   </div>
                 </CardContent>

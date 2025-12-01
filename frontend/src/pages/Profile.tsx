@@ -12,9 +12,9 @@ import { useActualUserReviews, ReviewHistoryRegister } from '@/hooks/useReviews'
 // (Para el botón de "Editar")
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import ReservationList from "@/components/ReservationList";
+import ReservationList from "@/components/reservation/ReservationList";
 import { useNavigate } from "react-router-dom";
-import ReservationCalendar from "@/components/ReservationCalendar";
+import ReservationCalendar from "@/components/reservation/ReservationCalendar";
 const Profile = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);

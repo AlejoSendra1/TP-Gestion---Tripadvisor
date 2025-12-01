@@ -7,6 +7,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { useUserReservations } from "@/hooks/useUserReservations";
 import { useOwnerReservations } from "@/hooks/useOwnerReservations";
 import ReservationList from "./ReservationList";
+import { getEventColor } from "./ReservationHelper";
 
 type ReservationListProps = {
   isOwner?: boolean;
@@ -142,22 +143,6 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
         return false;
       }
     });
-  };
-
-  // Función para obtener el color según el tipo de reserva
-  const getEventColor = (reservationType: string): string => {
-    switch (reservationType) {
-      case 'RESERVATIONHOTEL':
-        return '#3b82f6'; // blue
-      case 'RESERVATIONRESTAURANT':
-        return '#10b981'; // green
-      case 'RESERVATIONACTIVITY':
-        return '#8b5cf6'; // purple
-      case 'RESERVATIONCOWORKING':
-        return '#f59e0b'; // orange
-      default:
-        return '#6b7280'; // gray
-    }
   };
 
   // Función para obtener el título del evento - MODIFICADA
