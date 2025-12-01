@@ -22,4 +22,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findByReviewerId(Long reviewerId,Pageable pageable);
 
     Optional<Review> findByPublicationAndReviewer(Publication publication, Traveler reviewer);
+
+    @Query("SELECT AVG(r.publicationRating) FROM Review r WHERE r.publication.id IN :pubIds")
+    Double findAverageRatingByPublicationIds(List<Long> pubIds);
 }

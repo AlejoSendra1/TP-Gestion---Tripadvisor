@@ -1,7 +1,7 @@
 // File: `frontend/src/components/PublicationsCarousel.tsx`
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { List } from "lucide-react";
+import { Home } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExperienceCard } from "@/components/ExperienceCard";
 import { PublicationSummary } from "@/hooks/usePublications";
@@ -17,7 +17,9 @@ const PublicationsCarousel: React.FC<Props> = ({ fetchedPublications, loadingPub
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <List className="h-5 w-5 text-muted-foreground" />
+          <div className="p-2 rounded-full bg-orange-100">
+            <Home className="h-5 w-5 text-orange-600" />
+          </div>
           <CardTitle>Mis publicaciones</CardTitle>
         </div>
       </CardHeader>
