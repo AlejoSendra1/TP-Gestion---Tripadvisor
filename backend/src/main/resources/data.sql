@@ -1,5 +1,7 @@
-INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (100, 'hotel@paradise.com', 'hashed_password_789', TRUE, 'OWNER');
+-- DEVELOPMENT_PASSWORD :  $2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO
+
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role)
+VALUES (100, 'hotel@paradise.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'OWNER', 'HOST');
 DROP TABLE IF EXISTS reservation;
 -- eliminar tablas dependientes y la tabla base con CASCADE
 DROP TABLE IF EXISTS reservation_activity, reservation_restaurant, room_type, reservation_room_details, reservation_coworking, reservation_hotel, reservation CASCADE;
@@ -102,35 +104,31 @@ VALUES
     (4, 'Salas de Reunión'),
     (4, 'Impresora');
 
--- --- MOCKS DE RESEÑAS (Reviews) ---
--- NOTA: Estos inserts NO funcionarán hasta que no:
--- 1. Creen la entidad Review.java y la tabla 'review'
--- 2. Modifiquen PublicationService.java para que busque reseñas
 
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role)
+VALUES (201, 'maria.garcia@example.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'TRAVELER', 'USER');
 
-
-INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (201, 'maria.garcia@example.com', 'hashed_password_456', TRUE, 'TRAVELER');
-
-INSERT INTO travelers (id, first_name, last_name, xp, level)
+INSERT INTO travelers (id, first_name, last_name, xp, level, points)
 VALUES (
     201,
     'Maria',
     'Garcia',
-    200,
-    4
+    1960,
+    4,
+    100
 );
 
-INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (202, 'mike@trippy.com', 'hashed_password_456', TRUE, 'TRAVELER');
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role)
+VALUES (202, 'mike@trippy.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'TRAVELER', 'USER');
 
-INSERT INTO travelers (id, first_name, last_name, xp, level)
+INSERT INTO travelers (id, first_name, last_name, xp, level, points)
 VALUES (
     202,
     'Mike',
     'Chen',
-    170,
-    3
+    1270,
+    3,
+    360
 );
 
 
@@ -138,6 +136,17 @@ INSERT INTO review (review_id, publication_id, user_id, publication_rating, revi
 VALUES
     (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2024-05-20 08:00:00'),
     (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2024-05-20 08:00:00');
+
+INSERT INTO shop_items (title, icon, description, points_requiered)
+VALUES
+    ('Noche gratis', 'gi/GiNightSleep' ,'Una noche de alojamiento en hoteles seleccionados de la red', 29),
+    ('Desayuno buffet', 'gi/GiSlicedBread' ,'Incluye desayuno completo para 2 personas en tu próxima estadía', 223),
+    ('Cena para dos', 'gi/GiForkKnifeSpoon' ,'Menú completo de 3 pasos en restaurantes adheridos', 31),
+    ('Descuento 50% Resto', 'gi/GiKnifeFork' , 'Aplicable en cualquier restaurante de la red', 42),
+    ('City tour guiado', 'tb/TbTrekking' ,'Recorrido por los principales atractivos en la ciudad de tu proxima reserva', 51),
+    ('Tour gastronomico', 'pi/PiChefHatThin' ,'Degustación de comida local', 16),
+    ('Descuento 20% Hotel', 'fa/FaHotel', 'Aplicable en tu proxima reserva de hotel', 44),
+    ('2x1 en cines', 'io5/IoTicket' , 'Solo aplicables a cadenas de cines de cinemark', 76);
 
 -- ACTUALIZA EL CONTADOR DE IDS
 -- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1

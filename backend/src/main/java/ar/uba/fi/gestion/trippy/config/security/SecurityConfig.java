@@ -68,6 +68,8 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sessions").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/benefits/**").hasAnyRole("TRAVELER", "USER")
+                        .requestMatchers(HttpMethod.POST, "/users/benefits/**").hasAnyRole("TRAVELER", "USER")
 
                         // --- ¡CORREGIDO A hasAnyRole! ---
                         .requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("TRAVELER", "USER")

@@ -1,8 +1,14 @@
 package ar.uba.fi.gestion.trippy.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import ar.uba.fi.gestion.trippy.user.travelerBenefits.OwnItem;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -22,6 +28,12 @@ public class Traveler extends User {
     @Column(nullable = false)
     private Integer level = 1;
 
+    @Column(nullable = false)
+    private Integer points = 0;
+
+    @OneToMany(mappedBy = "traveler", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OwnItem> benefits = new ArrayList<>();
+
     @Column
     private String achievements;
 
@@ -32,20 +44,21 @@ public class Traveler extends User {
     private static final int BASE_XP = 500;
     private static final double XP_MULTIPLIER = 1.5;
 
-    public Traveler(){}
+    public Traveler() {
+    }
 
-    public Traveler(String email, String password, String firstName, String lastName){
+    public Traveler(String email, String password, String firstName, String lastName) {
         super(email, password);
         this.setRole("USER");
         this.firstName = firstName;
         this.lastName = lastName;
     }
 
-    public String getFirstName() { 
+    public String getFirstName() {
         return this.firstName;
     }
 
-    public String getLastName() { 
+    public String getLastName() {
         return this.lastName;
     }
 
@@ -57,7 +70,7 @@ public class Traveler extends User {
         this.lastName = lastName;
     }
 
-    public Integer getXp() { 
+    public Integer getXp() {
         return this.xp;
     }
 
@@ -71,24 +84,44 @@ public class Traveler extends User {
         updateLevel();
     }
 
-    public Integer getLevel() { 
+    public void setPoints(Integer points) {
+        this.points = points;
+    }
+
+    public void addPoints(Integer pointsToAdd) {
+        this.points += pointsToAdd;
+    }
+
+    public Integer getLevel() {
         return this.level;
+    }
+
+    public void addBenefit(OwnItem benefit) {
+        this.benefits.add(benefit);
+    }
+
+    public void removeBenefit(OwnItem benefit) {
+        this.benefits.remove(benefit);
     }
 
     public void setLevel(Integer level) {
         this.level = level;
     }
 
-    public String getUserType(){ 
-        return "TRAVELER"; 
+    public String getUserType() {
+        return "TRAVELER";
     }
 
-    public Integer getUserXP() { 
-        return this.xp; 
+    public Integer getUserXP() {
+        return this.xp;
     }
 
-    public Integer getUserLevel() { 
-        return this.level; 
+    public Integer getUserLevel() {
+        return this.level;
+    }
+
+    public Integer getPoints() {
+        return this.points;
     }
 
     public String getAchievements() {
@@ -111,7 +144,8 @@ public class Traveler extends User {
      * Calcula el XP necesario para alcanzar un nivel específico
      */
     public static int calculateXpForLevel(int level) {
-        if (level <= 1) return 0;
+        if (level <= 1)
+            return 0;
         int totalXp = 0;
         for (int i = 1; i < level; i++) {
             totalXp += (int) (BASE_XP * Math.pow(XP_MULTIPLIER, i - 1));
@@ -141,8 +175,9 @@ public class Traveler extends User {
         int nextLevelXp = getXpForNextLevel();
         int xpInCurrentLevel = this.xp - currentLevelXp;
         int xpNeededInLevel = nextLevelXp - currentLevelXp;
-        
-        if (xpNeededInLevel == 0) return 100.0;
+
+        if (xpNeededInLevel == 0)
+            return 100.0;
         return (xpInCurrentLevel * 100.0) / xpNeededInLevel;
     }
 
@@ -172,9 +207,9 @@ public class Traveler extends User {
             case 8 -> "20% de descuento • Check-in/out flexibles";
             case 9 -> "25% de descuento • Concierge personal";
             case 10 -> "30% de descuento • Acceso Elite • Todas las ventajas premium";
-            default -> this.level > 10 ? 
-                "30% de descuento • Acceso Elite • Beneficios exclusivos de nivel " + this.level :
-                "Acceso básico a la plataforma";
+            default ->
+                this.level > 10 ? "30% de descuento • Acceso Elite • Beneficios exclusivos de nivel " + this.level
+                        : "Acceso básico a la plataforma";
         };
     }
 

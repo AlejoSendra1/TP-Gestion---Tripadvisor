@@ -18,7 +18,6 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -364,7 +363,7 @@ export default function ExperienceDetails() {
                     </div>
                     <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
                       <Trophy className="h-4 w-4 mr-2 text-experience" />
-                      Ganá {xpReward} de XP al reseñar esta publicación!
+                      Ganá XP y puntos canjeables al reseñar esta publicación!
                     </div>
                   </div>
 
@@ -396,7 +395,7 @@ export default function ExperienceDetails() {
                     <Trophy className="h-8 w-8 mx-auto mb-2 text-experience" />
                     <h4 className="font-semibold mb-1">Ganate recompensas!</h4>
                     <p className="text-sm text-muted-foreground">
-                      Compartí tu reseña y ganá {xpReward} de XP para subir de nivel!
+                      Compartí tu reseña y ganá recompensas!
                     </p>
                   </div>
                 </CardContent>
@@ -457,8 +456,6 @@ function RenderSpecificDetails({
                 </div>
             );
           }
-
-          // No renderizar otros tipos (null, undefined, etc.)
           return null;
         })}
       </div>

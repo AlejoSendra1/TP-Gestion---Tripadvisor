@@ -16,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -131,6 +132,10 @@ public class UserService {
 
     public User getCurrentAuthenticatedUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Authenticated: " + (auth != null && auth.isAuthenticated()));
+        System.out.println("Principal class: " + (auth != null ? auth.getPrincipal().getClass() : "null"));
+        System.out.println("Principal value: " + (auth != null ? auth.getPrincipal() : "null"));
         if (principal instanceof JwtUserDetails userDetails) {
             return userRepository.findByEmail(userDetails.username())
                     .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found in database"));

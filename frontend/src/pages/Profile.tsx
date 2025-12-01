@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Star, Trophy, Award, Gift, TrendingUp, ThumbsUp, ThumbsDown ,ChevronLeft , ChevronRight} from "lucide-react";
+import { Calendar, Star, Trophy, Award, Gift, TrendingUp, ThumbsUp, ThumbsDown ,ChevronLeft , ChevronRight, ShoppingBag} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserReservations } from "@/hooks/useUserReservations";
 
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import ReservationList from "@/components/ReservationList";
 
 import { useNavigate } from "react-router-dom";
+import { ItemCardGrid } from "@/components/ItemCardGrid";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -160,7 +161,6 @@ const Profile = () => {
     { name: "Trotamundos", icon: "🌍", description: "Visitó 50+ lugares", earned: profileStats.placesVisited >= 50 },
     { name: "Maestro Crítico", icon: "⭐", description: "Escribió 100+ reseñas", earned: profileStats.reviewsCount >= 100 }
   ];
-
 
 // const recentReviews = [ /* Vacío a propósito, las reseñas no son reservas */ ];
 
@@ -399,17 +399,6 @@ const getQualificationColor = (qualification) => {
                 </CardHeader>
                 <CardContent className="space-y-4">
 
-  {/*{recentReviews.length > 0 ? (*/}
-  {/*                  recentReviews.map((review) => (*/}
-  {/*                       // ... lógica de renderizado de reseñas*/}
-  {/*                      <div key={review.id}></div>*/}
-  {/*                  ))*/}
-  {/*              ) : (*/}
-  {/*                   <p className="text-sm text-muted-foreground text-center py-4">*/}
-  {/*                   Aún no has escrito ninguna reseña*/}
-  {/*                 </p>*/}
-  {/*              )}*/}
-
                     {reviewsLoading && <p className="text-sm text-muted-foreground text-center py-4">Cargando reseñas...</p>}
                     {reviewsError && <p className="text-sm text-destructive text-center py-4">Error cargando reseñas: {String(reviewsError.message ?? reviewsError)}</p>}
 
@@ -559,6 +548,14 @@ const getQualificationColor = (qualification) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Tienda de puntos canjeables */}
+          <ItemCardGrid
+              title="Tienda de Canjes"
+              IconComponent={ShoppingBag}
+              gridCols={5}
+          />
+
         </main>
       </div>
   );

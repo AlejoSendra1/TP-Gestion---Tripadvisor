@@ -45,7 +45,7 @@ const App = () => (
               </Route>
 
               {/* --- 🔒 Rutas protegidas para Travelers (Users) --- */}
-              <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
+              <Route element={<ProtectedRoute allowedRoles={["USER","TRAVELER"]} />}>
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/edit-profile" element={<EditProfile />} />
                 <Route path="/checkout/:id" element={<Checkout />} />

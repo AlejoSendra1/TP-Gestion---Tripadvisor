@@ -1,6 +1,5 @@
 package ar.uba.fi.gestion.trippy.user;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 
 @Entity

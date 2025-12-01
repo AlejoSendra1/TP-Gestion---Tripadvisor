@@ -36,6 +36,7 @@ const Login = () => {
             const data = response.data;
             console.log("Login exitoso:", data);
             login(data); // Guardamos la sesión
+            toast({ title: "¡Bienvenido!", description: "Has iniciado sesion correctamente." });
             navigate('/'); // Redirigimos al inicio
 
         } catch (err) {
@@ -140,7 +141,7 @@ const Login = () => {
                             </div>
 
                             <Button type="submit" className="w-full">
-                                Ingresar como {userType === "traveler" ? "Viajero" : "Propietario"}
+                                Ingresar
                             </Button>
                         </form>
 
