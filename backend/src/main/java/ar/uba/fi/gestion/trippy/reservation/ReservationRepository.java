@@ -15,6 +15,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByPublicationId(Long publicationId);
     List<Reservation> findByTravelerId(Long travelerId);
 
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.publication JOIN FETCH r.traveler WHERE r.traveler.id = :travelerId")
+    List<Reservation> findByTravelerIdWithAssociations(@Param("travelerId") Long travelerId);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.publication JOIN FETCH r.traveler WHERE r.publication.id = :publicationId")
+    List<Reservation> findByPublicationIdWithAssociations(@Param("publicationId") Long publicationId);
+
     @Query("""
         SELECT COALESCE(SUM(r.roomCount), 0)
         FROM ReservationHotel r

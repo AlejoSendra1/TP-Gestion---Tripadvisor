@@ -139,8 +139,33 @@ VALUES
     (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2024-05-20 08:00:00'),
     (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2024-05-20 08:00:00');
 
+-- Agregar usuario owner "El Mas Grande" con password hasheado de "123456789"
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role, "token-verified")
+VALUES (1, 'asd@gmail.com', '$2a$10$ewqlk2zysNDd47IVB17TGe1fUqgS4yO7u/LpSG22V7UqrldUswOya', TRUE, 'OWNER', 'HOST', '3c34b596-aec0-4e1d-88f4-4e7618e3b89b');
+-- Agregar el business owner
+INSERT INTO business_owners (id, business_name, business_description, verified)
+VALUES (
+    1,
+    'El Mas Grande',
+    'El restaurante más grande y famoso de la ciudad',
+    TRUE
+);
+
+-- Agregar publicación del restaurante
+INSERT INTO publication (
+    id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
+    street_address, city, state, country, zip_code,
+    cuisine_type, price_range, opening_start, opening_end, menu_url, capacity
+) VALUES (
+    5, 'RESTAURANT', 'El Mas Grande Restaurante', 'El restaurante más grande ambientado en river para una experiencia Riverplatense', 75.00, 1, 'https://plus.unsplash.com/premium_photo-1670984940113-f3aa1cd1309a?q=80&w=2370&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'Av. Cabildo 123', 'Buenos Aires', 'CABA', 'Argentina', '1001',
+    'Argentina', '$$$', '10:00', '23:00', 'https://elmasgrande.com/menu', 200
+);
+
 -- ACTUALIZA EL CONTADOR DE IDS
 -- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1
 SELECT setval('publication_id_seq', (SELECT MAX(id) FROM publication));
 SELECT setval('review_review_id_seq', (SELECT MAX(review_id) FROM review));
 
+-- $2a$10$ewqlk2zysNDd47IVB17TGe1fUqgS4yO7u/LpSG22V7UqrldUswOya	
+-- 3c34b596-aec0-4e1d-88f4-4e7618e3b89b
