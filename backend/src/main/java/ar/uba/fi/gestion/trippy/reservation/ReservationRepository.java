@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -76,4 +77,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
+    @Query("SELECT SUM(res.totalPrice) FROM Reservation res WHERE res.publication.id = :publicationId AND res.status = :status")
+    BigDecimal sumIncomeByPublicationIdAndStatus(Long publicationId, ReservationStatus status);
+
 }
