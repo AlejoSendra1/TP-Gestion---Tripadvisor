@@ -15,11 +15,9 @@ import { useActualUserReviews, ReviewHistoryRegister } from '@/hooks/useReviews'
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-// --- IMPORT DEL COMPONENTE DE LA LISTA ---
-import ReservationList from "@/components/ReservationList";
-
+import ReservationList from "@/components/reservation/ReservationList";
 import { useNavigate } from "react-router-dom";
-
+import ReservationCalendar from "@/components/reservation/ReservationCalendar";
 const Profile = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
@@ -291,22 +289,7 @@ const getQualificationColor = (qualification) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* 1. Muestra "Cargando..." mientras el hook busca los datos */}
-              {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
-
-              {/* 2. Muestra un error si el hook falla (ej: 401, 404, 500) */}
-              {reservationsError && <div className="text-sm text-destructive">Error cargando reservas: {String(reservationsError.message ?? reservationsError)}</div>}
-
-              {/* 3. Cuando todo está OK (ni cargando, ni error), pasa la data del hook (reservations) al componente ReservationList */}
-              {!reservationsLoading && !reservationsError && (
-
-                <ReservationList 
-                  reservations={reservations} 
-                  onDeleteReservation={handleDeleteReservation}
-                  deletingReservationId={deletingReservationId}
-                />
-
-              )}
+              <ReservationCalendar isOwner={false} />
             </CardContent>
           </Card>
           {/* --- FIN DE LA SECCIÓN CLAVE --- */}

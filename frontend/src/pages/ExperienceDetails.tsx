@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCreateReview } from "@/hooks/useCreateReview";
 import { ReviewsSection } from "@/components/ReviewsSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // --- Hooks de datos ---
 import {
   usePublicationDetail,
@@ -10,12 +11,14 @@ import { useDeletePublication } from "@/hooks/useDeletePublication";
 import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 
+import ReservationList from "@/components/reservation/ReservationList";
+import ReservationCalendar from "@/components/reservation/ReservationCalendar";
+import { useUserReservations } from "@/hooks/useUserReservations";
 // --- Hooks de UI y Auth ---
 import { useAuth } from "@/hooks/use-auth";
 
 // --- Componentes de UI (shadcn/ui) ---
 import { Header } from "@/components/Header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,7 +51,7 @@ import BookingModal from "@/components/BookingModal"; // <-- nuevo
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
-  id: string;
+  //id: string;
   username: string;
   userLastname: string;
   reviewerEmail: string;
@@ -62,6 +65,7 @@ export default function ExperienceDetails() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
 
   // --- Hook para OBTENER datos de la publicación ---
   const {
@@ -105,7 +109,7 @@ export default function ExperienceDetails() {
 
   const reviewsArray = reviewPage?.content || [];
   const displayReviews: DisplayReview[] = reviewsArray.map((review: ReviewDTO) => ({
-    id: review.id,
+    //id: review.id,
     username: review.username,
     userLastname: review.userLastname,
     reviewerEmail: review.reviewerEmail,
@@ -135,7 +139,7 @@ export default function ExperienceDetails() {
 
   const handleSubmitComment = (rating: number, content: string) => {
     createReview({
-      publicationId: id,
+      publicationId: publication.id,
       reviewerEmail: user.email,
       rating: rating,
       reviewContent: content,
@@ -145,7 +149,7 @@ export default function ExperienceDetails() {
   const handleDeleteReview = (userEmail: string) => {
     setDeletingReviewId(userEmail);
     deleteReview(
-      { reviewerEmail: userEmail, publicationId: id },
+      { reviewerEmail: userEmail, publicationId: publication.id },
       {
         onSettled: () => {
           setDeletingReviewId(null);
@@ -323,6 +327,21 @@ export default function ExperienceDetails() {
                 </CardContent>
               </Card>
 
+              {/* Reservas de la publicaion */}
+              {canEdit && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      Reservas de esta publicación
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ReservationCalendar isOwner={true} publicationId={publication.id} />
+                  </CardContent>
+                </Card>
+              )}
+
               <ReviewsSection
                 reviews={displayReviews}
                 currentUserEmail={user?.email}
@@ -376,14 +395,6 @@ export default function ExperienceDetails() {
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Reservá Ahora
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Guardar en Favoritos
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Users className="h-4 w-4 mr-2" />
-                      Contactar a {publication.host?.name || "Host"}
                     </Button>
                   </div>
                 </CardContent>
