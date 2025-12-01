@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Coins, Gift, Sparkles, TrendingUp, Check, X } from 'lucide-react';
+import { Coins, Gift, Sparkles, TrendingUp, Check, X, AlertCircle } from 'lucide-react';
 import shopService, { Benefit, PurchaseResponse } from '@/services/shopService';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
@@ -19,30 +19,119 @@ interface PointShopDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// 🎭 DATOS DE PRUEBA - Eliminar cuando el backend funcione
+const MOCK_BENEFITS: Benefit[] = [
+  {
+    id: 1,
+    name: 'Descuento 5%',
+    description: 'Obtén un 5% de descuento en tu próxima reserva',
+    cost: 200,
+    type: 'DISCOUNT',
+    discountPercentage: 5,
+    singleUse: true
+  },
+  {
+    id: 2,
+    name: 'Descuento 10%',
+    description: 'Obtén un 10% de descuento en tu próxima reserva',
+    cost: 400,
+    type: 'DISCOUNT',
+    discountPercentage: 10,
+    singleUse: true
+  },
+  {
+    id: 3,
+    name: 'Bonus XP +50',
+    description: 'Gana 50 XP adicionales en tu próxima reserva',
+    cost: 150,
+    type: 'XP_BONUS',
+    xpBonus: 50,
+    singleUse: true
+  },
+  {
+    id: 4,
+    name: 'Bonus XP +100',
+    description: 'Gana 100 XP adicionales en tu próxima reserva',
+    cost: 300,
+    type: 'XP_BONUS',
+    xpBonus: 100,
+    singleUse: true
+  },
+  {
+    id: 5,
+    name: 'Soporte Prioritario 24h',
+    description: 'Acceso a soporte prioritario durante 24 horas',
+    cost: 300,
+    type: 'PRIORITY_SUPPORT',
+    singleUse: true
+  },
+  {
+    id: 6,
+    name: 'Upgrade de Categoría',
+    description: 'Upgrade gratuito a la siguiente categoría disponible',
+    cost: 500,
+    type: 'FREE_UPGRADE',
+    singleUse: true
+  }
+];
+
 export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) => {
   const { user, updateUser } = useAuth();
   const [benefits, setBenefits] = useState<Benefit[]>([]);
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [useMockData, setUseMockData] = useState(false);
 
   const currentXp = user?.userXP || 0;
 
   useEffect(() => {
     if (open) {
+      console.log('🔓 Dialog opened, loading benefits...');
       loadBenefits();
     }
   }, [open]);
 
   const loadBenefits = async () => {
     setLoading(true);
+    setError(null);
+    console.log('⏳ Loading benefits...');
+    
     try {
       const data = await shopService.getShopBenefits();
+      console.log('✅ Benefits loaded successfully:', data);
+      
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No benefits received from API');
+        setError('No se encontraron beneficios disponibles');
+      }
+      
       setBenefits(data);
-    } catch (error) {
-      console.error('Error al cargar beneficios:', error);
-      toast.error('No se pudieron cargar los beneficios');
+      setUseMockData(false);
+    } catch (error: any) {
+      console.error('❌ Error loading benefits:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
+      // Si es un error de red, usar datos de prueba
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('🎭 Using mock data because backend is not available');
+        setBenefits(MOCK_BENEFITS);
+        setUseMockData(true);
+        toast.warning('Usando datos de prueba - Backend no disponible');
+      } else {
+        const errorMessage = error.response?.data?.message || 
+                            error.message || 
+                            'No se pudieron cargar los beneficios';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
+      console.log('🏁 Loading finished');
     }
   };
 
@@ -52,21 +141,37 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
       return;
     }
 
+    // Si estamos usando datos de prueba, simular la compra
+    if (useMockData) {
+      toast.info('Modo de prueba - La compra no se guardará', {
+        description: 'Inicia tu backend para realizar compras reales'
+      });
+      return;
+    }
+
     setPurchasing(benefit.id);
     try {
       const response: PurchaseResponse = await shopService.purchaseBenefit(benefit.id);
       
       if (response.success) {
-        if (updateUser) {
-          updateUser({ ...user!, userXP: response.remainingXp });
+        // Actualizar el XP del usuario en el contexto
+        if (updateUser && user) {
+          updateUser({ userXP: response.remainingXp });
         }
         
         toast.success(response.message || '¡Beneficio adquirido exitosamente!', {
           description: `Te quedan ${response.remainingXp} XP`,
         });
+        
+        // Opcional: Refrescar la lista de beneficios activos
+        // await loadBenefits();
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Error al comprar el beneficio';
+      console.error('❌ Error en la compra:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error ||
+                          error.message ||
+                          'Error al comprar el beneficio';
       toast.error(errorMessage);
     } finally {
       setPurchasing(null);
@@ -107,11 +212,24 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Coins className="h-6 w-6 text-yellow-500" />
             Tienda de Puntos
+            {useMockData && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                Modo Prueba
+              </Badge>
+            )}
           </DialogTitle>
           <DialogDescription>
             Canjea tus puntos XP por beneficios exclusivos
           </DialogDescription>
         </DialogHeader>
+
+        {useMockData && (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mb-4">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+              ⚠️ Mostrando datos de prueba. Para ver los beneficios reales, inicia tu backend en el puerto 8080.
+            </p>
+          </div>
+        )}
 
         <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
@@ -129,12 +247,22 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Cargando beneficios...
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground mt-4">Cargando beneficios...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <p className="text-destructive font-medium mb-2">{error}</p>
+            <Button onClick={loadBenefits} variant="outline" size="sm">
+              Reintentar
+            </Button>
           </div>
         ) : benefits.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            No hay beneficios disponibles en este momento
+            <Gift className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No hay beneficios disponibles en este momento</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
@@ -174,7 +302,7 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
                       </div>
                       <Button
                         onClick={() => handlePurchase(benefit)}
-                        disabled={!affordable || isPurchasing}
+                        disabled={!affordable || isPurchasing || useMockData}
                         variant={affordable ? 'default' : 'secondary'}
                         size="sm"
                       >

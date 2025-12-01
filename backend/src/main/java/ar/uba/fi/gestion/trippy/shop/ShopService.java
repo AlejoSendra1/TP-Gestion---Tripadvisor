@@ -1,150 +1,136 @@
 package ar.uba.fi.gestion.trippy.shop;
 
-import ar.uba.fi.gestion.trippy.shop.dto.BenefitDTO;
-import ar.uba.fi.gestion.trippy.shop.dto.PurchaseResponseDTO;
 import ar.uba.fi.gestion.trippy.user.Traveler;
-import ar.uba.fi.gestion.trippy.user.User;
 import ar.uba.fi.gestion.trippy.user.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class ShopService {
 
-    private final BenefitRepository benefitRepository;
-    private final UserBenefitRepository userBenefitRepository;
-    private final UserRepository userRepository;
+    @Autowired
+    private BenefitRepository benefitRepository;
 
     @Autowired
-    public ShopService(BenefitRepository benefitRepository,
-                       UserBenefitRepository userBenefitRepository,
-                       UserRepository userRepository) {
-        this.benefitRepository = benefitRepository;
-        this.userBenefitRepository = userBenefitRepository;
-        this.userRepository = userRepository;
-    }
+    private UserBenefitRepository userBenefitRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
-     * Obtiene todos los beneficios disponibles en la tienda
+     * Obtiene todos los beneficios disponibles
      */
-    @Transactional(readOnly = true)
-    public List<BenefitDTO> getAllBenefits() {
-        return benefitRepository.findAll()
-                .stream()
-                .map(BenefitDTO::fromEntity)
-                .collect(Collectors.toList());
+    public List<Benefit> getAllBenefits() {
+        return benefitRepository.findAll();
     }
 
     /**
-     * Procesa la compra de un beneficio
+     * Compra un beneficio para un usuario
      */
     @Transactional
-    public PurchaseResponseDTO purchaseBenefit(Long benefitId, String userEmail) {
-        // Buscar el usuario
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-
-        if (!(user instanceof Traveler traveler)) {
-            throw new IllegalStateException("Solo los viajeros pueden comprar beneficios");
-        }
-
-        // Buscar el beneficio
+    public PurchaseResponse purchaseBenefit(Long userId, Long benefitId) {
+        // Validar que el beneficio existe
         Benefit benefit = benefitRepository.findById(benefitId)
-                .orElseThrow(() -> new EntityNotFoundException("Beneficio no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Beneficio no encontrado"));
 
-        // ✅ CORREGIDO: Usar getUserXP() consistentemente
-        int currentXp = traveler.getUserXP();
-        
-        // Verificar si tiene suficientes puntos
-        if (currentXp < benefit.getCost()) {
-            throw new IllegalStateException(
-                String.format("XP insuficiente. Necesitas %d XP pero solo tienes %d XP", 
-                    benefit.getCost(), currentXp)
-            );
+        // Obtener el usuario y verificar que sea un Traveler
+        Traveler traveler = (Traveler) userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Verificar que sea un traveler (por si acaso)
+        if (!"TRAVELER".equals(traveler.getUserType())) {
+            throw new IllegalArgumentException("Solo los viajeros pueden comprar beneficios");
         }
 
-        // ✅ CORREGIDO: Usar subtractXp para mantener consistencia
+        // Verificar que el usuario tiene suficientes XP
+        Integer currentXP = traveler.getXp() != null ? traveler.getXp() : 0;
+        if (currentXP < benefit.getCost()) {
+            throw new IllegalArgumentException("No tienes suficientes puntos XP");
+        }
+
+        // Descontar los XP usando el método de Traveler
         traveler.subtractXp(benefit.getCost());
         userRepository.save(traveler);
 
-        // Crear el registro de beneficio del usuario
+        // Crear el UserBenefit
         UserBenefit userBenefit = new UserBenefit();
-        userBenefit.setUser(traveler);
+        userBenefit.setId(userId);
         userBenefit.setBenefit(benefit);
+        userBenefit.setPurchaseDate(LocalDateTime.now());
         userBenefit.setUsed(false);
-        userBenefit = userBenefitRepository.save(userBenefit);
+        userBenefitRepository.save(userBenefit);
 
-        // Construir respuesta
-        PurchaseResponseDTO response = new PurchaseResponseDTO();
-        response.setSuccess(true);
-        response.setMessage("¡Beneficio adquirido exitosamente!");
-        response.setRemainingXp(traveler.getUserXP());
-
-        System.out.println("✅ " + traveler.getEmail() + " compró: " + benefit.getName() + 
-                         " por " + benefit.getCost() + " XP. XP restante: " + traveler.getUserXP());
-
-        return response;
+        return new PurchaseResponse(
+                true,
+                "¡Beneficio adquirido exitosamente!",
+                userBenefit,
+                traveler.getXp() // Usar getXp() de Traveler
+        );
     }
 
     /**
-     * Obtiene todos los beneficios que ha comprado un usuario
+     * Obtiene todos los beneficios de un usuario
      */
-    @Transactional(readOnly = true)
-    public List<UserBenefit> getUserBenefits(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-
-        return userBenefitRepository.findByUserId(user.getId());
+    public List<UserBenefit> getUserBenefits(Long userId) {
+        return userBenefitRepository.findByUserId(userId);
     }
 
     /**
      * Obtiene los beneficios activos (no usados) de un usuario
      */
-    @Transactional(readOnly = true)
-    public List<UserBenefit> getActiveBenefits(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-
-        return userBenefitRepository.findByUserIdAndUsedFalse(user.getId());
+    public List<UserBenefit> getActiveBenefits(Long userId) {
+        return userBenefitRepository.findByUserIdAndUsed(userId, false);
     }
 
     /**
-     * Obtiene beneficios activos de un tipo específico para un usuario
+     * Obtiene los beneficios activos de un usuario filtrados por tipo
+     * Usado por ReservationService para aplicar descuentos automáticamente
      */
-    @Transactional(readOnly = true)
     public List<UserBenefit> getActiveBenefitsByType(Long userId, Benefit.BenefitType type) {
-        return userBenefitRepository.findActiveByUserIdAndType(userId, type);
+        return userBenefitRepository.findByUserIdAndUsed(userId, false)
+                .stream()
+                .filter(ub -> ub.getBenefit().getType() == type)
+                .collect(Collectors.toList());
     }
-    
+
     /**
-     * ✅ NUEVO: Marca un beneficio como usado
+     * Marca un beneficio como usado
      */
     @Transactional
-    public void markBenefitAsUsed(Long userBenefitId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-
+    public void useBenefit(Long userId, Long userBenefitId) {
         UserBenefit userBenefit = userBenefitRepository.findById(userBenefitId)
-                .orElseThrow(() -> new EntityNotFoundException("Beneficio no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Beneficio no encontrado"));
 
         // Verificar que el beneficio pertenece al usuario
-        if (!userBenefit.getUser().getId().equals(user.getId())) {
-            throw new IllegalStateException("No puedes usar un beneficio que no te pertenece");
+        if (!userBenefit.getId().equals(userId)) {
+            throw new IllegalArgumentException("No tienes permiso para usar este beneficio");
         }
 
-        // Verificar que no ha sido usado
+        // Verificar que no esté ya usado
         if (userBenefit.getUsed()) {
-            throw new IllegalStateException("Este beneficio ya ha sido usado");
+            throw new IllegalArgumentException("Este beneficio ya fue usado");
         }
 
-        userBenefit.markAsUsed();
+        userBenefit.setUsed(true);
+        userBenefit.setUsedDate(LocalDateTime.now());
         userBenefitRepository.save(userBenefit);
-        
-        System.out.println("✅ Beneficio marcado como usado: " + userBenefit.getBenefit().getName());
+    }
+
+    /**
+     * Marca un beneficio como usado usando el ID como String
+     * Usado por ReservationService cuando se aplica un descuento
+     */
+    @Transactional
+    public void markBenefitAsUsed(Long userId, String userBenefitIdStr) {
+        try {
+            Long userBenefitId = Long.parseLong(userBenefitIdStr);
+            useBenefit(userId, userBenefitId);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("ID de beneficio inválido: " + userBenefitIdStr);
+        }
     }
 }

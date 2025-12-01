@@ -1,6 +1,6 @@
 // File: frontend/src/pages/Profile.tsx
 import { useEffect, useState } from "react";
-import { Header } from "@/components/Header";
+import { Header } from "@/components/Header"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -11,12 +11,11 @@ import { useUserReservations } from "@/hooks/useUserReservations";
 import { useDeleteReservation } from "@/hooks/useDeleteReservation";
 import { useActualUserReviews } from '@/hooks/useReviews';
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; 
 import ReservationList from "@/components/ReservationList";
 import { useNavigate } from "react-router-dom";
-import shopService, { Benefit } from '@/services/shopService';
-import { toast } from 'sonner';
 import { ActiveBenefitsCard } from '@/components/ActiveBenefitsCard';
+import { PointShopDialog } from "@/components/PointShopDialog";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -30,10 +29,8 @@ const Profile = () => {
 
   const { data: userReviewsData, isLoading: reviewsLoading, error: reviewsError } = useActualUserReviews({ page, size: pageSize });
 
-  // ✅ NUEVO: Estado para la tienda
-  const [benefits, setBenefits] = useState<Benefit[]>([]);
-  const [loadingBenefits, setLoadingBenefits] = useState(false);
-  const [purchasing, setPurchasing] = useState<number | null>(null);
+  // Estado para controlar la apertura del diálogo de la tienda
+  const [isShopOpen, setIsShopOpen] = useState(false);
 
   useEffect(() => {
     if (reviewsError) {
@@ -44,52 +41,6 @@ const Profile = () => {
       }
     }
   }, [reviewsError]);
-
-  // ✅ NUEVO: Cargar beneficios de la tienda
-  useEffect(() => {
-    loadBenefits();
-  }, []);
-
-  const loadBenefits = async () => {
-    setLoadingBenefits(true);
-    try {
-      const data = await shopService.getShopBenefits();
-      setBenefits(data);
-    } catch (error) {
-      console.error('Error al cargar beneficios:', error);
-      toast.error('No se pudieron cargar los beneficios de la tienda');
-    } finally {
-      setLoadingBenefits(false);
-    }
-  };
-
-  // ✅ NUEVO: Función para comprar beneficios
-  const handlePurchaseBenefit = async (benefit: Benefit) => {
-    const currentXp = user?.userXP || 0;
-    
-    if (currentXp < benefit.cost) {
-      toast.error('No tienes suficientes puntos XP');
-      return;
-    }
-
-    setPurchasing(benefit.id);
-    try {
-      const response = await shopService.purchaseBenefit(benefit.id);
-      
-      if (response.success && updateUser) {
-        updateUser({ ...user!, userXP: response.remainingXp });
-        
-        toast.success(response.message || '¡Beneficio adquirido exitosamente!', {
-          description: `Te quedan ${response.remainingXp} XP`,
-        });
-      }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Error al comprar el beneficio';
-      toast.error(errorMessage);
-    } finally {
-      setPurchasing(null);
-    }
-  };
 
   const handleDeleteReservation = (reservationId: string, publicationId: string) => {
     setDeletingReservationId(reservationId);
@@ -223,34 +174,6 @@ const Profile = () => {
     if (level >= 7) return "text-yellow-500";
     if (level >= 4) return "text-blue-500";
     return "text-green-500";
-  };
-
-  // ✅ NUEVO: Helpers para la tienda
-  const canAfford = (cost: number) => currentXp >= cost;
-
-  const getBenefitIcon = (type: string) => {
-    switch (type) {
-      case 'DISCOUNT':
-        return <Gift className="h-5 w-5" />;
-      case 'XP_BONUS':
-        return <TrendingUp className="h-5 w-5" />;
-      case 'PRIORITY_SUPPORT':
-        return <Sparkles className="h-5 w-5" />;
-      case 'FREE_UPGRADE':
-        return <Sparkles className="h-5 w-5" />;
-      default:
-        return <Gift className="h-5 w-5" />;
-    }
-  };
-
-  const getBenefitTypeLabel = (type: string) => {
-    const labels: { [key: string]: string } = {
-      DISCOUNT: 'Descuento',
-      XP_BONUS: 'Bonus XP',
-      PRIORITY_SUPPORT: 'Soporte Prioritario',
-      FREE_UPGRADE: 'Upgrade Gratis',
-    };
-    return labels[type] || type;
   };
 
   return (
@@ -397,9 +320,6 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* ✅ NUEVO: Beneficios Activos Comprados */}
-          <ActiveBenefitsCard />
-
           {/* Logros */}
           <Card>
             <CardHeader>
@@ -529,104 +449,27 @@ const Profile = () => {
               </CardContent>
         </Card>
 
-        {/* ✅ NUEVA SECCIÓN: Tienda de Canje de Puntos */}
+        {/* Sección de Tienda de Puntos con botón para abrir el diálogo */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5 text-primary" />
-                Tienda de Canje de Puntos
+                Tienda de Puntos
               </CardTitle>
               <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg px-4 py-2">
                 <Coins className="h-5 w-5 text-yellow-500" />
                 <span className="text-lg font-bold">{currentXp} XP</span>
+                <span className="text-sm text-muted-foreground">disponibles</span>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            {loadingBenefits ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Cargando beneficios...
-              </div>
-            ) : benefits.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No hay beneficios disponibles en este momento
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {benefits.map((benefit) => {
-                  const affordable = canAfford(benefit.cost);
-                  const isPurchasing = purchasing === benefit.id;
-
-                  return (
-                    <div
-                      key={benefit.id}
-                      className={`p-4 rounded-lg border transition-all ${
-                        affordable
-                          ? 'bg-card border-primary/30 hover:border-primary hover:shadow-md'
-                          : 'bg-muted/30 border-muted opacity-60'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          {getBenefitIcon(benefit.type)}
-                          <Badge variant="outline" className="text-xs">
-                            {getBenefitTypeLabel(benefit.type)}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <h3 className="font-semibold text-sm mb-2">{benefit.name}</h3>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                        {benefit.description}
-                      </p>
-
-                      {benefit.discountPercentage && (
-                        <div className="mb-3 text-xs text-primary font-medium flex items-center gap-1">
-                          <Gift className="h-3 w-3" />
-                          {benefit.discountPercentage}% de descuento
-                        </div>
-                      )}
-                      {benefit.xpBonus && (
-                        <div className="mb-3 text-xs text-primary font-medium flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          +{benefit.xpBonus} XP bonus
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between pt-3 border-t">
-                        <div className="flex items-center gap-1">
-                          <Coins className="h-4 w-4 text-yellow-500" />
-                          <span className="text-lg font-bold">{benefit.cost}</span>
-                          <span className="text-xs text-muted-foreground">XP</span>
-                        </div>
-                        <Button
-                          onClick={() => handlePurchaseBenefit(benefit)}
-                          disabled={!affordable || isPurchasing}
-                          variant={affordable ? 'default' : 'secondary'}
-                          size="sm"
-                          className="text-xs"
-                        >
-                          {isPurchasing ? (
-                            'Comprando...'
-                          ) : affordable ? (
-                            <>
-                              <Check className="h-3 w-3 mr-1" />
-                              Canjear
-                            </>
-                          ) : (
-                            <>
-                              <X className="h-3 w-3 mr-1" />
-                              Bloqueado
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          <CardContent className="text-center">
+            <p className="text-muted-foreground mb-4">Canjea tus puntos de experiencia (XP) por beneficios exclusivos que mejorarán tus futuras reservas.</p>
+            <Button onClick={() => setIsShopOpen(true)}>
+              <ShoppingBag className="h-4 w-4 mr-2" />
+              Abrir Tienda de Puntos
+            </Button>
           </CardContent>
         </Card>
 
@@ -680,6 +523,9 @@ const Profile = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Diálogo de la Tienda de Puntos */}
+      <PointShopDialog open={isShopOpen} onOpenChange={setIsShopOpen} />
     </div>
   );
 };

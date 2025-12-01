@@ -58,6 +58,11 @@ class JwtAuthFilter extends OncePerRequestFilter {
             );
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authToken);
+            
+            // ✅ CRÍTICO: Agregar userId al request para que los controladores lo puedan usar
+            request.setAttribute("userId", userDetails.userId());
+            
+            System.out.println("✅ JWT Filter - User authenticated: " + userDetails.username() + " (ID: " + userDetails.userId() + ", Role: " + userDetails.role() + ")");
         });
     }
 }

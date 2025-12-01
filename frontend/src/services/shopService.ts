@@ -1,7 +1,52 @@
 // File: frontend/src/services/shopService.ts
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:30002';
+
+console.log('🔧 Shop Service initialized with API_URL:', API_URL);
+
+const apiClient = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+});
+
+// 🔍 Interceptor para debugging - REQUEST
+apiClient.interceptors.request.use(
+  (config) => {
+    console.log('🚀 Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+    });
+    return config;
+  },
+  (error) => {
+    console.error('❌ Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// 🔍 Interceptor para debugging - RESPONSE
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log('✅ Response:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    console.error('❌ Response Error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return Promise.reject(error);
+  }
+);
 
 export interface Benefit {
   id: number;
@@ -34,7 +79,9 @@ class ShopService {
    * Obtiene todos los beneficios disponibles en la tienda
    */
   async getShopBenefits(): Promise<Benefit[]> {
-    const response = await axios.get(`${API_URL}/api/shop/benefits`);
+    console.log('📦 Fetching shop benefits...');
+    const response = await apiClient.get(`/api/shop/benefits`);
+    console.log('📦 Benefits received:', response.data);
     return response.data;
   }
 
@@ -42,7 +89,9 @@ class ShopService {
    * Compra un beneficio específico
    */
   async purchaseBenefit(benefitId: number): Promise<PurchaseResponse> {
-    const response = await axios.post(`${API_URL}/api/shop/purchase/${benefitId}`);
+    console.log('💰 Purchasing benefit:', benefitId);
+    const response = await apiClient.post(`/api/shop/purchase/${benefitId}`);
+    console.log('💰 Purchase response:', response.data);
     return response.data;
   }
 
@@ -50,7 +99,9 @@ class ShopService {
    * Obtiene todos los beneficios que el usuario ha comprado
    */
   async getUserBenefits(): Promise<UserBenefit[]> {
-    const response = await axios.get(`${API_URL}/api/shop/user-benefits`);
+    console.log('👤 Fetching user benefits...');
+    const response = await apiClient.get(`/api/shop/user-benefits`);
+    console.log('👤 User benefits received:', response.data);
     return response.data;
   }
 
@@ -58,7 +109,9 @@ class ShopService {
    * Obtiene los beneficios activos (no usados) del usuario
    */
   async getActiveBenefits(): Promise<UserBenefit[]> {
-    const response = await axios.get(`${API_URL}/api/shop/user-benefits/active`);
+    console.log('⭐ Fetching active benefits...');
+    const response = await apiClient.get(`/api/shop/user-benefits/active`);
+    console.log('⭐ Active benefits received:', response.data);
     return response.data;
   }
 
@@ -66,7 +119,9 @@ class ShopService {
    * Marca un beneficio como usado manualmente
    */
   async useBenefit(userBenefitId: number): Promise<{ success: boolean; message: string }> {
-    const response = await axios.post(`${API_URL}/api/shop/user-benefits/${userBenefitId}/use`);
+    console.log('✓ Using benefit:', userBenefitId);
+    const response = await apiClient.post(`/api/shop/user-benefits/${userBenefitId}/use`);
+    console.log('✓ Use benefit response:', response.data);
     return response.data;
   }
 }

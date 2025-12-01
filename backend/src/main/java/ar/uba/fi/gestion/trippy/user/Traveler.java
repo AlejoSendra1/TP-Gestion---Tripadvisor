@@ -58,7 +58,7 @@ public class Traveler extends User {
     }
 
     public Integer getXp() { 
-        return this.xp;
+        return this.xp; 
     }
 
     public void setXp(Integer xp) {

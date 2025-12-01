@@ -1,160 +1,138 @@
 package ar.uba.fi.gestion.trippy.shop;
 
-import ar.uba.fi.gestion.trippy.shop.dto.BenefitDTO;
-import ar.uba.fi.gestion.trippy.shop.dto.PurchaseResponseDTO;
-import ar.uba.fi.gestion.trippy.shop.dto.UserBenefitDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/shop")
-@CrossOrigin(origins = "*")
+@CrossOrigin(
+    origins = {"http://localhost:5173", "http://localhost:3000", "http://localhost:30003"},
+    allowedHeaders = "*",
+    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS},
+    allowCredentials = "true"
+)
 public class ShopController {
 
-    private final ShopService shopService;
-
     @Autowired
-    public ShopController(ShopService shopService) {
-        this.shopService = shopService;
-    }
+    private ShopService shopService;
 
     /**
-     * GET /api/shop/benefits
      * Obtiene todos los beneficios disponibles en la tienda
+     * Endpoint público - no requiere autenticación
      */
     @GetMapping("/benefits")
-    public ResponseEntity<List<BenefitDTO>> getAllBenefits() {
-        List<BenefitDTO> benefits = shopService.getAllBenefits();
-        return ResponseEntity.ok(benefits);
+    public ResponseEntity<List<Benefit>> getAllBenefits() {
+        try {
+            List<Benefit> benefits = shopService.getAllBenefits();
+            System.out.println("✅ Returning " + benefits.size() + " benefits");
+            return ResponseEntity.ok(benefits);
+        } catch (Exception e) {
+            System.err.println("❌ Error getting benefits: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     /**
-     * POST /api/shop/purchase/{benefitId}
-     * Compra un beneficio específico
+     * Compra un beneficio - REQUIERE AUTENTICACIÓN
      */
     @PostMapping("/purchase/{benefitId}")
-    public ResponseEntity<?> purchaseBenefit(
+    public ResponseEntity<PurchaseResponse> purchaseBenefit(
             @PathVariable Long benefitId,
-            Authentication authentication) {
+            @RequestAttribute("userId") Long userId) {
         
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401)
-                    .body(Map.of("message", "Debes iniciar sesión para comprar beneficios"));
-        }
-
         try {
-            String userEmail = authentication.getName();
-            PurchaseResponseDTO response = shopService.purchaseBenefit(benefitId, userEmail);
+            System.out.println("💰 Purchase request - Benefit ID: " + benefitId + ", User ID: " + userId);
+            
+            PurchaseResponse response = shopService.purchaseBenefit(userId, benefitId);
+            System.out.println("✅ Purchase successful for user " + userId);
             return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
+            
+        } catch (IllegalArgumentException e) {
+            System.err.println("⚠️ Invalid purchase: " + e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", e.getMessage()));
+                .body(new PurchaseResponse(false, e.getMessage(), null, 0));
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("success", false, "message", "Error al procesar la compra"));
+            System.err.println("❌ Error purchasing benefit: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                .body(new PurchaseResponse(false, "Error interno del servidor", null, 0));
         }
     }
 
     /**
-     * GET /api/shop/user-benefits
      * Obtiene todos los beneficios que el usuario ha comprado
+     * REQUIERE AUTENTICACIÓN
      */
     @GetMapping("/user-benefits")
-    public ResponseEntity<?> getUserBenefits(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401)
-                    .body(Map.of("message", "Debes iniciar sesión"));
-        }
-
+    public ResponseEntity<List<UserBenefit>> getUserBenefits(
+            @RequestAttribute("userId") Long userId) {
+        
         try {
-            String userEmail = authentication.getName();
-            List<UserBenefit> benefits = shopService.getUserBenefits(userEmail);
+            System.out.println("👤 Getting benefits for user " + userId);
+            List<UserBenefit> userBenefits = shopService.getUserBenefits(userId);
+            return ResponseEntity.ok(userBenefits);
             
-            // ✅ Convertir a DTO para evitar lazy loading
-            List<UserBenefitDTO> dtoList = benefits.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(dtoList);
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("message", "Error al obtener beneficios"));
+            System.err.println("❌ Error getting user benefits: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
     /**
-     * GET /api/shop/user-benefits/active
      * Obtiene los beneficios activos (no usados) del usuario
+     * REQUIERE AUTENTICACIÓN
      */
     @GetMapping("/user-benefits/active")
-    public ResponseEntity<?> getActiveBenefits(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401)
-                    .body(Map.of("message", "Debes iniciar sesión"));
-        }
-
+    public ResponseEntity<List<UserBenefit>> getActiveBenefits(
+            @RequestAttribute("userId") Long userId) {
+        
         try {
-            String userEmail = authentication.getName();
-            List<UserBenefit> benefits = shopService.getActiveBenefits(userEmail);
+            System.out.println("⭐ Getting active benefits for user " + userId);
+            List<UserBenefit> activeBenefits = shopService.getActiveBenefits(userId);
+            return ResponseEntity.ok(activeBenefits);
             
-            // ✅ Convertir a DTO
-            List<UserBenefitDTO> dtoList = benefits.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(dtoList);
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("message", "Error al obtener beneficios activos"));
+            System.err.println("❌ Error getting active benefits: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
     /**
-     * ✅ NUEVO: POST /api/shop/user-benefits/{userBenefitId}/use
      * Marca un beneficio como usado manualmente
+     * REQUIERE AUTENTICACIÓN
      */
     @PostMapping("/user-benefits/{userBenefitId}/use")
-    public ResponseEntity<?> useBenefit(
+    public ResponseEntity<Map<String, Object>> useBenefit(
             @PathVariable Long userBenefitId,
-            Authentication authentication) {
+            @RequestAttribute("userId") Long userId) {
         
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401)
-                    .body(Map.of("message", "Debes iniciar sesión"));
-        }
-
         try {
-            String userEmail = authentication.getName();
-            shopService.markBenefitAsUsed(userBenefitId, userEmail);
+            System.out.println("✓ User " + userId + " using benefit " + userBenefitId);
+            shopService.useBenefit(userId, userBenefitId);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Beneficio usado exitosamente"
+                "message", "Beneficio marcado como usado"
             ));
-        } catch (IllegalStateException e) {
+            
+        } catch (IllegalArgumentException e) {
+            System.err.println("⚠️ Invalid operation: " + e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", e.getMessage()));
+                .body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+                ));
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("success", false, "message", "Error al usar el beneficio"));
+            System.err.println("❌ Error using benefit: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                .body(Map.of(
+                    "success", false,
+                    "message", "Error interno del servidor"
+                ));
         }
-    }
-
-    /**
-     * ✅ Helper method para convertir UserBenefit a DTO
-     */
-    private UserBenefitDTO convertToDTO(UserBenefit userBenefit) {
-        UserBenefitDTO dto = new UserBenefitDTO();
-        dto.setId(userBenefit.getId());
-        dto.setPurchaseDate(userBenefit.getPurchaseDate());
-        dto.setUsed(userBenefit.getUsed());
-        dto.setUsedDate(userBenefit.getUsedDate());
-        dto.setBenefit(BenefitDTO.fromEntity(userBenefit.getBenefit()));
-        return dto;
     }
 }

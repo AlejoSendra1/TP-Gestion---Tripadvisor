@@ -23,6 +23,7 @@ export const ActiveBenefitsCard = () => {
       setActiveBenefits(benefits);
     } catch (error) {
       console.error('Error al cargar beneficios activos:', error);
+      toast.error('No se pudieron cargar tus beneficios activos.');
     } finally {
       setLoading(false);
     }
