@@ -11,7 +11,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const accessToken = sessionStorage.getItem("accessToken");
+        // const accessToken = sessionStorage.getItem("accessToken");
+        const accessToken = localStorage.getItem("accessToken");
 
         if (accessToken) {
           // Usamos apiClient en lugar de fetch
@@ -38,8 +39,10 @@ export function AuthProvider({ children }) {
     console.log("🔐 Login - usuario normalizado:", normalizedUser);
 
     if (userData.tokenDTO) {
-      sessionStorage.setItem("accessToken", userData.tokenDTO.accessToken);
-      sessionStorage.setItem("refreshToken", userData.tokenDTO.refreshToken);
+      // sessionStorage.setItem("accessToken", userData.tokenDTO.accessToken);
+      // sessionStorage.setItem("refreshToken", userData.tokenDTO.refreshToken);
+      localStorage.setItem("accessToken", userData.tokenDTO.accessToken);
+      localStorage.setItem("refreshToken", userData.tokenDTO.refreshToken);
     }
 
     setUser(normalizedUser);
@@ -47,8 +50,11 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("refreshToken");
+    // sessionStorage.removeItem("accessToken");
+    // sessionStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userData");
   };
 
   const signup = (userData) => {
@@ -57,7 +63,8 @@ export function AuthProvider({ children }) {
 
   const refreshUser = async () => {
     try {
-      const accessToken = sessionStorage.getItem("accessToken");
+      // const accessToken = sessionStorage.getItem("accessToken");
+      const accessToken = localStorage.getItem("accessToken");
       
       if (!accessToken) {
         console.error("No access token found");

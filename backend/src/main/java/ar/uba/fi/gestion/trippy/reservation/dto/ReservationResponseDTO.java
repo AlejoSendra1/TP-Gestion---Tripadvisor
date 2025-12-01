@@ -19,6 +19,10 @@ public record ReservationResponseDTO(
         String notes,
         String reservationType,
 
+        String publicationTitle,
+        String publicationMainImageUrl,
+        String travelerEmail,
+
         // Hotel
         LocalDate checkIn,
         LocalDate checkOut,
@@ -50,6 +54,10 @@ public record ReservationResponseDTO(
         String notes = r.getNotes();
 
         String type = r.getClass().getSimpleName().toUpperCase();
+
+        String pubTitle = r.getPublication() != null ? r.getPublication().getTitle() : null;
+        String pubImg = r.getPublication() != null ? r.getPublication().getMainImageUrl() : null;
+        String travEmail = r.getTraveler() != null ? r.getTraveler().getEmail() : null;
 
         // defaults
         LocalDate checkIn = null;
@@ -91,6 +99,9 @@ public record ReservationResponseDTO(
                 status,
                 notes,
                 type,
+                pubTitle,
+                pubImg,
+                travEmail,
                 checkIn,
                 checkOut,
                 roomCount,
