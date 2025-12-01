@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiClient } from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
-import axios , { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 
 // MODIFICADO: El "molde" ahora incluye TODOS los campos posibles
 const initialState = {
@@ -68,7 +68,10 @@ const CreatePublication = () => {
     // NUEVO: Estado para el tipo de publicación
     const [publicationType, setPublicationType] = useState<PublicationType>("hotel");
 
-    // Handler para campos simples (sin cambios)
+    // --- NUEVO: Estado para el archivo de imagen ---
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    // Handler para campos simples
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev: any) => ({
@@ -93,101 +96,152 @@ const CreatePublication = () => {
     const handleTypeChange = (value: string) => {
         // Reiniciamos el formulario al cambiar de tipo
         setFormData(initialState);
+        setSelectedFile(null); // Limpiamos también la imagen seleccionada
         setPublicationType(value as PublicationType);
     };
 
-    // MODIFICADO: El Submit ahora es dinámico
+    // --- NUEVO: Handler para el input de archivo ---
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+        }
+    };
+
+    // --- NUEVO: Función para subir la imagen al Backend ---
+    const uploadImage = async (file: File): Promise<string> => {
+        const formDataImage = new FormData();
+        formDataImage.append("file", file);
+
+        // Llamada al endpoint de subida de imágenes
+        const response = await apiClient.post("/api/images/upload", formDataImage, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        // El backend debe devolver { "url": "http://localhost:8080/images/..." }
+        return response.data.url;
+    };
+
+    // Submit dinámico
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // 1. Determinar el endpoint dinámicamente
-        const endpoint = `/publications/${publicationType}`;
+        try {
+            // 1. Subir la imagen primero si existe
+            let uploadedImageUrl = "";
 
-        // 2. Construir el DTO de "base"
-        const baseData = {
-            title: formData.title,
-            description: formData.description,
-            price: parseFloat(String(formData.price)),
-            location: formData.location,
-            mainImageUrl: formData.mainImageUrl,
-            imageUrls: formData.mainImageUrl ? [formData.mainImageUrl] : [], // Lógica simple de galería
-        };
-
-        // 3. Construir el DTO específico basado en el tipo
-        let specificData = {};
-        if (publicationType === "hotel") {
-            specificData = {
-                roomCount: parseInt(String(formData.roomCount), 10),
-                capacity: parseInt(String(formData.capacity), 10),
-            };
-        } else if (publicationType === "activity") {
-            specificData = {
-                durationInHours: parseInt(String(formData.durationInHours), 10),
-                meetingPoint: formData.meetingPoint,
-                whatIsIncluded: formData.whatIsIncluded,
-                activityLevel: formData.activityLevel,
-                language: formData.language,
-                maxGroupSize: parseInt(String(formData.maxGroupSize), 10), // <-- agregado
-            };
-        } else if (publicationType === "coworking") {
-             if (formData.capacity === undefined || formData.capacity === "" ) {
+            if (selectedFile) {
+                try {
+                    uploadedImageUrl = await uploadImage(selectedFile);
+                    console.log("Imagen subida:", uploadedImageUrl);
+                } catch (error) {
+                    console.error("Error subiendo imagen", error);
+                    toast({
+                        title: "Error de Imagen",
+                        description: "No se pudo subir la imagen. Intenta de nuevo.",
+                        variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
                 toast({
-                    title: "Campo requerido",
-                    description: "La capacidad es obligatoria para Coworking.",
+                    title: "Imagen requerida",
+                    description: "Por favor selecciona una imagen principal.",
                     variant: "destructive",
-                });
-                return;
-            }
-            const capNum = parseInt(String(formData.capacity), 10);
-            if (Number.isNaN(capNum) || capNum < 0) {
-                toast({
-                    title: "Valor inválido",
-                    description: "La capacidad debe ser un número entero válido mayor o igual a 0.",
-                    variant: "destructive",
-                });
-                return;
-            }
-            specificData = {
-                pricePerDay: parseFloat(String(formData.pricePerDay)),
-                pricePerMonth: parseFloat(String(formData.pricePerMonth)),
-                capacity: parseInt(String(formData.capacity), 10), // entero obligatorio
-                // Convertimos el string "Wifi, Cafe" en un array ["Wifi", "Cafe"]
-                services: (formData.services || "").split(",").map((s: string) => s.trim()).filter((s: string) => s.length > 0),
-            };
-        } else if (publicationType === "restaurant") {
-            if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
-                toast({
-                  title: "Horario inválido",
-                  description: "El horario de apertura debe ser menor que el horario de cierre.",
-                  variant: "destructive",
                 });
                 setIsLoading(false);
                 return;
-              }
-            // Normalizar horarios a hora en punto
-            const openingStart = normalizeToHour(formData.openingStart);
-            const openingEnd = normalizeToHour(formData.openingEnd);
+            }
 
-            specificData = {
-                cuisineType: formData.cuisineType,
-                priceRange: formData.priceRange,
-                openingStart: openingStart || null,
-                openingEnd: openingEnd || null,
-                menuUrl: formData.menuUrl,
-               capacity: formData.capacity !== undefined && formData.capacity !== ""
-                         ? parseInt(String(formData.capacity), 10)
-                         : null,
+            // 2. Determinar el endpoint dinámicamente
+            const endpoint = `/publications/${publicationType}`;
+
+            // 3. Construir el DTO de "base" usando la URL de la imagen subida
+            const baseData = {
+                title: formData.title,
+                description: formData.description,
+                price: parseFloat(String(formData.price)),
+                location: formData.location,
+                mainImageUrl: uploadedImageUrl, // Usamos la URL real del servidor
+                imageUrls: [uploadedImageUrl], // Por ahora la galería es la misma imagen
             };
-        }
 
-        // 4. Combinar y enviar
-        const dataToSubmit = { ...baseData, ...specificData };
+            // 4. Construir el DTO específico basado en el tipo
+            let specificData = {};
+            if (publicationType === "hotel") {
+                specificData = {
+                    roomCount: parseInt(String(formData.roomCount), 10),
+                    capacity: parseInt(String(formData.capacity), 10),
+                };
+            } else if (publicationType === "activity") {
+                specificData = {
+                    durationInHours: parseInt(String(formData.durationInHours), 10),
+                    meetingPoint: formData.meetingPoint,
+                    whatIsIncluded: formData.whatIsIncluded,
+                    activityLevel: formData.activityLevel,
+                    language: formData.language,
+                    maxGroupSize: parseInt(String(formData.maxGroupSize), 10),
+                };
+            } else if (publicationType === "coworking") {
+                if (formData.capacity === undefined || formData.capacity === "" ) {
+                    toast({
+                        title: "Campo requerido",
+                        description: "La capacidad es obligatoria para Coworking.",
+                        variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+                const capNum = parseInt(String(formData.capacity), 10);
+                if (Number.isNaN(capNum) || capNum < 0) {
+                    toast({
+                        title: "Valor inválido",
+                        description: "La capacidad debe ser un número entero válido mayor o igual a 0.",
+                        variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+                specificData = {
+                    pricePerDay: parseFloat(String(formData.pricePerDay)),
+                    pricePerMonth: parseFloat(String(formData.pricePerMonth)),
+                    capacity: parseInt(String(formData.capacity), 10),
+                    // Convertimos el string "Wifi, Cafe" en un array ["Wifi", "Cafe"]
+                    services: (typeof formData.services === 'string' ? formData.services : "").split(",").map((s: string) => s.trim()).filter((s: string) => s.length > 0),
+                };
+            } else if (publicationType === "restaurant") {
+                if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
+                    toast({
+                        title: "Horario inválido",
+                        description: "El horario de apertura debe ser menor que el horario de cierre.",
+                        variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+                // Normalizar horarios a hora en punto
+                const openingStart = normalizeToHour(formData.openingStart);
+                const openingEnd = normalizeToHour(formData.openingEnd);
 
-        console.log(`Enviando a ${endpoint}:`, dataToSubmit);
+                specificData = {
+                    cuisineType: formData.cuisineType,
+                    priceRange: formData.priceRange,
+                    openingStart: openingStart || null,
+                    openingEnd: openingEnd || null,
+                    menuUrl: formData.menuUrl,
+                    capacity: formData.capacity !== undefined && formData.capacity !== ""
+                        ? parseInt(String(formData.capacity), 10)
+                        : null,
+                };
+            }
 
-        try {
-            // Usamos el endpoint dinámico
+            // 5. Combinar y enviar
+            const dataToSubmit = { ...baseData, ...specificData };
+
+            console.log(`Enviando a ${endpoint}:`, dataToSubmit);
+
             const response = await apiClient.post(endpoint, dataToSubmit);
 
             // ¡Éxito!
@@ -209,11 +263,15 @@ const CreatePublication = () => {
                     description = "Datos inválidos. Revisa el formulario.";
                 } else if (error.response?.status === 403) {
                     description = "No tienes permiso para realizar esta acción.";
+                } else if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
+                     // Intentar sacar mensaje del backend si existe
+                    description = (error.response.data as any).message;
                 }
             }
 
             toast({ title, description, variant: "destructive" });
-            setIsLoading(false);
+        } finally {
+             setIsLoading(false);
         }
     };
 
@@ -290,17 +348,22 @@ const CreatePublication = () => {
                                             required
                                         />
                                     </div>
+                                    {/* --- MODIFICADO: Input de Archivo --- */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="mainImageUrl">Main Image URL</Label>
+                                        <Label htmlFor="mainImage">Main Image</Label>
                                         <Input
-                                            id="mainImageUrl"
-                                            name="mainImageUrl"
-                                            type="url"
-                                            value={formData.mainImageUrl}
-                                            onChange={handleInputChange}
-                                            placeholder="https://ejemplo.com/imagen.jpg"
+                                            id="mainImage"
+                                            name="mainImage"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
                                             required
                                         />
+                                        {selectedFile && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Archivo: {selectedFile.name}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

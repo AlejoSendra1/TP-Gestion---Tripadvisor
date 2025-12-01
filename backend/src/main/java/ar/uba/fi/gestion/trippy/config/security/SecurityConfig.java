@@ -86,6 +86,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/payments/create-preference").hasAnyRole("TRAVELER", "USER")
                         // --- FIN DE LOS CAMBIOS ---
 
+                        // Permitir públicamente acceso a archivos estáticos
+                        .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 //
