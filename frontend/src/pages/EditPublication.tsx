@@ -1,3 +1,4 @@
+// File: frontend/src/pages/EditPublication.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -23,10 +24,11 @@ import {
 } from "@/components/ui/select";
 import { apiClient } from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
-import { useEditPublication } from "@/hooks/useEditPublication"; // Importamos el hook
-import { Loader2 } from "lucide-react"; // Para el estado de carga
+import { useEditPublication } from "@/hooks/useEditPublication";
+import { Loader2, Upload, X } from "lucide-react";
+// IMPORTAMOS EL HOOK DE SUBIDA DE IMÁGENES
+import { useImageUpload } from "@/hooks/useImageUpload";
 
-// Puedes mover esto a un archivo 'types.ts' global si quieres
 type PublicationType = "hotel" | "activity" | "coworking" | "restaurant";
 
 const EditPublication = () => {
@@ -34,12 +36,19 @@ const EditPublication = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
 
+    // Hook de subida de imágenes
+    const { uploadImage, uploadMultipleImages, isUploading: isImgUploading } = useImageUpload();
+
     const [formData, setFormData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [publicationType, setPublicationType] =
-        useState<PublicationType>("hotel");
+    const [publicationType, setPublicationType] = useState<PublicationType>("hotel");
 
-    // Usamos el hook de mutación. 'isPending' es el nuevo 'isSaving'
+    // Estados para imágenes nuevas
+    const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+    const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+    // Para galería (opcional, si quisieras editarla también, aquí dejo la base)
+    // const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+
     const { mutate: editPublication, isPending: isSaving } = useEditPublication(
         id!,
         publicationType
@@ -54,7 +63,6 @@ const EditPublication = () => {
                 const res = await apiClient.get(`/publications/${id}`);
                 const data = res.data;
 
-                // "Aplanamos" los datos: copiamos 'specificDetails' al nivel raíz
                 const flattenedData = {
                     ...data,
                     ...(data.specificDetails || {}),
@@ -81,9 +89,7 @@ const EditPublication = () => {
     }, [id, navigate, toast]);
 
     // --- Handlers de Inputs ---
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev: any) => ({
             ...prev,
@@ -103,9 +109,16 @@ const EditPublication = () => {
     };
 
     const handleTypeChange = (value: string) => {
-        // Cuando el tipo cambia, es buena idea resetear los datos específicos
-        // pero por ahora solo actualizamos el tipo.
         setPublicationType(value as PublicationType);
+    };
+
+    // --- Handler de Imagen Principal ---
+    const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setMainImageFile(file);
+            setMainImagePreview(URL.createObjectURL(file));
+        }
     };
 
     // --- Enviar Formulario ---
@@ -114,21 +127,33 @@ const EditPublication = () => {
         if (!formData) return;
 
         if (publicationType === "restaurant") {
-          if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
-            toast({
-              title: "Horario inválido",
-              description: "El horario de apertura debe ser menor que el horario de cierre.",
-              variant: "destructive",
-            });
-            return;
-          }
+            if (!isOpeningBeforeClosing(formData.openingStart, formData.openingEnd)) {
+                toast({
+                    title: "Horario inválido",
+                    description: "El horario de apertura debe ser menor que el cierre.",
+                    variant: "destructive",
+                });
+                return;
+            }
         }
 
-        // El hook se encarga de todo (separar datos, llamar a 2 endpoints, etc.)
-        editPublication(formData);
+        let updatedFormData = { ...formData };
+
+        // 1. Si hay una nueva imagen principal seleccionada, subirla
+        if (mainImageFile) {
+            const uploadedUrl = await uploadImage(mainImageFile);
+            if (uploadedUrl) {
+                updatedFormData.mainImageUrl = uploadedUrl;
+            } else {
+                // Si falla la subida, avisamos y detenemos
+                return;
+            }
+        }
+
+        // 2. Llamar a la mutación con los datos (posiblemente) actualizados
+        editPublication(updatedFormData);
     };
 
-    // --- Renderizado de Carga ---
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center text-muted-foreground">
@@ -138,10 +163,9 @@ const EditPublication = () => {
         );
     }
 
-    const publicationTitle =
-        publicationType.charAt(0).toUpperCase() + publicationType.slice(1);
+    const publicationTitle = publicationType.charAt(0).toUpperCase() + publicationType.slice(1);
+    const isSubmitting = isSaving || isImgUploading;
 
-    // --- Renderizado Principal ---
     return (
         <div className="min-h-screen bg-background">
             <Header />
@@ -155,18 +179,12 @@ const EditPublication = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {/* Nos aseguramos de que formData exista antes de renderizar el form
-              para que los 'value' de los inputs no sean 'undefined' al inicio.
-            */}
                         {formData && (
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* --- Tipo de Publicación --- */}
+                                {/* Tipo de Publicación */}
                                 <div className="space-y-2">
                                     <Label htmlFor="publicationType">Tipo de Publicación</Label>
-                                    <Select
-                                        value={publicationType}
-                                        onValueChange={handleTypeChange}
-                                    >
+                                    <Select value={publicationType} onValueChange={handleTypeChange}>
                                         <SelectTrigger id="publicationType">
                                             <SelectValue placeholder="Selecciona un tipo" />
                                         </SelectTrigger>
@@ -179,7 +197,7 @@ const EditPublication = () => {
                                     </Select>
                                 </div>
 
-                                {/* --- Campos Comunes --- */}
+                                {/* Campos Comunes */}
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="title">Título</Label>
@@ -211,26 +229,58 @@ const EditPublication = () => {
                                             onChange={handleInputChange}
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="mainImageUrl">Imagen Principal (URL)</Label>
-                                        <Input
-                                            id="mainImageUrl"
-                                            name="mainImageUrl"
-                                            value={formData.mainImageUrl}
-                                            onChange={handleInputChange}
-                                        />
+
+                                    {/* --- SECCIÓN IMAGEN PRINCIPAL --- */}
+                                    <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
+                                        <Label>Imagen Principal</Label>
+                                        <div className="flex items-start gap-4">
+                                            {/* Preview */}
+                                            <div className="relative w-32 h-24 bg-muted rounded-md overflow-hidden border">
+                                                {(mainImagePreview || formData.mainImageUrl) ? (
+                                                    <img
+                                                        src={mainImagePreview || formData.mainImageUrl}
+                                                        alt="Principal"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+                                                        <Upload className="h-6 w-6" />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Input */}
+                                            <div className="flex-1 space-y-2">
+                                                <Label htmlFor="mainImageUpload" className="cursor-pointer">
+                                                    <div className="flex items-center gap-2 text-sm text-primary hover:underline">
+                                                        <Upload className="h-4 w-4" />
+                                                        Cambiar imagen
+                                                    </div>
+                                                    <Input
+                                                        id="mainImageUpload"
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={handleMainImageChange}
+                                                        disabled={isSubmitting}
+                                                    />
+                                                </Label>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Formatos soportados: JPG, PNG. Máx 5MB.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
+                                    {/* ------------------------------- */}
                                 </div>
 
                                 <Separator />
 
-                                {/* --- Ubicación --- */}
+                                {/* Ubicación */}
                                 <div className="space-y-4">
                                     <h3 className="text-lg font-medium">Ubicación</h3>
                                     <div className="space-y-2">
-                                        <Label htmlFor="streetAddress">
-                                            Dirección (Calle y número)
-                                        </Label>
+                                        <Label htmlFor="streetAddress">Dirección</Label>
                                         <Input
                                             id="streetAddress"
                                             name="streetAddress"
@@ -262,9 +312,7 @@ const EditPublication = () => {
 
                                 <Separator />
 
-                                {/* --- Campos Dinámicos --- */}
-
-                                {/* Campos para HOTEL */}
+                                {/* Campos Dinámicos (Hotel, Activity, etc.) */}
                                 {publicationType === "hotel" && (
                                     <div className="space-y-4">
                                         <h3 className="text-lg font-medium">Detalles del Hotel</h3>
@@ -293,12 +341,9 @@ const EditPublication = () => {
                                     </div>
                                 )}
 
-                                {/* Campos para ACTIVITY */}
                                 {publicationType === "activity" && (
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-medium">
-                                            Detalles de la Actividad
-                                        </h3>
+                                        <h3 className="text-lg font-medium">Detalles de la Actividad</h3>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="durationInHours">Duración (Horas)</Label>
@@ -339,9 +384,7 @@ const EditPublication = () => {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="whatIsIncluded">
-                                                Qué incluye (separado por comas)
-                                            </Label>
+                                            <Label htmlFor="whatIsIncluded">Qué incluye</Label>
                                             <Textarea
                                                 id="whatIsIncluded"
                                                 name="whatIsIncluded"
@@ -349,27 +392,22 @@ const EditPublication = () => {
                                                 onChange={handleInputChange}
                                             />
                                         </div>
-                                        {/* AÑADIDO: campo para maxGroupSize */}
-                                            <div className="space-y-2">
-                                                <Label htmlFor="maxGroupSize">Tamaño Máximo del Grupo</Label>
-                                                <Input
-                                                    id="maxGroupSize"
-                                                    name="maxGroupSize"
-                                                    type="number"
-                                                    value={formData.maxGroupSize ?? ""}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Ej: 20"
-                                                />
-                                            </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="maxGroupSize">Tamaño Máximo del Grupo</Label>
+                                            <Input
+                                                id="maxGroupSize"
+                                                name="maxGroupSize"
+                                                type="number"
+                                                value={formData.maxGroupSize ?? ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
-                                {/* Campos para COWORKING */}
                                 {publicationType === "coworking" && (
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-medium">
-                                            Detalles del Coworking
-                                        </h3>
+                                        <h3 className="text-lg font-medium">Detalles del Coworking</h3>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="pricePerDay">Precio por Día (USD)</Label>
@@ -382,9 +420,7 @@ const EditPublication = () => {
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="pricePerMonth">
-                                                    Precio por Mes (USD)
-                                                </Label>
+                                                <Label htmlFor="pricePerMonth">Precio por Mes (USD)</Label>
                                                 <Input
                                                     id="pricePerMonth"
                                                     name="pricePerMonth"
@@ -395,21 +431,14 @@ const EditPublication = () => {
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="services">
-                                                Servicios (separados por comas)
-                                            </Label>
+                                            <Label htmlFor="services">Servicios</Label>
                                             <Input
                                                 id="services"
                                                 name="services"
-                                                value={
-                                                    Array.isArray(formData.services)
-                                                        ? formData.services.join(", ")
-                                                        : formData.services || ""
-                                                }
+                                                value={Array.isArray(formData.services) ? formData.services.join(", ") : formData.services || ""}
                                                 onChange={handleInputChange}
                                             />
                                         </div>
-                                        {/* Nuevo: campo capacity */}
                                         <div className="space-y-2">
                                             <Label htmlFor="capacity">Capacidad (Personas)</Label>
                                             <Input
@@ -418,105 +447,59 @@ const EditPublication = () => {
                                                 type="number"
                                                 value={formData.capacity ?? ""}
                                                 onChange={handleInputChange}
-                                                placeholder="Ej: 50"
                                             />
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Campos para RESTAURANT */}
                                 {publicationType === "restaurant" && (
                                     <div className="space-y-4">
                                         <h3 className="text-lg font-medium">Detalles del Restaurante</h3>
                                         <div className="grid grid-cols-2 gap-4">
-                                          <div className="space-y-2">
-                                            <Label htmlFor="cuisineType">Tipo de Cocina</Label>
-                                            <Input
-                                              id="cuisineType"
-                                              name="cuisineType"
-                                              value={formData.cuisineType || ""}
-                                              onChange={handleInputChange}
-                                            />
-                                          </div>
-                                          <div className="space-y-2">
-                                            <Label htmlFor="priceRange">Rango de Precio</Label>
-                                            <Input
-                                              id="priceRange"
-                                              name="priceRange"
-                                              value={formData.priceRange || ""}
-                                              onChange={handleInputChange}
-                                            />
-                                          </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="cuisineType">Tipo de Cocina</Label>
+                                                <Input id="cuisineType" name="cuisineType" value={formData.cuisineType || ""} onChange={handleInputChange} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="priceRange">Rango de Precio</Label>
+                                                <Input id="priceRange" name="priceRange" value={formData.priceRange || ""} onChange={handleInputChange} />
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
-                                          <div className="space-y-2">
-                                            <Label htmlFor="openingStart">Horario Inicio</Label>
-                                            <select
-                                              id="openingStart"
-                                              name="openingStart"
-                                              value={formData.openingStart || ""}
-                                              onChange={handleInputChange}
-                                              className="w-full rounded-md border px-3 py-2"
-                                            >
-                                              <option value="">-- Seleccionar --</option>
-                                              {hourOptions.map((h) => (
-                                                <option key={`start-${h}`} value={h}>
-                                                  {h}
-                                                </option>
-                                              ))}
-                                            </select>
-                                          </div>
-
-                                          <div className="space-y-2">
-                                            <Label htmlFor="openingEnd">Horario Fin</Label>
-                                            <select
-                                              id="openingEnd"
-                                              name="openingEnd"
-                                              value={formData.openingEnd || ""}
-                                              onChange={handleInputChange}
-                                              className="w-full rounded-md border px-3 py-2"
-                                            >
-                                              <option value="">-- Seleccionar --</option>
-                                              {hourOptions.map((h) => (
-                                                <option key={`end-${h}`} value={h}>
-                                                  {h}
-                                                </option>
-                                              ))}
-                                            </select>
-                                          </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="openingStart">Horario Inicio</Label>
+                                                <select id="openingStart" name="openingStart" value={formData.openingStart || ""} onChange={handleInputChange} className="w-full rounded-md border px-3 py-2">
+                                                    <option value="">-- Seleccionar --</option>
+                                                    {hourOptions.map((h) => <option key={`start-${h}`} value={h}>{h}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="openingEnd">Horario Fin</Label>
+                                                <select id="openingEnd" name="openingEnd" value={formData.openingEnd || ""} onChange={handleInputChange} className="w-full rounded-md border px-3 py-2">
+                                                    <option value="">-- Seleccionar --</option>
+                                                    {hourOptions.map((h) => <option key={`end-${h}`} value={h}>{h}</option>)}
+                                                </select>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">
-                                          <Label htmlFor="menuUrl">URL del Menú</Label>
-                                          <Input
-                                            id="menuUrl"
-                                            name="menuUrl"
-                                            value={formData.menuUrl || ""}
-                                            onChange={handleInputChange}
-                                          />
+                                            <Label htmlFor="menuUrl">URL del Menú</Label>
+                                            <Input id="menuUrl" name="menuUrl" value={formData.menuUrl || ""} onChange={handleInputChange} />
                                         </div>
-                                        {/* NUEVO: campo capacity para restaurant */}
                                         <div className="space-y-2">
-                                          <Label htmlFor="capacity">Capacidad (Personas)</Label>
-                                          <Input
-                                            id="capacity"
-                                            name="capacity"
-                                            type="number"
-                                            value={formData.capacity ?? ""}
-                                            onChange={handleInputChange}
-                                            placeholder="Ej: 30"
-                                          />
+                                            <Label htmlFor="capacity">Capacidad (Personas)</Label>
+                                            <Input id="capacity" name="capacity" type="number" value={formData.capacity ?? ""} onChange={handleInputChange} />
                                         </div>
-                                      </div>
-                                    )}
+                                    </div>
+                                )}
 
-                                {/* --- Botón de Enviar --- */}
-                                <Button type="submit" className="w-full" disabled={isSaving}>
-                                    {isSaving ? (
+                                {/* Botón de Guardar */}
+                                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                    {isSubmitting ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            Guardando...
+                                            {isImgUploading ? "Subiendo imagen..." : "Guardando..."}
                                         </>
                                     ) : (
                                         "Guardar Cambios"

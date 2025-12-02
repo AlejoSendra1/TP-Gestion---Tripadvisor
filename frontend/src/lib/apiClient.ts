@@ -1,21 +1,29 @@
-// language: typescript
 // src/lib/apiClient.ts
-
 import axios from 'axios';
 
-// 1. Lee la variable de entorno VITE_API_BASE_URL (que pusiste en Vercel).
-//    Si no existe (porque estás en local), usa '/' como base
-//    para que el proxy de vite.config.ts funcione.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:30002';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-// 2. Creamos la instancia de Axios con la URL base correcta
 export const apiClient = axios.create({
-    baseURL: API_BASE_URL, // <-- ¡Lógica de Vercel!
+    baseURL: API_BASE_URL,
     timeout: 10000,
 });
 
-// 3. Interceptor de Petición (Request)
-// (Lee el token antes de CADA llamada)
+// --- LÓGICA DE BLOQUEO PARA REFRESH TOKEN ---
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
+// 1. Interceptor de Request
 apiClient.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
@@ -30,39 +38,7 @@ apiClient.interceptors.request.use(
     }
 );
 
-
-// export const apiClient = axios.create({
-//     baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:30002',
-//     timeout: 10000,
-// });
-
-// // ✅ IMPORTANTE: Debe ser sessionStorage (NO localStorage)
-// apiClient.interceptors.request.use((config) => {
-//     const token = sessionStorage.getItem('accessToken');
-    
-//     // Debug temporal - remover después
-//     console.log('🔑 apiClient - Token:', token ? 'encontrado' : 'NO encontrado');
-    
-//     if (token) {
-//         config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-// });
-
-// // Interceptor para manejar errores 401
-// apiClient.interceptors.response.use(
-//     (response) => response,
-//     (error) => {
-//         if (error.response?.status === 401) {
-//             console.error('🚫 Error 401 - Verificá el token');
-//         }
-//         return Promise.reject(error);
-//     }
-// );
-
-// ... imports y configuración inicial igual ...
-
-// 4. Interceptor de Respuesta (CORREGIDO)
+// 2. Interceptor de Response (CORREGIDO)
 apiClient.interceptors.response.use(
     (response) => {
         return response;
@@ -70,54 +46,70 @@ apiClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // --- PARCHE ANTI-BUCLE ---
-        // Si el error viene de intentar hacer login o refresh (/sessions),
-        // NO intentamos refrescar de nuevo. Dejamos que falle.
+        // Evitar bucles en login o refresh
         if (originalRequest.url.includes('/sessions') || originalRequest.url.includes('/login')) {
             return Promise.reject(error);
         }
-        // -------------------------
 
-        // Si el error es 401 (Unauthorized) Y no es un reintento.
         if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
 
-            const refreshToken = localStorage.getItem('refreshToken'); //
+            // SI YA SE ESTÁ REFRESANDO: Ponemos la petición en cola
+            if (isRefreshing) {
+                return new Promise(function (resolve, reject) {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest.headers['Authorization'] = 'Bearer ' + token;
+                        return apiClient(originalRequest);
+                    })
+                    .catch((err) => {
+                        return Promise.reject(err);
+                    });
+            }
+
+            // SI NO SE ESTÁ REFRESANDO: Iniciamos el proceso
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            const refreshToken = localStorage.getItem('refreshToken');
 
             if (!refreshToken) {
-                // Logout forzoso
-                localStorage.removeItem('userData');
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                window.location.href = '/login';
+                handleLogout();
                 return Promise.reject(error);
             }
 
             try {
-                // Llamamos al refresh
                 const response = await apiClient.put('/sessions', { refreshToken });
-
                 const { accessToken, refreshToken: newRefreshToken } = response.data;
 
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', newRefreshToken);
 
-                originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+                // Procesamos la cola de peticiones que estaban esperando
+                processQueue(null, accessToken);
 
+                // Reintentamos la petición original
+                originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
                 return apiClient(originalRequest);
 
             } catch (refreshError) {
-                // Si falla el refresh, logout forzoso
-                localStorage.removeItem('userData');
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                window.location.href = '/login';
+                processQueue(refreshError, null);
+                handleLogout();
                 return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
             }
         }
 
         return Promise.reject(error);
     }
 );
+
+const handleLogout = () => {
+    localStorage.removeItem('userData');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    window.location.href = '/login';
+};
 
 export default apiClient;

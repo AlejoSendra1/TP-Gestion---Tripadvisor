@@ -80,7 +80,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll() // Webhook es público
 
                         // --- ¡CORREGIDO A hasAnyRole! ---
-                        .requestMatchers(HttpMethod.GET, "/reservations/me").hasAnyRole("TRAVELER", "USER")
+                        .requestMatchers(HttpMethod.GET, "/reservations/me").hasAnyRole("TRAVELER", "USER", "HOST")
+                        .requestMatchers(HttpMethod.GET, "/reservations/all").hasAnyRole("HOST")
                         .requestMatchers(HttpMethod.GET, "/reservations/{id}").hasAnyRole("TRAVELER", "USER", "HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/{publicationId}/reservations").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.POST, "/payments/create-preference").hasAnyRole("TRAVELER", "USER")
@@ -88,6 +89,7 @@ public class SecurityConfig {
 
                         // Permitir públicamente acceso a archivos estáticos
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
                         .anyRequest().authenticated()

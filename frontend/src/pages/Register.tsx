@@ -1,3 +1,5 @@
+// File: frontend/src/pages/Register.tsx
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,26 +8,27 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MapPin, Plane, Building2 } from "lucide-react";
-import {useAuth} from "@/hooks/use-auth"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-// --- Imports nuevos ---
+import { MapPin, Plane, Building2, Upload, User as UserIcon } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { apiClient } from "@/lib/apiClient";
 import axios, { AxiosError } from "axios";
 import { useToast } from "@/hooks/use-toast";
+// IMPORTAMOS EL HOOK DE IMÁGENES
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 const Register = () => {
   const { signup } = useAuth();
-  const { toast } = useToast(); // Hook para notificaciones
+  const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Hook de subida de imágenes
+  const { uploadImage, isUploading: isImgUploading } = useImageUpload();
+
   const [userType, setUserType] = useState<"traveler" | "owner">("traveler");
+  // Estado para el archivo seleccionado
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     userType: "TRAVELER",
     firstName: "",
@@ -35,65 +38,19 @@ const Register = () => {
     confirmPassword: "",
     agreeToTerms: false,
     businessName: "",
+    // photo: se agrega dinámicamente al enviar
   });
 
-  // --- Función handleSubmit (Reescrita) ---
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Estado de carga local para el submit
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({ title: "Error", description: "Las contraseñas no coinciden", variant: "destructive" });
-      return;
-    }
-    if (!formData.agreeToTerms) {
-      toast({ title: "Error", description: "Debes aceptar los términos y condiciones", variant: "destructive" });
-      return;
-    }
-
-    // Este log ahora es correcto, enviamos el objeto plano
-    console.log("Registration attempt:", formData);
-    try {
-      // 1. Usamos apiClient.post. Esto llamará a POST /users
-      //    y el proxy de Vite lo redirigirá a :8080
-      const response = await apiClient.post("/users", formData);
-
-      // 2. Si la petición es exitosa:
-      const data = response.data;
-      console.log("Registro exitoso:", data);
-      signup(data); // Guardamos la sesión
-      toast({ title: "¡Bienvenido!", description: "Tu cuenta ha sido creada." });
-      navigate('/'); // Redirigimos al inicio
-
-    } catch (err) {
-      // 3. Manejo de errores de Axios
-      const error = err as Error | AxiosError;
-      console.error('Error en el registro:', error.message);
-
-      let title = "Error en el registro";
-      let description = "Ocurrió un error inesperado. Intenta de nuevo.";
-
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          // El backend respondió con un error
-          if (error.response.status === 409) { // 409 Conflict (email duplicado)
-            title = "Email en uso";
-            description = "Ese email ya está registrado. Prueba con otro.";
-          } else if (error.response.status === 400) { // 400 Bad Request
-            description = "Datos inválidos. Revisa el formulario.";
-          } else if (error.response.status === 500) {
-            description = "Error interno del servidor. Contacta a soporte.";
-          }
-        } else if (error.request) {
-          description = "No se pudo conectar con el servidor.";
-        }
-      }
-
-      // Mostramos el error
-      toast({
-        title: title,
-        description: description,
-        variant: "destructive",
-      });
+  // --- Handlers ---
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      // Crear preview local
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -118,10 +75,82 @@ const Register = () => {
     }));
   };
 
+  // --- Submit con Subida de Imagen ---
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      toast({ title: "Error", description: "Las contraseñas no coinciden", variant: "destructive" });
+      return;
+    }
+    if (!formData.agreeToTerms) {
+      toast({ title: "Error", description: "Debes aceptar los términos y condiciones", variant: "destructive" });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let photoUrl = "";
+
+      // 1. Si hay archivo seleccionado, subirlo primero
+      if (selectedFile) {
+        const uploadedUrl = await uploadImage(selectedFile);
+        if (uploadedUrl) {
+          photoUrl = uploadedUrl;
+        } else {
+          // Si falla la subida, detenemos el registro (o podrías continuar sin foto)
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 2. Preparar payload con la URL de la foto
+      const payload = {
+        ...formData,
+        photo: photoUrl // Enviamos la URL al backend
+      };
+
+      console.log("Registration attempt:", payload);
+
+      // 3. Registrar usuario
+      const response = await apiClient.post("/users", payload);
+      const data = response.data;
+
+      console.log("Registro exitoso:", data);
+      signup(data);
+      toast({ title: "¡Bienvenido!", description: "Tu cuenta ha sido creada." });
+      navigate('/');
+
+    } catch (err) {
+      const error = err as Error | AxiosError;
+      console.error('Error en el registro:', error.message);
+
+      let title = "Error en el registro";
+      let description = "Ocurrió un error inesperado. Intenta de nuevo.";
+
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          if (error.response.status === 409) {
+            title = "Email en uso";
+            description = "Ese email ya está registrado. Prueba con otro.";
+          } else if (error.response.status === 400) {
+            description = "Datos inválidos. Revisa el formulario.";
+          }
+        }
+      }
+
+      toast({ title, description, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isLoading = isSubmitting || isImgUploading;
+
   return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
-          {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-aileron font-extrabold bg-gradient-hero bg-clip-text text-transparent">
               unite a trippy
@@ -138,7 +167,7 @@ const Register = () => {
                 Elegí tu tipo de cuenta para comenzar
               </CardDescription>
 
-              {/* User Type Toggle */}
+              {/* Selector Tipo de Usuario */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg">
                 <Button
                     type="button"
@@ -162,13 +191,12 @@ const Register = () => {
                 </Button>
               </div>
 
-              {/* User Type Description */}
               <div className="text-center p-3 bg-muted/50 rounded-lg">
                 {formData.userType === "TRAVELER" && (
                     <div className="space-y-1">
                       <Badge variant="secondary" className="mb-2">Cuenta de Viajero</Badge>
                       <p className="text-sm text-muted-foreground">
-                        Reservá experiencias, escribí reseñas, ganá XP y desbloqueá logros y descuentos
+                        Reservá experiencias, escribí reseñas y ganá XP.
                       </p>
                     </div>
                 )}
@@ -176,7 +204,7 @@ const Register = () => {
                     <div className="space-y-1">
                       <Badge variant="secondary" className="mb-2 bg-experience text-experience-foreground">Cuenta de Negocio</Badge>
                       <p className="text-sm text-muted-foreground">
-                        Publicá tus propiedades, gestioná reservas y alcanzá a más clientes
+                        Publicá tus propiedades y alcanzá a más clientes.
                       </p>
                     </div>
                 )}
@@ -185,36 +213,85 @@ const Register = () => {
 
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Traveler-specific fields */}
+
+                {/* --- SECCIÓN FOTO DE PERFIL --- */}
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="relative">
+                    {previewUrl ? (
+                        <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+                        />
+                    ) : (
+                        <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/50">
+                          {formData.userType === "OWNER" ? <Building2 className="h-10 w-10 text-muted-foreground"/> : <UserIcon className="h-10 w-10 text-muted-foreground"/>}
+                        </div>
+                    )}
+                    <label
+                        htmlFor="photo-upload"
+                        className="absolute bottom-0 right-0 bg-primary text-primary-foreground p-1.5 rounded-full cursor-pointer hover:bg-primary/90 shadow-sm"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <input
+                          id="photo-upload"
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          disabled={isLoading}
+                      />
+                    </label>
+                  </div>
+                  <Label htmlFor="photo-upload" className="text-sm text-muted-foreground cursor-pointer">
+                    {formData.userType === "OWNER" ? "Subir Logo del Negocio" : "Subir Foto de Perfil"}
+                  </Label>
+                </div>
+
+                {/* Campos Específicos Viajero */}
                 {formData.userType === "TRAVELER" && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="firstName">Nombre</Label>
-                          <Input
-                              id="firstName"
-                              name="firstName"
-                              value={formData.firstName}
-                              onChange={handleInputChange}
-                              placeholder="Juan"
-                              required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="lastName">Apellido</Label>
-                          <Input
-                              id="lastName"
-                              name="lastName"
-                              value={formData.lastName}
-                              onChange={handleInputChange}
-                              placeholder="Pérez"
-                              required
-                          />
-                        </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">Nombre</Label>
+                        <Input
+                            id="firstName"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            placeholder="Juan"
+                            required
+                        />
                       </div>
-                    </>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Apellido</Label>
+                        <Input
+                            id="lastName"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            placeholder="Pérez"
+                            required
+                        />
+                      </div>
+                    </div>
                 )}
 
+                {/* Campos Específicos Negocio */}
+                {formData.userType === "OWNER" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="businessName">Nombre del Negocio</Label>
+                      <Input
+                          id="businessName"
+                          name="businessName"
+                          value={formData.businessName}
+                          onChange={handleInputChange}
+                          placeholder="El nombre de tu negocio"
+                          required
+                      />
+                    </div>
+                )}
+
+                {/* Campos Comunes */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Correo electrónico</Label>
                   <Input
@@ -227,23 +304,6 @@ const Register = () => {
                       required
                   />
                 </div>
-
-                {/* Business-specific fields */}
-                {formData.userType === "OWNER" && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="businessName">Nombre del Negocio</Label>
-                        <Input
-                            id="businessName"
-                            name="businessName"
-                            value={formData.businessName}
-                            onChange={handleInputChange}
-                            placeholder="El nombre de tu negocio"
-                            required
-                        />
-                      </div>
-                    </>
-                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Contraseña</Label>
@@ -289,8 +349,8 @@ const Register = () => {
                   </Label>
                 </div>
 
-                <Button type="submit" className="w-full">
-                  Crear Cuenta de {formData.userType === "TRAVELER" ? "Viajero" : "Negocio"}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isImgUploading ? "Subiendo foto..." : `Crear Cuenta de ${formData.userType === "TRAVELER" ? "Viajero" : "Negocio"}`}
                 </Button>
               </form>
 
@@ -303,7 +363,6 @@ const Register = () => {
             </CardContent>
           </Card>
 
-          {/* Quick Access */}
           <div className="text-center">
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
               ← Volver a la página principal

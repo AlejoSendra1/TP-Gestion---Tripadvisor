@@ -52,6 +52,9 @@ export function AuthProvider({ children }) {
     setUser(null);
     // sessionStorage.removeItem("accessToken");
     // sessionStorage.removeItem("refreshToken");
+    console.group("🚨 LOGOUT DETECTADO EN CONTEXTO");
+    console.trace("¿Quién llamó a logout?"); // <--- ESTO ES ORO
+    console.groupEnd();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
@@ -96,7 +99,7 @@ export function AuthProvider({ children }) {
         email: userData.email,
         userType: userData.userType,
         verified: userData.verified,
-        role: userData.role
+        role: userData.role,
       };
 
       if (userData.userType === "TRAVELER") {
@@ -107,11 +110,13 @@ export function AuthProvider({ children }) {
           // Del login, pueden venir como userXP/userLevel o xp/level
           userXP: userData.userXP ?? userData.xp ?? 0,
           userLevel: userData.userLevel ?? userData.level ?? 1,
+          photo: userData.photo
         };
       } else if (userData.userType === "OWNER") {
         return {
           ...baseUser,
           businessName: userData.businessName,
+          photo: userData.photo
         };
       }
 

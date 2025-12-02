@@ -27,6 +27,9 @@ public abstract class User {
 
     private String role;
 
+    @Column(name = "photo_url")
+    private String photo;
+
     public User(){}
 
     public User(String email, String password){
@@ -44,5 +47,7 @@ public abstract class User {
     public String getRole(){return this.role; }
     public void setRole(String role) { this.role = role;}
     public void setTokenVerified(String tokenVerified) { this.tokenVerified = tokenVerified;}
+    public String getPhoto() { return this.photo;}
+    public void setPhoto(String photo) { this.photo = photo; }
 }
 

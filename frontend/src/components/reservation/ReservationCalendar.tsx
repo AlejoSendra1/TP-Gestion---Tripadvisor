@@ -214,7 +214,12 @@ export const ReservationCalendar: React.FC<ReservationListProps> = ({
       const displayDate = getDisplayDate(reservation);
       const color = getEventColor(reservation.reservationType);
       const title = getEventTitle(reservation);
-
+      if (typeof color !== 'string') {
+        console.error("🚨 DETECTADO ERROR EN COLOR:", color, "Reserva ID:", reservation.id);
+      }
+      if (typeof title !== 'string') {
+        console.error("🚨 DETECTADO ERROR EN TÍTULO:", title, "Reserva ID:", reservation.id);
+      }
       // Para reservas de hotel (rango de fechas)
       if (reservation.reservationType === 'RESERVATIONHOTEL' && reservation.checkIn && reservation.checkOut) {
         const adjustedCheckOut = addOneDay(reservation.checkOut);
