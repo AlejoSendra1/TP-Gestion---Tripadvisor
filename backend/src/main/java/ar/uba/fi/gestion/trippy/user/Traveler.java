@@ -22,6 +22,9 @@ public class Traveler extends User {
     @Column(nullable = false)
     private Integer level = 1;
 
+    @Column(nullable = false, name = "trippy_coins")
+    private Integer trippyCoins = 0;
+
     @Column
     private String achievements;
 
@@ -205,4 +208,13 @@ public class Traveler extends User {
             default -> this.level >= 10 ? 30 : 0;
         };
     }
+
+    public Integer getTrippyCoins() { return this.trippyCoins; }
+
+    public void addTrippyCoins(Integer coinsToAdd) {
+        this.trippyCoins += coinsToAdd;
+    }
+
+    public void subtractTrippyCoins(Integer cost) { this.trippyCoins -= cost; }
+
 }

@@ -86,6 +86,7 @@ const Profile = () => {
 
   const currentLevel = user.userLevel || 1;
   const currentXp = user.userXP || 0;
+  const currentTrippyCoins = user.userTrippyCoins || 0;
 
   const calculateXpForLevel = (level) => {
     if (level <= 1) return 0;
@@ -449,26 +450,26 @@ const Profile = () => {
               </CardContent>
         </Card>
 
-        {/* Sección de Tienda de Puntos con botón para abrir el diálogo */}
+        {/* Sección de Tienda de Trippy Coins con botón para abrir el diálogo */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5 text-primary" />
-                Tienda de Puntos
+                Tienda de Trippy Coins
               </CardTitle>
               <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg px-4 py-2">
                 <Coins className="h-5 w-5 text-yellow-500" />
-                <span className="text-lg font-bold">{currentXp} XP</span>
+                <span className="text-lg font-bold">{currentTrippyCoins} Trippy Coins</span>
                 <span className="text-sm text-muted-foreground">disponibles</span>
               </div>
             </div>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-muted-foreground mb-4">Canjea tus puntos de experiencia (XP) por beneficios exclusivos que mejorarán tus futuras reservas.</p>
+            <p className="text-muted-foreground mb-4">Canjea tus Trippy Coins por beneficios exclusivos que mejorarán tus futuras reservas.</p>
             <Button onClick={() => setIsShopOpen(true)}>
               <ShoppingBag className="h-4 w-4 mr-2" />
-              Abrir Tienda de Puntos
+              Abrir Tienda de Trippy Coins
             </Button>
           </CardContent>
         </Card>

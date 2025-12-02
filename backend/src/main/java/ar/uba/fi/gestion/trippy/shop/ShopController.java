@@ -28,6 +28,9 @@ public class ShopController {
     public ResponseEntity<List<Benefit>> getAllBenefits() {
         try {
             List<Benefit> benefits = shopService.getAllBenefits();
+            benefits.sort((o1, o2)
+                    -> o1.getCost().compareTo(
+                    o2.getCost()));
             System.out.println("✅ Returning " + benefits.size() + " benefits");
             return ResponseEntity.ok(benefits);
         } catch (Exception e) {
@@ -42,16 +45,15 @@ public class ShopController {
      */
     @PostMapping("/purchase/{benefitId}")
     public ResponseEntity<PurchaseResponse> purchaseBenefit(
-            @PathVariable Long benefitId,
-            @RequestAttribute("userId") Long userId) {
-        
+            @PathVariable Long benefitId
+    ){
+        PurchaseResponse response = shopService.purchaseBenefit(benefitId);
+        return ResponseEntity.ok(response);
+        /*
         try {
-            System.out.println("💰 Purchase request - Benefit ID: " + benefitId + ", User ID: " + userId);
-            
-            PurchaseResponse response = shopService.purchaseBenefit(userId, benefitId);
-            System.out.println("✅ Purchase successful for user " + userId);
+            PurchaseResponse response = shopService.purchaseBenefit(benefitId);
             return ResponseEntity.ok(response);
-            
+
         } catch (IllegalArgumentException e) {
             System.err.println("⚠️ Invalid purchase: " + e.getMessage());
             return ResponseEntity.badRequest()
@@ -62,6 +64,7 @@ public class ShopController {
             return ResponseEntity.internalServerError()
                 .body(new PurchaseResponse(false, "Error interno del servidor", null, 0));
         }
+        */
     }
 
     /**

@@ -1,5 +1,7 @@
+-- DEVELOPMENT_PASSWORD :  $2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO
+
 INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (100, 'hotel@paradise.com', 'hashed_password_789', TRUE, 'OWNER');
+VALUES (100, 'hotel@paradise.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'OWNER');
 DROP TABLE IF EXISTS reservation;
 -- eliminar tablas dependientes y la tabla base con CASCADE
 DROP TABLE IF EXISTS reservation_activity, reservation_restaurant, room_type, reservation_room_details, reservation_coworking, reservation_hotel, reservation CASCADE;
@@ -109,28 +111,30 @@ VALUES
 
 
 
-INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (201, 'maria.garcia@example.com', 'hashed_password_456', TRUE, 'TRAVELER');
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role)
+VALUES (201, 'maria.garcia@example.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'TRAVELER', 'USER');
 
-INSERT INTO travelers (id, first_name, last_name, xp, level)
+INSERT INTO travelers (id, first_name, last_name, xp, level, trippy_coins)
 VALUES (
     201,
     'Maria',
     'Garcia',
-    200,
-    4
+    2200,
+    4,
+    124
 );
 
-INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (202, 'mike@trippy.com', 'hashed_password_456', TRUE, 'TRAVELER');
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role)
+VALUES (202, 'mike@trippy.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'TRAVELER', 'USER');
 
-INSERT INTO travelers (id, first_name, last_name, xp, level)
+INSERT INTO travelers (id, first_name, last_name, xp, level, trippy_coins)
 VALUES (
     202,
     'Mike',
     'Chen',
-    170,
-    3
+    1400,
+    3,
+    500
 );
 
 

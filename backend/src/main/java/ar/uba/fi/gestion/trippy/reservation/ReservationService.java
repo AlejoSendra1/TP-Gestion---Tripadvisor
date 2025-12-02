@@ -151,6 +151,7 @@ public class ReservationService {
 
         // Añadir XP
         traveler.addXp(totalXp);
+        traveler.addTrippyCoins(totalXp);
         userRepository.save(traveler);
 
         // Log

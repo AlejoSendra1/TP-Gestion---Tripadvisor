@@ -121,7 +121,7 @@ export const ActiveBenefitsCard = () => {
               No tienes beneficios activos
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Canjea puntos XP en la tienda para obtener beneficios
+              Canjea Trippy Coins en la tienda para obtener beneficios
             </p>
           </div>
         </CardContent>

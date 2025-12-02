@@ -1,52 +1,10 @@
 // File: frontend/src/services/shopService.ts
 import axios from 'axios';
+import { apiClient } from '@/lib/apiClient';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:30002';
 
 console.log('🔧 Shop Service initialized with API_URL:', API_URL);
-
-const apiClient = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-});
-
-// 🔍 Interceptor para debugging - REQUEST
-apiClient.interceptors.request.use(
-  (config) => {
-    console.log('🚀 Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`,
-    });
-    return config;
-  },
-  (error) => {
-    console.error('❌ Request Error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// 🔍 Interceptor para debugging - RESPONSE
-apiClient.interceptors.response.use(
-  (response) => {
-    console.log('✅ Response:', {
-      status: response.status,
-      url: response.config.url,
-      data: response.data,
-    });
-    return response;
-  },
-  (error) => {
-    console.error('❌ Response Error:', {
-      status: error.response?.status,
-      url: error.config?.url,
-      data: error.response?.data,
-      message: error.message,
-    });
-    return Promise.reject(error);
-  }
-);
 
 export interface Benefit {
   id: number;

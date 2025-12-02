@@ -107,6 +107,7 @@ export function AuthProvider({ children }) {
           firstName: userData.firstName,
           lastName: userData.lastName,
           userXP: userData.userXP ?? userData.xp ?? 0,
+          userTrippyCoins: userData.userTrippyCoins ?? userData.TrippyCoins ?? 0,
           userLevel: userData.userLevel ?? userData.level ?? 1,
         };
       } else if (userData.userType === "OWNER") {
@@ -138,6 +139,7 @@ export function AuthProvider({ children }) {
         photo: userData.photo,
         userXP: userData.levelInfo.currentXp,
         userLevel: userData.levelInfo.currentLevel,
+        userTrippyCoins: userData.TrippyCoins,
         xpForNextLevel: userData.levelInfo.xpForNextLevel,
         xpRequiredForNextLevel: userData.levelInfo.xpRequiredForNextLevel,
         progressPercentage: userData.levelInfo.progressPercentage,

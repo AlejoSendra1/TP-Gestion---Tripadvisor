@@ -1,7 +1,9 @@
 package ar.uba.fi.gestion.trippy.shop;
 
 import ar.uba.fi.gestion.trippy.user.Traveler;
+import ar.uba.fi.gestion.trippy.user.User;
 import ar.uba.fi.gestion.trippy.user.UserRepository;
+import ar.uba.fi.gestion.trippy.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,9 @@ public class ShopService {
     private UserBenefitRepository userBenefitRepository;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private UserRepository userRepository;
 
     /**
@@ -32,7 +37,11 @@ public class ShopService {
      * Compra un beneficio para un usuario
      */
     @Transactional
-    public PurchaseResponse purchaseBenefit(Long userId, Long benefitId) {
+    public PurchaseResponse purchaseBenefit(Long benefitId) {
+        User creator = userService.getCurrentAuthenticatedUser();
+        Long userId = userService.getCurrentAuthenticatedUser().getId();
+        System.out.println("💰 Purchase request - Benefit ID: " + benefitId + ", User ID: " + userId);
+
         // Validar que el beneficio existe
         Benefit benefit = benefitRepository.findById(benefitId)
                 .orElseThrow(() -> new IllegalArgumentException("Beneficio no encontrado"));
@@ -46,29 +55,25 @@ public class ShopService {
             throw new IllegalArgumentException("Solo los viajeros pueden comprar beneficios");
         }
 
-        // Verificar que el usuario tiene suficientes XP
-        Integer currentXP = traveler.getXp() != null ? traveler.getXp() : 0;
-        if (currentXP < benefit.getCost()) {
-            throw new IllegalArgumentException("No tienes suficientes puntos XP");
+        // Verificar que el usuario tiene suficientes Trippy coins
+        Integer currentTrippyCoins = traveler.getTrippyCoins() != null ? traveler.getTrippyCoins() : 0;
+        if (currentTrippyCoins < benefit.getCost()) {
+            throw new IllegalArgumentException("No tienes suficientes Trippy Coins");
         }
 
         // Descontar los XP usando el método de Traveler
-        traveler.subtractXp(benefit.getCost());
+        traveler.subtractTrippyCoins(benefit.getCost());
         userRepository.save(traveler);
 
         // Crear el UserBenefit
-        UserBenefit userBenefit = new UserBenefit();
-        userBenefit.setId(userId);
-        userBenefit.setBenefit(benefit);
-        userBenefit.setPurchaseDate(LocalDateTime.now());
-        userBenefit.setUsed(false);
+        UserBenefit userBenefit = new UserBenefit(creator,benefit,LocalDateTime.now());
         userBenefitRepository.save(userBenefit);
-
+        System.out.println("✅ Purchase successful for user " + userId);
         return new PurchaseResponse(
                 true,
                 "¡Beneficio adquirido exitosamente!",
                 userBenefit,
-                traveler.getXp() // Usar getXp() de Traveler
+                traveler.getTrippyCoins() // Usar getXp() de Traveler
         );
     }
 

@@ -84,6 +84,7 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
   const [useMockData, setUseMockData] = useState(false);
 
   const currentXp = user?.userXP || 0;
+  const currentTrippyCoins = user.userTrippyCoins || 0;
 
   useEffect(() => {
     if (open) {
@@ -136,8 +137,8 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
   };
 
   const handlePurchase = async (benefit: Benefit) => {
-    if (currentXp < benefit.cost) {
-      toast.error('No tienes suficientes puntos XP');
+    if (currentTrippyCoins < benefit.cost) {
+      toast.error('No tienes suficientes Trippy Coins');
       return;
     }
 
@@ -154,13 +155,13 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
       const response: PurchaseResponse = await shopService.purchaseBenefit(benefit.id);
       
       if (response.success) {
-        // Actualizar el XP del usuario en el contexto
+        // Actualizar los coins del usuario en el contexto
         if (updateUser && user) {
-          updateUser({ userXP: response.remainingXp });
+          updateUser({ userTrippyCoins: response.remainingTrippyCoins });
         }
         
         toast.success(response.message || '¡Beneficio adquirido exitosamente!', {
-          description: `Te quedan ${response.remainingXp} XP`,
+          description: `Te quedan ${response.remainingTrippyCoins} Trippy Coins`,
         });
         
         // Opcional: Refrescar la lista de beneficios activos
@@ -203,7 +204,7 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
     return labels[type] || type;
   };
 
-  const canAfford = (cost: number) => currentXp >= cost;
+  const canAfford = (cost: number) => currentTrippyCoins >= cost;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -211,7 +212,7 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Coins className="h-6 w-6 text-yellow-500" />
-            Tienda de Puntos
+            Tienda de Trippy Coins
             {useMockData && (
               <Badge variant="outline" className="ml-2 text-xs">
                 Modo Prueba
@@ -219,7 +220,7 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
             )}
           </DialogTitle>
           <DialogDescription>
-            Canjea tus puntos XP por beneficios exclusivos
+            Canjea tus Trippy Coins por beneficios exclusivos
           </DialogDescription>
         </DialogHeader>
 
@@ -236,8 +237,8 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
             <div className="flex items-center gap-2">
               <Coins className="h-8 w-8 text-yellow-500" />
               <div>
-                <p className="text-sm text-muted-foreground">Tus puntos disponibles</p>
-                <p className="text-3xl font-bold text-foreground">{currentXp} XP</p>
+                <p className="text-sm text-muted-foreground">Tus Trippy Coins disponibles</p>
+                <p className="text-3xl font-bold text-foreground">{currentTrippyCoins} Trippy Coins</p>
               </div>
             </div>
             <Badge variant="secondary" className="text-lg px-4 py-2">
@@ -298,7 +299,6 @@ export const PointShopDialog = ({ open, onOpenChange }: PointShopDialogProps) =>
                       <div className="flex items-center gap-2">
                         <Coins className="h-5 w-5 text-yellow-500" />
                         <span className="text-2xl font-bold">{benefit.cost}</span>
-                        <span className="text-sm text-muted-foreground">XP</span>
                       </div>
                       <Button
                         onClick={() => handlePurchase(benefit)}

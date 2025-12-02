@@ -2,6 +2,8 @@ package ar.uba.fi.gestion.trippy.shop;
 
 import ar.uba.fi.gestion.trippy.user.User;
 import jakarta.persistence.*;
+import org.springframework.cglib.core.Local;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,6 +29,12 @@ public class UserBenefit {
     private Boolean used = false;
 
     private LocalDateTime usedDate;
+
+    public UserBenefit(User user, Benefit benefit, LocalDateTime time){
+        this.user = user;
+        this.benefit = benefit;
+        this.purchaseDate = time;
+    }
 
     @PrePersist
     protected void onCreate() {

@@ -4,17 +4,17 @@ public class PurchaseResponse {
     private Boolean success;
     private String message;
     private UserBenefit userBenefit;
-    private Integer remainingXp;
+    private Integer remainingTrippyCoins;
 
     // Constructor vacío
     public PurchaseResponse() {}
 
     // Constructor con todos los parámetros
-    public PurchaseResponse(Boolean success, String message, UserBenefit userBenefit, Integer remainingXp) {
+    public PurchaseResponse(Boolean success, String message, UserBenefit userBenefit, Integer remainingTrippyCoins) {
         this.success = success;
         this.message = message;
         this.userBenefit = userBenefit;
-        this.remainingXp = remainingXp;
+        this.remainingTrippyCoins = remainingTrippyCoins;
     }
 
     // Getters y Setters
@@ -27,6 +27,6 @@ public class PurchaseResponse {
     public UserBenefit getUserBenefit() { return userBenefit; }
     public void setUserBenefit(UserBenefit userBenefit) { this.userBenefit = userBenefit; }
     
-    public Integer getRemainingXp() { return remainingXp; }
-    public void setRemainingXp(Integer remainingXp) { this.remainingXp = remainingXp; }
+    public Integer getRemainingTrippyCoins() { return remainingTrippyCoins; }
+    public void setRemainingTrippyCoins(Integer remainingTrippyCoins) { this.remainingTrippyCoins = remainingTrippyCoins; }
 }

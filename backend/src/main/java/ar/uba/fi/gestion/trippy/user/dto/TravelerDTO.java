@@ -7,6 +7,7 @@ public record TravelerDTO(
         String lastName,
         Integer userXP,
         Integer userLevel,
+        Integer userTrippyCoins,
         String userType,
         String role
 ) implements UserDTO {}
