@@ -169,7 +169,6 @@ public class UserService {
         if (user instanceof Traveler traveler) {
             int oldLevel = traveler.getLevel();
             traveler.addXp(xpToAdd);
-            traveler.addTrippyCoins(xpToAdd);
             userRepository.save(traveler);
             
             int newLevel = traveler.getLevel();

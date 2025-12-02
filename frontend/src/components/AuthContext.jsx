@@ -67,7 +67,8 @@ export function AuthProvider({ children }) {
       const response = await apiClient.get("/sessions/profile");
       const userData = response.data;
       console.log("🔄 refreshUser - datos recibidos:", userData);
-      
+
+      console.log("entrando al normalizer");
       const normalizedUser = normalizeUserData(userData);
       setUser(normalizedUser);
       
@@ -107,7 +108,7 @@ export function AuthProvider({ children }) {
           firstName: userData.firstName,
           lastName: userData.lastName,
           userXP: userData.userXP ?? userData.xp ?? 0,
-          userTrippyCoins: userData.userTrippyCoins ?? userData.TrippyCoins ?? 0,
+          userTrippyCoins: userData.userTrippyCoins ?? userData.trippyCoins ?? 0,
           userLevel: userData.userLevel ?? userData.level ?? 1,
         };
       } else if (userData.userType === "OWNER") {
@@ -132,6 +133,8 @@ export function AuthProvider({ children }) {
     };
 
     if (isTraveler && userData.levelInfo) {
+      console.log("USERdata tiene estas coins:", userData.trippyCoins);
+
       return {
         ...baseUser,
         firstName: userData.firstName,
@@ -139,7 +142,7 @@ export function AuthProvider({ children }) {
         photo: userData.photo,
         userXP: userData.levelInfo.currentXp,
         userLevel: userData.levelInfo.currentLevel,
-        userTrippyCoins: userData.TrippyCoins,
+        userTrippyCoins: userData.TrippyCoins ?? userData.trippyCoins ?? 0,
         xpForNextLevel: userData.levelInfo.xpForNextLevel,
         xpRequiredForNextLevel: userData.levelInfo.xpRequiredForNextLevel,
         progressPercentage: userData.levelInfo.progressPercentage,

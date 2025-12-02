@@ -26,7 +26,7 @@ public record UserProfileDTO(
                 user.getEmail(),
                 null, // photo - implementar cuando tengas el campo
                 LevelInfoDTO.fromTraveler(traveler),
-                ((Traveler) user).getTrippyCoins(),
+                traveler.getTrippyCoins(),
                 0, // reviewsCount - obtener de repositorio de reviews
                 0, // placesVisited - obtener de repositorio
                 0, // photosShared - obtener de repositorio

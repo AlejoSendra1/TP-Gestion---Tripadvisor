@@ -73,9 +73,6 @@ public class ReservationService {
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
-        // ✅ Otorgar XP al Traveler por la reserva (con bonus de beneficios XP_BONUS)
-        awardXpForReservation(traveler, savedReservation.getTotalPrice());
-
         return savedReservation;
     }
 
