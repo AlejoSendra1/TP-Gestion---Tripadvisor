@@ -37,7 +37,7 @@ export function useOwnerReservations(publicationId?: string) {
 
       // Usar el endpoint correcto del backend
       const res = await apiClient.get(
-        `${import.meta.env.VITE_BACKEND_API_URL}/publications/${publicationId}/reservations/all`,
+        `/publications/${publicationId}/reservations/all`,
         config
       );
       
