@@ -4,6 +4,9 @@ import ar.uba.fi.gestion.trippy.publication.Publication;
 import ar.uba.fi.gestion.trippy.publication.PublicationRepository;
 import ar.uba.fi.gestion.trippy.publication.PublicationService;
 import ar.uba.fi.gestion.trippy.reservation.dto.ReservationResponseDTO;
+import ar.uba.fi.gestion.trippy.shop.Benefit;
+import ar.uba.fi.gestion.trippy.shop.ShopService;
+import ar.uba.fi.gestion.trippy.shop.UserBenefit;
 import ar.uba.fi.gestion.trippy.user.Traveler;
 import ar.uba.fi.gestion.trippy.user.User;
 import ar.uba.fi.gestion.trippy.user.UserRepository;
@@ -16,12 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
 
 @Service
 public class ReservationService {
@@ -30,23 +31,26 @@ public class ReservationService {
     private final PublicationRepository publicationRepository;
     private final UserRepository userRepository;
     private final ReservationFactory reservationFactory;
+    private final ShopService shopService;
 
     // Constantes para el sistema de XP por reserva
     private static final int BASE_XP_PER_RESERVATION = 100;
-    private static final int XP_PER_10_DOLLARS = 1;  // 1 XP por cada $10
+    private static final int XP_PER_10_DOLLARS = 1; // 1 XP por cada $10
 
     @Autowired
     private PublicationService publicationService;
 
     @Autowired
     public ReservationService(ReservationRepository reservationRepository,
-                              PublicationRepository publicationRepository,
-                              UserRepository userRepository,
-                              ReservationFactory reservationFactory) {
+            PublicationRepository publicationRepository,
+            UserRepository userRepository,
+            ReservationFactory reservationFactory,
+            ShopService shopService) {
         this.reservationRepository = reservationRepository;
         this.publicationRepository = publicationRepository;
         this.userRepository = userRepository;
         this.reservationFactory = reservationFactory;
+        this.shopService = shopService;
     }
 
     @Transactional
@@ -64,8 +68,8 @@ public class ReservationService {
             throw new IllegalStateException("No podés reservar tu propia publicación.");
 
         double oldPrice = pub.getPrice();
-        double newPrice = publicationService.getPublicationPriceForActualUser(publicationId);
-        pub.setPrice(newPrice);
+        double finalPrice = publicationService.getPublicationPriceForActualUser(publicationId);
+        pub.setPrice(finalPrice);
         Reservation reservation = reservationFactory.createForPublication(pub, user, dto);
 
         // Delegar validación a la instancia concreta antes de persistir
@@ -75,17 +79,50 @@ public class ReservationService {
         pub.setPrice(oldPrice);
         publicationRepository.save(pub);
 
-        // ✅ NUEVO: Otorgar XP al Traveler por la reserva
-        awardXpForReservation(traveler, savedReservation.getTotalPrice());
-
         return savedReservation;
     }
 
     /**
+     * ✅ NUEVO: Aplica descuentos de beneficios activos
+     */
+    private BigDecimal applyBenefitDiscounts(Traveler traveler, BigDecimal originalPrice) {
+        List<UserBenefit> discountBenefits = shopService.getActiveBenefitsByType(
+                traveler.getId(),
+                Benefit.BenefitType.DISCOUNT);
+
+        if (discountBenefits.isEmpty()) {
+            return originalPrice;
+        }
+
+        // Usar el beneficio con mayor descuento
+        UserBenefit bestDiscount = discountBenefits.stream()
+                .max((b1, b2) -> Integer.compare(
+                        b1.getBenefit().getDiscountPercentage(),
+                        b2.getBenefit().getDiscountPercentage()))
+                .orElse(null);
+
+        if (bestDiscount != null && bestDiscount.getBenefit().getDiscountPercentage() != null) {
+            int discountPercent = bestDiscount.getBenefit().getDiscountPercentage();
+            BigDecimal discount = originalPrice.multiply(BigDecimal.valueOf(discountPercent))
+                    .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+
+            BigDecimal finalPrice = originalPrice.subtract(discount);
+
+            // Marcar beneficio como usado
+            shopService.markBenefitAsUsed(bestDiscount.getId(), traveler.getEmail());
+
+            System.out.println("✅ Descuento aplicado: " + discountPercent + "% = $" + discount);
+            System.out.println("   Precio original: $" + originalPrice + " → Precio final: $" + finalPrice);
+
+            return finalPrice;
+        }
+
+        return originalPrice;
+    }
+
+    /**
      * Calcula y otorga XP al usuario por crear una reserva.
-     * El XP se calcula basándose en:
-     * - XP base: 30 puntos por reserva
-     * - XP por monto: 1 XP por cada $10 del precio total
+     * ✅ MODIFICADO: Incluye bonus de beneficios XP_BONUS
      */
     private void awardXpForReservation(Traveler traveler, BigDecimal totalPrice) {
         int totalXp = BASE_XP_PER_RESERVATION;
@@ -96,11 +133,25 @@ public class ReservationService {
             totalXp += priceXp;
         }
 
+        // ✅ NUEVO: Bonus de beneficios XP_BONUS
+        List<UserBenefit> xpBonusBenefits = shopService.getActiveBenefitsByType(
+                traveler.getId(),
+                Benefit.BenefitType.XP_BONUS);
+
+        for (UserBenefit xpBenefit : xpBonusBenefits) {
+            if (xpBenefit.getBenefit().getXpBonus() != null) {
+                totalXp += xpBenefit.getBenefit().getXpBonus();
+                shopService.markBenefitAsUsed(xpBenefit.getId(), traveler.getEmail());
+                System.out.println("✅ Bonus XP aplicado: +" + xpBenefit.getBenefit().getXpBonus());
+            }
+        }
+
         // Guardar nivel anterior para detectar subida
         int oldLevel = traveler.getLevel();
 
         // Añadir XP
         traveler.addXp(totalXp);
+        traveler.addTrippyCoins(totalXp);
         userRepository.save(traveler);
 
         // Log
@@ -140,49 +191,35 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-
     public ReservationResponseDTO getReservationById(Long reservationId, String userEmail) {
-        // 1. Busca la reserva
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada: " + reservationId));
 
-        // 2. Valida permisos
-        // Solo el viajero que la creó o el host de la publicación pueden verla.
         if (!reservation.getTraveler().getEmail().equals(userEmail) &&
                 !reservation.getPublication().getHost().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("No tienes permiso para ver esta reserva.");
         }
 
-        // 3. Convierte al DTO que ya tienes
         return ReservationResponseDTO.from(reservation);
     }
 
-    /**
-     * Obtiene todas las reservas de un usuario específico.
-     * Al ser @Transactional, evita la LazyInitializationException.
-     */
     @Transactional(readOnly = true)
     public List<ReservationResponseDTO> getMyReservations(String userEmail) {
-
-        // 1. Buscar al usuario
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + userEmail));
 
-        // 2. Buscar sus reservas
         List<Reservation> reservations = reservationRepository.findByTravelerId(user.getId());
 
-        // 3. Convertir a DTOs (la sesión sigue abierta aquí)
         return reservations.stream()
                 .map(ReservationResponseDTO::from)
                 .collect(Collectors.toList());
     }
-  
+
     @Transactional(readOnly = true)
     public List<Reservation> getReservationsForPublication(Long publicationId, String requestingUserEmail) {
         Publication pub = publicationRepository.findById(publicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada: " + publicationId));
 
-        // política: sólo el host puede ver todas las reservas de su publicación
         if (pub.getHost() == null || !pub.getHost().getEmail().equals(requestingUserEmail)) {
             throw new SecurityException("No tenés permiso para ver las reservas de esta publicación.");
         }

@@ -22,6 +22,9 @@ public class Traveler extends User {
     @Column(nullable = false)
     private Integer level = 1;
 
+    @Column(nullable = false, name = "trippy_coins")
+    private Integer trippyCoins = 0;
+
     @Column
     private String achievements;
 
@@ -58,7 +61,7 @@ public class Traveler extends User {
     }
 
     public Integer getXp() { 
-        return this.xp;
+        return this.xp; 
     }
 
     public void setXp(Integer xp) {
@@ -68,6 +71,12 @@ public class Traveler extends User {
 
     public void addXp(Integer xpToAdd) {
         this.xp += xpToAdd;
+        updateLevel();
+    }
+
+    // ✅ MÉTODO PARA RESTAR XP (usado en la tienda)
+    public void subtractXp(Integer xpToSubtract) {
+        this.xp = Math.max(0, this.xp - xpToSubtract);
         updateLevel();
     }
 
@@ -83,8 +92,15 @@ public class Traveler extends User {
         return "TRAVELER"; 
     }
 
+    // ✅ CONSISTENCIA: getUserXP() debe devolver this.xp
     public Integer getUserXP() { 
         return this.xp; 
+    }
+
+    // ✅ MÉTODO ADICIONAL: setUserXP para la tienda
+    public void setUserXP(Integer xp) {
+        this.xp = xp;
+        updateLevel();
     }
 
     public Integer getUserLevel() { 
@@ -192,4 +208,13 @@ public class Traveler extends User {
             default -> this.level >= 10 ? 30 : 0;
         };
     }
+
+    public Integer getTrippyCoins() { return this.trippyCoins; }
+
+    public void addTrippyCoins(Integer coinsToAdd) {
+        this.trippyCoins += coinsToAdd;
+    }
+
+    public void subtractTrippyCoins(Integer cost) { this.trippyCoins -= cost; }
+
 }

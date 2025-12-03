@@ -1,5 +1,7 @@
+-- DEVELOPMENT_PASSWORD :  $2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO
+
 INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (100, 'hotel@paradise.com', 'hashed_password_789', TRUE, 'OWNER');
+VALUES (100, 'hotel@paradise.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'OWNER');
 DROP TABLE IF EXISTS reservation;
 -- eliminar tablas dependientes y la tabla base con CASCADE
 DROP TABLE IF EXISTS reservation_activity, reservation_restaurant, room_type, reservation_room_details, reservation_coworking, reservation_hotel, reservation CASCADE;
@@ -109,28 +111,30 @@ VALUES
 
 
 
-INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (201, 'maria.garcia@example.com', 'hashed_password_456', TRUE, 'TRAVELER');
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role)
+VALUES (201, 'maria.garcia@example.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'TRAVELER', 'USER');
 
-INSERT INTO travelers (id, first_name, last_name, xp, level)
+INSERT INTO travelers (id, first_name, last_name, xp, level, trippy_coins)
 VALUES (
     201,
     'Maria',
     'Garcia',
-    200,
-    4
+    2200,
+    4,
+    124
 );
 
-INSERT INTO users (id, email, password, agree_to_terms, user_type)
-VALUES (202, 'mike@trippy.com', 'hashed_password_456', TRUE, 'TRAVELER');
+INSERT INTO users (id, email, password, agree_to_terms, user_type, role)
+VALUES (202, 'mike@trippy.com', '$2a$10$atPW6LHtb4uug8Iz5dPM0e9hmv5hjEzjwMjz3llwo2M9yiUDEhwFO', TRUE, 'TRAVELER', 'USER');
 
-INSERT INTO travelers (id, first_name, last_name, xp, level)
+INSERT INTO travelers (id, first_name, last_name, xp, level, trippy_coins)
 VALUES (
     202,
     'Mike',
     'Chen',
-    170,
-    3
+    1400,
+    3,
+    500
 );
 
 
@@ -139,33 +143,96 @@ VALUES
     (1, 1, 201, 5, '¡Increíble! La pileta es hermosa y la atención 10/10.', '2024-05-20 08:00:00'),
     (2, 1, 202, 4, 'Muy buen hotel, la habitación era cómoda. El desayuno podría mejorar.', '2024-05-20 08:00:00');
 
--- Agregar usuario owner "El Mas Grande" con password hasheado de "123456789"
-INSERT INTO users (id, email, password, agree_to_terms, user_type, role, "token-verified")
-VALUES (1, 'asd@gmail.com', '$2a$10$ewqlk2zysNDd47IVB17TGe1fUqgS4yO7u/LpSG22V7UqrldUswOya', TRUE, 'OWNER', 'HOST', '3c34b596-aec0-4e1d-88f4-4e7618e3b89b');
--- Agregar el business owner
-INSERT INTO business_owners (id, business_name, business_description, verified)
-VALUES (
-    1,
-    'El Mas Grande',
-    'El restaurante más grande y famoso de la ciudad',
-    TRUE
-);
-
--- Agregar publicación del restaurante
-INSERT INTO publication (
-    id, tipo_publicacion, title, description, price, host_user_id, main_image_url,
-    street_address, city, state, country, zip_code,
-    cuisine_type, price_range, opening_start, opening_end, menu_url, capacity
-) VALUES (
-    5, 'RESTAURANT', 'El Mas Grande Restaurante', 'El restaurante más grande ambientado en river para una experiencia Riverplatense', 75.00, 1, 'https://plus.unsplash.com/premium_photo-1670984940113-f3aa1cd1309a?q=80&w=2370&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    'Av. Cabildo 123', 'Buenos Aires', 'CABA', 'Argentina', '1001',
-    'Argentina', '$$$', '10:00', '23:00', 'https://elmasgrande.com/menu', 200
-);
-
 -- ACTUALIZA EL CONTADOR DE IDS
 -- Le dice a la secuencia que el próximo ID que debe generar es MAX(id) + 1
 SELECT setval('publication_id_seq', (SELECT MAX(id) FROM publication));
 SELECT setval('review_review_id_seq', (SELECT MAX(review_id) FROM review));
 
--- $2a$10$ewqlk2zysNDd47IVB17TGe1fUqgS4yO7u/LpSG22V7UqrldUswOya	
--- 3c34b596-aec0-4e1d-88f4-4e7618e3b89b
+-- ============================================================
+-- Script completo para crear e insertar beneficios
+-- Base de datos: PostgreSQL
+-- ============================================================
+
+-- 1. Verificar si la tabla existe
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+  AND table_name = 'benefits';
+
+-- 2. Crear la tabla si no existe
+CREATE TABLE IF NOT EXISTS benefits (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(500) NOT NULL,
+    cost INTEGER NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    discount_percentage INTEGER,
+    xp_bonus INTEGER,
+    single_use BOOLEAN NOT NULL DEFAULT true
+);
+
+-- 3. Crear la tabla de beneficios de usuario si no existe
+CREATE TABLE IF NOT EXISTS user_benefits (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    benefit_id BIGINT NOT NULL,
+    purchase_date TIMESTAMP NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT false,
+    used_date TIMESTAMP,
+    FOREIGN KEY (benefit_id) REFERENCES benefits(id) ON DELETE CASCADE
+);
+
+-- 4. Limpiar datos existentes (opcional - solo para desarrollo)
+-- TRUNCATE TABLE user_benefits RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE benefits RESTART IDENTITY CASCADE;
+
+-- 5. Insertar beneficios de VALES FIGURATIVOS (Reemplazo de DESCUENTO)
+INSERT INTO benefits (name, description, cost, type, discount_percentage, single_use)
+VALUES
+('Vale de Experiencia Lite', 'Canjea por un postre de cortesía en nuestro restaurante asociado.', 200, 'DISCOUNT', 5, true),
+('Vale de Experiencia Standard', 'Canjea por 2 entradas de cine (solo válido para Cinemark).', 400, 'DISCOUNT', 10, true),
+('Vale de Experiencia Plus', 'Canjea por una botella de vino seleccionada en tu próxima estancia.', 600, 'DISCOUNT', 15, true),
+('Pase al Salón VIP', 'Acceso por un día al exclusivo Salón VIP del hotel.', 900, 'DISCOUNT', 20, true),
+('Cena para Dos', '¡Vale por una cena especial para dos personas en el menú del chef!', 1200, 'DISCOUNT', 25, true)
+ON CONFLICT DO NOTHING;
+
+-- 6. Insertar beneficios de RECONOCIMIENTOS (Reemplazo de BONUS XP)
+INSERT INTO benefits (name, description, cost, type, xp_bonus, single_use)
+VALUES
+('Reconocimiento Bronce', 'Tu nombre se mostrará en el Muro de Clientes Distinguidos por una semana.', 150, 'XP_BONUS', 50, true),
+('Reconocimiento Plata', 'Una mención especial en nuestro newsletter mensual.', 300, 'XP_BONUS', 100, true),
+('Reconocimiento Oro', 'Una tarjeta de agradecimiento personalizada firmada por la gerencia.', 550, 'XP_BONUS', 200, true),
+('Título Honorífico', '¡Recibe el título de "Cliente Estrella" por un mes!', 1000, 'XP_BONUS', 500, true)
+ON CONFLICT DO NOTHING;
+
+-- 7. Insertar beneficios de DISTINCIONES (Reemplazo de SOPORTE PRIORITARIO)
+INSERT INTO benefits (name, description, cost, type, single_use)
+VALUES
+('Pin de Distinción (Temporal)', 'Recibe un pin digital o físico que te identifica como cliente Premium por 24h.', 300, 'PRIORITY_SUPPORT', true),
+('Distinción de Perfil', 'Obtén una insignia permanente en tu perfil de usuario.', 800, 'PRIORITY_SUPPORT', true)
+ON CONFLICT DO NOTHING;
+
+-- 8. Insertar beneficios de SORTEO/SUBASTA (Reemplazo de UPGRADE GRATIS)
+INSERT INTO benefits (name, description, cost, type, single_use)
+VALUES
+('Boleto para el Sorteo Mensual', 'Una entrada para el sorteo de un fin de semana en nuestra suite de lujo.', 500, 'FREE_UPGRADE', true),
+('Pase a la Subasta Exclusiva', 'Acceso para participar en la subasta interna de experiencias únicas.', 1000, 'FREE_UPGRADE', true)
+ON CONFLICT DO NOTHING;
+
+-- 9. Verificar que se insertaron correctamente
+SELECT 
+  id,
+  name,
+  cost,
+  type,
+  COALESCE(discount_percentage, 0) as discount,
+  COALESCE(xp_bonus, 0) as xp_bonus,
+  single_use
+FROM benefits 
+ORDER BY cost ASC;
+
+-- 10. Contar cuántos beneficios hay
+SELECT COUNT(*) as total_benefits FROM benefits;
+
+-- Resultado esperado: 13 beneficios
+-- 5 DISCOUNT + 4 XP_BONUS + 2 PRIORITY_SUPPORT + 2 FREE_UPGRADE = 13

@@ -7,6 +7,7 @@ import ar.uba.fi.gestion.trippy.payment.dto.PaymentRequestDTO;
 import ar.uba.fi.gestion.trippy.reservation.Reservation;
 import ar.uba.fi.gestion.trippy.reservation.ReservationRepository;
 import ar.uba.fi.gestion.trippy.reservation.ReservationStatus;
+import ar.uba.fi.gestion.trippy.user.Traveler;
 import ar.uba.fi.gestion.trippy.user.UserService;
 
 // Imports de Mercado Pago SDK
@@ -159,16 +160,19 @@ public class PaymentService {
 
                 // 4. Actualizamos el estado de nuestra reserva (¡Idempotente!)
                 if (reservation.getStatus() == ReservationStatus.PENDING) {
-                    reservation.setStatus(ReservationStatus.CONFIRMED);
+                    reservation.setStatus(ReservationStatus.CONFIRMED); // aca agregar el 
                     reservationRepository.save(reservation);
 
                     // 5. ¡GAMIFICACIÓN! Damos XP al usuario
-                    if (reservation.getTraveler() != null) {
-                        userService.addXpForPurchase(
-                                reservation.getTraveler().getEmail(),
-                                reservation.getTotalPrice().doubleValue()
-                        );
-                    }
+                    userService.addXpForPurchase(
+                            reservation.getTraveler().getEmail(),
+                            reservation.getTotalPrice().doubleValue()
+                    );
+                    Traveler traveler = (Traveler) reservation.getTraveler();
+                    BigDecimal coins = reservation.getTotalPrice().multiply(new BigDecimal("0.1"));
+                    traveler.addTrippyCoins(coins.intValue());
+
+
                 }
                 // Si ya estaba CONFIRMED, no hacemos nada (MP puede enviar webhooks duplicados)
             }

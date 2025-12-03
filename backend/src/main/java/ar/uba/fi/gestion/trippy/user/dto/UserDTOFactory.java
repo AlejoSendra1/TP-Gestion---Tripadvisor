@@ -15,6 +15,7 @@ public class UserDTOFactory {
                     traveler.getLastName(),
                     traveler.getXp(),
                     traveler.getLevel(),
+                    traveler.getTrippyCoins(),
                     traveler.getUserType(),
                     "USER"
             );
