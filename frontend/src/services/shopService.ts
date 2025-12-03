@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { apiClient } from '@/lib/apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:30002';
+const API_URL = import.meta.env.VITE_BASE_API_URL;
 
 console.log('🔧 Shop Service initialized with API_URL:', API_URL);
 

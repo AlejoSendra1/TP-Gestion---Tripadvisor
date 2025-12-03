@@ -107,7 +107,7 @@ public class PaymentService {
                     .items(List.of(itemRequest))
                     .backUrls(backUrls)
                     // Forzamos la redirección automática al frontend
-//                    .autoReturn("approved")
+                    .autoReturn("approved")
                     // Guardamos nuestro ID de reserva para el webhook
                     .externalReference(reservation.getId().toString())
                     // Le decimos a MP dónde notificarnos (usando la variable inyectada)

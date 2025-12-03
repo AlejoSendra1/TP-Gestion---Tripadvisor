@@ -119,7 +119,8 @@ public class SecurityConfig {
             "http://localhost:5173",   // Vite dev
             "http://localhost:3000",   // React dev alternativo
             "http://localhost:30003",   // Frontend en Docker
-            "http://localhost:8081"
+            "http://localhost:8081",
+            "https://trippy-hazel.vercel.app"
         ));
         
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
