@@ -119,7 +119,7 @@ const Profile = () => {
   };
 
   const discountPercentage = getDiscountPercentage(currentLevel);
-  const joinDate = "Noviembre 2025";
+  const joinDate = "Diciembre 2025";
 
   const levelBenefits = [
     { level: 1, discount: 0, benefits: ["Acceso básico a la plataforma"] },
@@ -134,9 +134,12 @@ const Profile = () => {
     { level: 10, discount: 30, benefits: ["30% de descuento", "Acceso Elite", "Todas las ventajas premium"] },
   ];
 
+  const realReviewsCount = userReviewsData?.totalElements || 0;
+  const realReservationsCount = reservations?.length || 0;
+
   const profileStats = {
-    reviewsCount: 0,
-    placesVisited: 0,
+    reviewsCount: realReviewsCount,
+    placesVisited: realReservationsCount,
     photosShared: 0,
     helpfulVotes: 0
   };
@@ -234,22 +237,14 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+              <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 text-center">
                 <div className="space-y-1">
                   <div className="text-2xl font-bold text-primary">{profileStats.reviewsCount}</div>
                   <div className="text-xs text-muted-foreground">Reseñas</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-2xl font-bold text-blue-500">{profileStats.placesVisited}</div>
-                  <div className="text-xs text-muted-foreground">Lugares</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-purple-500">{profileStats.photosShared}</div>
-                  <div className="text-xs text-muted-foreground">Fotos</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-green-500">{profileStats.helpfulVotes}</div>
-                  <div className="text-xs text-muted-foreground">Útiles</div>
+                  <div className="text-xs text-muted-foreground">Reservaciones</div>
                 </div>
               </div>
             </div>

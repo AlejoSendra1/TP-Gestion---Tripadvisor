@@ -1,28 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCreateReview } from "@/hooks/useCreateReview";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// --- Hooks de datos ---
 import {
   usePublicationDetail,
 } from "@/hooks/usePublicationDetail";
 import { useDeletePublication } from "@/hooks/useDeletePublication";
-import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
+import { useDeleteReview } from "@/hooks/useDeleteReview";
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
 import { usePersonalizedPrice } from "@/hooks/usePersonalizedPrice";
 import { PriceDisplay } from "@/components/PriceDisplay";
-import ReservationList from "@/components/reservation/ReservationList";
 import ReservationCalendar from "@/components/reservation/ReservationCalendar";
 import { useUserReservations } from "@/hooks/useUserReservations";
-// --- Hooks de UI y Auth ---
 import { useAuth } from "@/hooks/use-auth";
-
-// --- Componentes de UI (shadcn/ui) ---
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,25 +28,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-// --- Iconos (lucide-react) ---
 import {
   Star,
   MapPin,
   Trophy,
   ArrowLeft,
   Calendar,
-  Users,
-  Heart,
   Trash2,
   Loader2,
+  Share2,
 } from "lucide-react";
-
-import BookingModal from "@/components/BookingModal"; // <-- nuevo
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import BookingModal from "@/components/BookingModal";
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
-  //id: string;
   username: string;
   userLastname: string;
   reviewerEmail: string;
@@ -66,86 +66,66 @@ export default function ExperienceDetails() {
   const { id } = useParams();
   const { user, isTraveler } = useAuth();
   const navigate = useNavigate();
-  const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { reservations } = useUserReservations();
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
-  // --- Hook para OBTENER datos de la publicación ---
+  // --- Hooks de Datos ---
   const {
     data: publication,
     isLoading,
     isError,
   } = usePublicationDetail(id);
 
-    const {
-        data: personalizedPrice,
-        isLoading: isLoadingPrice,
-      } = usePersonalizedPrice(
-        id,
-        !!user && !!id && isTraveler()// Only fetch if user is logged in and we have an ID
-      );
-
-
-  // --- Hook para BORRAR publicación ---
-  const { mutate: performDelete, isPending: isDeleting } =
-      useDeletePublication();
-
-  // --- Hook para BORRAR review ---
-  const { mutate: deleteReview, isPending: isDeletingReview } =
-      useDeleteReview();
-
-  // For example, from your API or publication data:
-  const reviewsSummaryText = "aca estaria el resumen re q ti re jodido \n aaaaaa\n asdaisjfoafj\nsifjaoifj"; 
-
-  // hooks relacionados a reviews
-  const { mutate: createReview, isPending: isSubmittingReview } = useCreateReview();
-
-  // --- Hook para OBTENER datos de las reviews ---
   const {
-        data: reviewPage,
-        isLoading: isLoadingReviews,
-        isError: isErrorReviews,
+    data: personalizedPrice,
+    isLoading: isLoadingPrice,
+  } = usePersonalizedPrice(
+      id,
+      !!user && !!id && isTraveler()
+  );
+
+  const { mutate: performDelete, isPending: isDeleting } = useDeletePublication();
+  const { mutate: deleteReview } = useDeleteReview();
+  const { mutate: createReview, isPending: isSubmittingReview } = useCreateReview();
+  const {
+    data: reviewPage,
   } = useReviews(id);
 
-  // --- Estados locales para UI (reseñas) ---
-  const [newComment, setNewComment] = useState("");
-  const [rating, setRating] = useState(5);
-  const [comments, setComments] = useState<DisplayReview[]>([]);
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
-
-  // Estado para abrir modal de reserva
   const [openBooking, setOpenBooking] = useState(false);
 
-  // Lógica de Gamificación (local)
+  // Gamificación local
   const xpReward = 50;
 
+  // --- Mapeo de Reseñas ---
   const reviewsArray = reviewPage?.content || [];
   const displayReviews: DisplayReview[] = reviewsArray.map((review: ReviewDTO) => ({
-    //id: review.id,
     username: review.username,
     userLastname: review.userLastname,
     reviewerEmail: review.reviewerEmail,
     avatar: review.username.substring(0, 2).toUpperCase(),
     rating: review.rating,
-    createdAt: review.createdAt || "Justo ahora",
+    createdAt: review.createdAt || "Reciente",
     text: review.reviewContent,
   }));
 
-  // --- Estados Derivados (para Rating) ---
-  const avgRating =
-      comments.length > 0
-          ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(
-              1
-          )
-          : "N/A";
-  const reviewCount = comments.length;
+  const avgRating = displayReviews.length > 0
+      ? (displayReviews.reduce((acc, c) => acc + c.rating, 0) / displayReviews.length).toFixed(1)
+      : "N/A";
+  const reviewCount = displayReviews.length;
 
-  // --- Lógica de Permisos ---
-  const canEdit =
-      user && user.role === "HOST" && user.email === publication?.host?.email;
+  const canEdit = user && user.role === "HOST" && user.email === publication?.host?.email;
 
-  // --- Manejadores de Eventos (UI) ---
-  const handleReserve = () => {
-    setOpenBooking(true); // ahora abre el modal en vez de alert
-  };
+  // --- Lógica Corregida de Imágenes ---
+  // Si imageUrls está vacío, usamos mainImageUrl. Si ambos fallan, placeholder.
+  const galleryImages = (publication?.imageUrls && publication.imageUrls.length > 0)
+      ? publication.imageUrls
+      : (publication?.mainImageUrl ? [publication.mainImageUrl] : ["/placeholder.jpg"]);
+
+  // --- Handlers ---
+  const handleReserve = () => setOpenBooking(true);
 
   const handleSubmitComment = (rating: number, content: string) => {
     createReview({
@@ -159,128 +139,104 @@ export default function ExperienceDetails() {
   const handleDeleteReview = (userEmail: string) => {
     setDeletingReviewId(userEmail);
     deleteReview(
-      { reviewerEmail: userEmail, publicationId: publication.id },
-      {
-        onSettled: () => {
-          setDeletingReviewId(null);
-        },
-      }
+        { reviewerEmail: userEmail, publicationId: publication.id },
+        { onSettled: () => setDeletingReviewId(null) }
     );
   };
 
-  // --- Renderizado de Carga y Error ---
+  // --- Estilos de Categoría (Coherencia con Cards) ---
+  const getCategoryStyle = (cat: string) => {
+    switch (cat.toLowerCase()) {
+      case "hotel": return "bg-orange-100 text-orange-700 border-orange-200";
+      case "restaurant": return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "tour":
+      case "activity": return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "coworking": return "bg-purple-100 text-purple-700 border-purple-200";
+      default: return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
   if (isLoading) {
     return (
-        <div className="min-h-screen bg-background">
-          <div className="container mx-auto px-4 py-8 text-center">
-            <h1 className="text-2xl font-bold">Cargando...</h1>
-          </div>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
     );
   }
 
   if (isError || !publication) {
     return (
-        <div className="min-h-screen bg-background">
-          <div className="container mx-auto px-4 py-8 text-center">
-            <h1 className="text-2xl font-bold mb-4">
-              Experiencia no encontrada
-            </h1>
-            <Link to="/">
-              <Button variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver al Inicio
-              </Button>
-            </Link>
-          </div>
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+          <h1 className="text-2xl font-bold mb-4 font-aileron">Experiencia no encontrada</h1>
+          <Link to="/"><Button variant="outline">Volver al Inicio</Button></Link>
         </div>
     );
   }
 
-  // --- Helper de UI (Color de Badge) ---
-  const getCategoryColor = (cat: string) => {
-    const lowerCat = cat.toLowerCase();
-    switch (lowerCat) {
-      case "hotel":
-        return "bg-primary text-primary-foreground";
-      case "restaurant":
-        return "bg-accent text-accent-foreground";
-      case "activity":
-        return "bg-adventure text-adventure-foreground";
-      case "coworking":
-        return "bg-purple-600 text-white";
-      default:
-        return "bg-secondary text-secondary-foreground";
-    }
-  };
-
-  // --- Renderizado Principal (JSX) ---
   return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-12">
         <Header />
-        <div className="container mx-auto px-4 py-8">
-          {/* Botón Volver */}
-          <Link to="/">
-            <Button variant="outline" className="mb-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
-            </Button>
-          </Link>
+
+        {/* Container principal con ancho limitado para mejor lectura */}
+        <div className="container max-w-7xl mx-auto px-4 py-8">
+
+          {/* Navegación Superior */}
+          <div className="flex items-center justify-between mb-6">
+            <Link to="/">
+              <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-primary transition-colors">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver al listado
+              </Button>
+            </Link>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Contenido Principal */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Encabezado */}
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <Badge className={getCategoryColor(publication.publicationType)}>
-                    {publication.publicationType.toLowerCase()}
+            {/* COLUMNA IZQUIERDA: Contenido Principal */}
+            <div className="lg:col-span-2 space-y-8">
+
+              {/* Header de la Publicación */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Badge className={`px-3 py-1 text-sm font-semibold border ${getCategoryStyle(publication.publicationType)} shadow-sm`}>
+                    {publication.publicationType}
                   </Badge>
+                  <div className="flex items-center text-sm text-muted-foreground font-medium">
+                    <MapPin className="h-4 w-4 mr-1 text-primary" />
+                    {publication.location.city}, {publication.location.country}
+                  </div>
                 </div>
 
-                <h1 className="text-4xl font-bold mb-4">{publication.title}</h1>
+                <h1 className="text-4xl md:text-5xl font-black font-aileron tracking-tight text-foreground leading-[1.1]">
+                  {publication.title}
+                </h1>
 
-                {/* === ZONA DE BOTONES DE HOST === */}
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-md border border-yellow-100 text-yellow-700 font-bold">
+                    <Star className="h-4 w-4 fill-yellow-500 text-yellow-500 mr-1.5" />
+                    {avgRating} <span className="font-normal text-muted-foreground ml-1">({reviewCount} reseñas)</span>
+                  </div>
+                </div>
+
+                {/* Botones de Host (Si corresponde) */}
                 {canEdit && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {/* Botón de Editar */}
-                      <Button
-                          variant="outline"
-                          onClick={() => navigate(`/experience/${id}/edit`)}
-                      >
-                        ✏️ Editar publicación
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/experience/${id}/edit`)}>
+                        ✏️ Editar
                       </Button>
-
-                      {/* Botón y Diálogo de Eliminar */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" disabled={isDeleting}>
-                            {isDeleting ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                                <Trash2 className="h-4 w-4 mr-2" />
-                            )}
-                            {isDeleting ? "Eliminando..." : "Eliminar"}
+                          <Button variant="destructive" size="sm" disabled={isDeleting}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Eliminar
                           </Button>
                         </AlertDialogTrigger>
-
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Esto eliminará
-                              permanentemente tu publicación de nuestros servidores.
-                            </AlertDialogDescription>
+                            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel disabled={isDeleting}>
-                              Cancelar
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={() => performDelete(id!)}
-                                disabled={isDeleting}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => performDelete(id!)} className="bg-destructive">
                               {isDeleting ? "Eliminando..." : "Sí, eliminar"}
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -288,193 +244,207 @@ export default function ExperienceDetails() {
                       </AlertDialog>
                     </div>
                 )}
-                {/* === FIN ZONA DE BOTONES === */}
+              </div>
 
-                <div className="flex items-center gap-4 text-muted-foreground mb-4">
-                  <div className="flex items-center">
-                    <Star className="h-5 w-5 text-yellow-500 fill-current mr-1" />
-                    <span className="font-medium">{avgRating}</span>
-                    <span className="ml-1">({reviewCount} reseñas)</span>
-                  </div>
-                  <div className="flex items-center">
-                    <MapPin className="h-5 w-5 mr-1" />
-                    {publication.location.city}, {publication.location.country}
-                  </div>
+              {/* GALERÍA DE IMÁGENES (Lógica Corregida) */}
+              <div className="relative group rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {galleryImages.map((image, index) => (
+                        <CarouselItem key={index}>
+                          <div
+                              className="aspect-[16/9] md:aspect-[21/9] cursor-zoom-in relative"
+                              onClick={() => { setCurrentSlideIndex(index); setIsGalleryOpen(true); }}
+                          >
+                            <img
+                                src={image}
+                                alt={`Slide ${index + 1}`}
+                                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+                                    <span className="opacity-0 hover:opacity-100 text-white font-semibold bg-black/40 backdrop-blur-md px-4 py-2 rounded-full text-sm transition-opacity">
+                                        Ver pantalla completa
+                                    </span>
+                            </div>
+                          </div>
+                        </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  {galleryImages.length > 1 && (
+                      <>
+                        <CarouselPrevious className="left-4 h-10 w-10 border-none bg-black/30 text-white hover:bg-black/50" />
+                        <CarouselNext className="right-4 h-10 w-10 border-none bg-black/30 text-white hover:bg-black/50" />
+                      </>
+                  )}
+                </Carousel>
+              </div>
+
+              {/* Sección: Descripción */}
+              <div className="grid gap-8">
+                <div className="prose max-w-none">
+                  <h3 className="text-2xl font-bold font-aileron mb-4">Sobre esta experiencia</h3>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    {publication.description}
+                  </p>
+                </div>
+
+                <div className="border-t pt-8">
+                  <h3 className="text-2xl font-bold font-aileron mb-6">Lo que tenés que saber</h3>
+                  <RenderSpecificDetails details={publication.specificDetails} />
                 </div>
               </div>
 
-              {/* Imágenes */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {publication.imageUrls.map((image, index) => (
-                    <img
-                        key={index}
-                        src={image}
-                        alt={`${publication.title} ${index + 1}`}
-                        className="w-full h-64 object-cover rounded-lg"
-                    />
-                ))}
-              </div>
-
-              {/* Descripción */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-4">
-                    Sobre esta experiencia
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {publication.description}
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Detalles Específicos */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-4">
-                    Detalles
-                  </h3>
-                  <RenderSpecificDetails details={publication.specificDetails} />
-                </CardContent>
-              </Card>
-
-              {/* Reservas de la publicaion */}
+              {/* Calendario de Reservas (Solo Host) */}
               {canEdit && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-primary" />
-                      Reservas de esta publicación
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ReservationCalendar isOwner={true} publicationId={publication.id} />
-                  </CardContent>
-                </Card>
+                  <Card className="border-blue-100 bg-blue-50/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-blue-700">
+                        <Calendar className="h-5 w-5" />
+                        Gestión de Reservas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ReservationCalendar isOwner={true} publicationId={publication.id} />
+                    </CardContent>
+                  </Card>
               )}
 
-              <ReviewsSection
-                reviews={displayReviews}
-                currentUserEmail={user?.email}
-                xpReward={xpReward}
-                isSubmitting={isSubmittingReview}
-                onSubmitReview={handleSubmitComment}
-                onDeleteReview={handleDeleteReview}
-                deletingReviewId={deletingReviewId} 
-                publicationId={publication.id}              
-              />
+              {/* Sección de Reseñas */}
+              <div className="border-t pt-8">
+                <ReviewsSection
+                    reviews={displayReviews}
+                    currentUserEmail={user?.email}
+                    xpReward={xpReward}
+                    isSubmitting={isSubmittingReview}
+                    onSubmitReview={handleSubmitComment}
+                    onDeleteReview={handleDeleteReview}
+                    deletingReviewId={deletingReviewId}
+                    publicationId={publication.id}
+                />
+              </div>
             </div>
 
-            {/* Sidebar */}
+            {/* COLUMNA DERECHA: Sidebar Sticky */}
             <div className="space-y-6">
-              {/* Card de Reserva */}
-              <Card className="sticky top-6">
-                <CardContent className="p-6">
-                  <PriceDisplay
-                    basePrice={publication.price}
-                    personalizedPrice={personalizedPrice}
-                    isLoading={isLoadingPrice}
-                    publicationType={publication.publicationType}
-                  />
+              <div className="sticky top-24 space-y-6">
 
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Disponibilidad</span>
-                      <Badge
-                          variant="outline"
-                          className="text-green-600 border-green-600"
+                {/* Card de Reserva Principal */}
+                <Card className="border-0 shadow-xl ring-1 ring-black/5 overflow-hidden rounded-2xl">
+                  <CardContent className="p-0">
+                    <div className="bg-primary/5 p-6 border-b border-primary/10">
+                      <PriceDisplay
+                          basePrice={publication.price}
+                          personalizedPrice={personalizedPrice}
+                          isLoading={isLoadingPrice}
+                          publicationType={publication.publicationType}
+                      />
+                      <div className="mt-2 flex items-center justify-between">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-2 py-0.5">
+                          Disponible hoy
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="p-6 space-y-6">
+                      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-3 rounded-xl border border-orange-100 flex items-start gap-3">
+                        <div className="bg-white p-2 rounded-full shadow-sm">
+                          <Trophy className="h-4 w-4 text-orange-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-orange-800 uppercase tracking-wide mb-0.5">Rewards</p>
+                          <p className="text-sm text-orange-700 leading-tight">
+                            Reservá y ganá <span className="font-bold">+{xpReward} XP</span> al dejar tu reseña.
+                          </p>
+                        </div>
+                      </div>
+
+                      <Button
+                          onClick={handleReserve}
+                          className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
                       >
-                        Disponible
-                      </Badge>
-                    </div>
-                    <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
-                      <Trophy className="h-4 w-4 mr-2 text-experience" />
-                      Ganá XP al reseñar esta publicación!
-                    </div>
-                  </div>
+                        Reservá Ahora
+                      </Button>
 
-                  <div className="space-y-3">
-                    <Button
-                        onClick={handleReserve}
-                        className="w-full"
-                        size="lg"
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Reservá Ahora
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      <div className="text-center text-xs text-muted-foreground">
+                        No se te cobrará nada hasta confirmar.
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Card de Info de XP */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-center">
-                    <Trophy className="h-8 w-8 mx-auto mb-2 text-experience" />
-                    <h4 className="font-semibold mb-1">Ganate recompensas!</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Compartí tu reseña y ganá {xpReward} de XP para subir de nivel!
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* --- MODALES --- */}
+
         {/* Booking Modal */}
         <BookingModal
-          publicationId={publication.id}
-          publicationType={publication.publicationType} // se pasa el tipo
-          open={openBooking}
-          onClose={() => setOpenBooking(false)}
+            publicationId={publication.id}
+            publicationType={publication.publicationType}
+            open={openBooking}
+            onClose={() => setOpenBooking(false)}
         />
+
+        {/* Lightbox Gallery */}
+        <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
+          <DialogContent className="max-w-[95vw] h-[90vh] bg-black/95 border-none p-0 flex items-center justify-center">
+            <Carousel opts={{ align: "center", startIndex: currentSlideIndex }} className="w-full h-full flex items-center justify-center">
+              <CarouselContent>
+                {galleryImages.map((image, index) => (
+                    <CarouselItem key={index} className="flex items-center justify-center h-[85vh]">
+                      <img src={image} alt={`Full view ${index + 1}`} className="max-w-full max-h-full object-contain" />
+                    </CarouselItem>
+                ))}
+              </CarouselContent>
+              {galleryImages.length > 1 && (
+                  <>
+                    <CarouselPrevious className="left-4 bg-white/10 text-white border-white/20 hover:bg-white/20 h-12 w-12" />
+                    <CarouselNext className="right-4 bg-white/10 text-white border-white/20 hover:bg-white/20 h-12 w-12" />
+                  </>
+              )}
+            </Carousel>
+          </DialogContent>
+        </Dialog>
       </div>
   );
 }
 
-// --- Helper Component para renderizar 'specificDetails' ---
-function RenderSpecificDetails({
-                                 details,
-                               }: {
-  details: { [key: string]: unknown };
-}) {
-  const toTitleCase = (str: string) => {
-    return str
-        .replace(/([A-Z])/g, " $1")
-        .replace(/^./, (char) => char.toUpperCase());
-  };
+// --- Helper Component Refinado ---
+function RenderSpecificDetails({ details }: { details: { [key: string]: unknown } }) {
+  const toTitleCase = (str: string) => str.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
 
   return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {Object.entries(details).map(([key, value]) => {
-          // Caso 1: Array de strings (ej: 'services' de Coworking)
-          if (key === "services" && Array.isArray(value)) {
-            return value.map((service: string, index: number) => (
-                <div
-                    key={`${key}-${index}`}
-                    className="flex items-center bg-secondary/50 px-3 py-2 rounded-lg"
-                >
-                  <span className="text-sm">{service}</span>
-                </div>
-            ));
-          }
+          if (!value) return null; // Evitar nulos
 
-          // Caso 2: Pares clave-valor simples (string o number)
-          if (typeof value === "string" || typeof value === "number") {
+          if (key === "services" && Array.isArray(value)) {
             return (
-                <div
-                    key={key}
-                    className="flex items-center bg-secondary/50 px-3 py-2 rounded-lg"
-                >
-              <span className="text-sm">
-                <span className="font-medium">{toTitleCase(key)}:</span>{" "}
-                {String(value)}
-              </span>
+                <div key={key} className="col-span-full">
+                  <h4 className="text-sm font-bold text-muted-foreground uppercase mb-2">Servicios incluidos</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {value.map((service: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="px-3 py-1 font-normal bg-gray-100 hover:bg-gray-200 text-gray-700">
+                          {service}
+                        </Badge>
+                    ))}
+                  </div>
                 </div>
             );
           }
 
-          // No renderizar otros tipos (null, undefined, etc.)
+          if (typeof value === "string" || typeof value === "number") {
+            return (
+                <div key={key} className="flex flex-col p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                        {toTitleCase(key)}
+                    </span>
+                  <span className="font-medium text-gray-900">{String(value)}</span>
+                </div>
+            );
+          }
           return null;
         })}
       </div>

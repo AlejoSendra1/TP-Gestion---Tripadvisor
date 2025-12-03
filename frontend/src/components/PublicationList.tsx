@@ -47,7 +47,7 @@ export function PublicationList({ publications, isLoading, error }: PublicationL
       <section className="py-16">
         <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-                <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                <h1 className="font-aileron text-3xl md:text-4xl font-bold mb-4">
                     Tenés estas opciones disponibles!
                 </h1>
             </div>

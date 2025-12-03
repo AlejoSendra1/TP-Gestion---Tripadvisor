@@ -1,12 +1,13 @@
 // File: frontend/src/components/BookingModal.tsx
 import React, { useEffect, useState } from 'react';
-// ¡NUEVO IMPORTE!
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale'; // Importar idioma español
+import { Calendar } from "@/components/ui/calendar"; // <--- Componente de Calendario
 
 import { apiClient } from '@/lib/apiClient';
 import { useCreateReservation } from '@/hooks/useCreateReservation';
 import { useToast } from '@/hooks/use-toast';
-import DaysPicker from './DaysPicker';
 import DateTimeSelector from './DateTimeSelector';
 import QuantityAndNotes from './QuantityAndNotes';
 import { DayAvailability, isDateAvailable as utilIsDateAvailable, areRangeAvailable as utilAreRangeAvailable } from '@/utils/dates';
@@ -21,15 +22,20 @@ type BookingModalProps = {
 };
 
 export default function BookingModal({ publicationId, publicationType, open, onClose }: BookingModalProps) {
-  // --- ¡NUEVO! ---
   const navigate = useNavigate();
 
+  // Estados de fechas
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [singleDate, setSingleDate] = useState<Date | undefined>(undefined);
+
+  // Mantenemos los strings para la lógica de envío existente
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [restaurantDate, setRestaurantDate] = useState('');
   const [restaurantTime, setRestaurantTime] = useState('12:00');
   const [activityDate, setActivityDate] = useState('');
   const [activityTime, setActivityTime] = useState('12:00');
+
   const [guests, setGuests] = useState(1);
   const [roomCount, setRoomCount] = useState(1);
   const [notes, setNotes] = useState('');
@@ -39,7 +45,6 @@ export default function BookingModal({ publicationId, publicationType, open, onC
   const [hoursLoading, setHoursLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Hook para crear la reserva (ahora con estado PENDING)
   const { createReservation, isLoading: creating } = useCreateReservation();
   const { toast } = useToast();
 
@@ -50,6 +55,7 @@ export default function BookingModal({ publicationId, publicationType, open, onC
   const isActivity = type === 'activity';
   const isRangeType = isHotel || isCoworking;
 
+  // --- Efecto de Carga de Disponibilidad (Igual que antes) ---
   useEffect(() => {
     if (!open) return;
     setFetching(true);
@@ -57,7 +63,6 @@ export default function BookingModal({ publicationId, publicationType, open, onC
 
     apiClient.get(`/publications/${publicationId}/availability/days`)
         .then(res => {
-          // ... (toda tu lógica de mapeo de días)
           const payload = Array.isArray(res.data) ? res.data : [];
           const mapped = payload.map((d: any) => {
             if (typeof d === 'string') {
@@ -81,8 +86,11 @@ export default function BookingModal({ publicationId, publicationType, open, onC
         .finally(() => setFetching(false));
   }, [open, publicationId]);
 
+  // --- Reset de estados al abrir ---
   useEffect(() => {
     if (!open) return;
+    setDateRange({ from: undefined, to: undefined });
+    setSingleDate(undefined);
     setStartDate(''); setEndDate('');
     setRestaurantDate(''); setRestaurantTime('12:00');
     setActivityDate(''); setActivityTime('12:00');
@@ -90,6 +98,7 @@ export default function BookingModal({ publicationId, publicationType, open, onC
     setHoursSlots([]);
   }, [open]);
 
+  // --- Carga de Horas (Restaurante) ---
   useEffect(() => {
     if (!open || !isRestaurant || !restaurantDate) return;
     setHoursLoading(true);
@@ -102,7 +111,6 @@ export default function BookingModal({ publicationId, publicationType, open, onC
       signal: controller.signal
     })
         .then(res => {
-          // ... (toda tu lógica de mapeo de horas)
           const payload = Array.isArray(res.data) ? res.data : [];
           const mapped: HourSlot[] = payload.map((h: any) => {
             const startStr = String(h.start || h.dateTime || '');
@@ -114,6 +122,8 @@ export default function BookingModal({ publicationId, publicationType, open, onC
             };
           });
           setHoursSlots(mapped);
+
+          // Lógica para pre-seleccionar hora
           const current = mapped.find(h => h.time === restaurantTime && h.available && (h.availableSeats === null || h.availableSeats >= guests));
           if (!current) {
             const first = mapped.find(h => h.available && (h.availableSeats === null || h.availableSeats >= guests));
@@ -127,22 +137,7 @@ export default function BookingModal({ publicationId, publicationType, open, onC
         .finally(() => setHoursLoading(false));
 
     return () => controller.abort();
-  }, [open, isRestaurant, restaurantDate, publicationId, guests, restaurantTime]); // <- Se agregaron dependencias
-
-  useEffect(() => {
-    if (!open || !isRestaurant) return;
-    if (!hoursSlots.length) return;
-
-    const current = hoursSlots.find(h => h.time === restaurantTime && h.available && (h.availableSeats === null || h.availableSeats >= guests));
-    if (!current) {
-      const first = hoursSlots.find(h => h.available && (h.availableSeats === null || h.availableSeats >= guests));
-      if (first) setRestaurantTime(first.time);
-      else {
-        const any = hoursSlots.find(h => h.available) || hoursSlots[0];
-        if (any) setRestaurantTime(any.time);
-      }
-    }
-  }, [guests, hoursSlots, open, isRestaurant, restaurantTime]); // <- Se agregó dependencia
+  }, [open, isRestaurant, restaurantDate, publicationId, guests]); // Quitamos restaurantTime de deps para evitar loop
 
   const isDateAvailable = (d: string) => utilIsDateAvailable(days, d);
   const areRangeAvailable = (s: string, e: string) => utilAreRangeAvailable(days, s, e);
@@ -156,64 +151,25 @@ export default function BookingModal({ publicationId, publicationType, open, onC
     return hs;
   };
 
-  function onPickDay(day: DayAvailability) {
-    if (!day.available || !day.date) return;
-
-    if (isRangeType) {
-      if (!startDate) { setStartDate(day.date); setEndDate(''); setError(null); return; }
-      if (startDate && !endDate) {
-        if (day.date < startDate) { setStartDate(day.date); setEndDate(''); setError(null); return; }
-        if (day.date === startDate) { setEndDate(''); setError(null); return; }
-        if (areRangeAvailable(startDate, day.date)) { setEndDate(day.date); setError(null); } else { setError('El rango seleccionado contiene días no disponibles.'); }
-        return;
-      }
-      setStartDate(day.date); setEndDate(''); setError(null);
-      return;
-    }
-
-    if (isRestaurant) {
-      if (!isDateAvailable(day.date)) { setError('Fecha no disponible para este restaurante.'); return; }
-      setRestaurantDate(day.date);
-      setError(null);
-      return;
-    }
-
-    if (isActivity) {
-      if (!isDateAvailable(day.date)) { setError('Fecha no disponible para esta actividad.'); return; }
-      setActivityDate(day.date);
-      setError(null);
-      return;
-    }
-  }
-
-
-  // --- ¡LÓGICA DE SUBMIT MODIFICADA! ---
+  // --- Lógica de Submit ---
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
     setError(null);
-    // const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
     const token = localStorage.getItem('accessToken');
     if (!token) { setError('Debes iniciar sesión para reservar.'); return; }
 
-    // 1. Validar y construir el body de la reserva
     const body: any = {};
 
     if (isRangeType) {
       if (!startDate) { setError('Seleccioná la fecha de inicio.'); return; }
       if (endDate) {
         if (!areRangeAvailable(startDate, endDate)) { setError('El rango seleccionado contiene días no disponibles.'); return; }
-        if (isCoworking) {
-          body.start_date = startDate; body.end_date = endDate;
-        } else {
-          body.startDate = startDate; body.endDate = endDate;
-        }
+        if (isCoworking) { body.start_date = startDate; body.end_date = endDate; }
+        else { body.startDate = startDate; body.endDate = endDate; }
       } else {
         if (!isDateAvailable(startDate)) { setError('La fecha seleccionada no está disponible.'); return; }
-        if (isCoworking) {
-          body.start_date = startDate;
-        } else {
-          body.startDate = startDate;
-        }
+        if (isCoworking) { body.start_date = startDate; }
+        else { body.startDate = startDate; }
       }
     }
 
@@ -224,10 +180,9 @@ export default function BookingModal({ publicationId, publicationType, open, onC
       if (!restaurantDate) { setError('Seleccioná la fecha.'); return; }
       if (!isDateAvailable(restaurantDate)) { setError('La fecha no está disponible.'); return; }
       if (!restaurantTime) { setError('Seleccioná la hora.'); return; }
-
       const slot = hoursSlots.find(h => h.time === restaurantTime);
       if (slot && slot.availableSeats !== null && guests > slot.availableSeats) {
-        setError('La capacidad de la franja horaria no alcanza para la cantidad de personas.');
+        setError('La capacidad de la franja horaria no alcanza.');
         return;
       }
       body.dateTime = `${restaurantDate}T${restaurantTime}:00`;
@@ -244,68 +199,156 @@ export default function BookingModal({ publicationId, publicationType, open, onC
     if (notes) body.additionalInfo = notes;
 
     try {
-      // 2. Llamar a createReservation (crea la reserva en PENDING)
       const pendingReservation = await createReservation({ publicationId, token, ...body } as any);
-
-      // 3. Si tiene éxito, navegar a la página de checkout con el ID
       if (pendingReservation && pendingReservation.id) {
         toast({ title: 'Pre-reserva creada', description: 'Por favor, completá el pago.' });
         onClose();
-        navigate(`/checkout/${pendingReservation.id}`); // ¡Navegamos a la nueva ruta!
+        navigate(`/checkout/${pendingReservation.id}`);
       } else {
         throw new Error("La respuesta de la reserva no incluyó un ID.");
       }
-
     } catch (err: any) {
       setError(err?.message || 'Error al crear la pre-reserva.');
     }
   }
-  // --- FIN DE LA LÓGICA MODIFICADA ---
 
-
+  // --- Render ---
   if (!open) return null;
   const hours = generateHours();
-  const selectedDate = isRangeType ? startDate : isRestaurant ? restaurantDate : isActivity ? activityDate : '';
+
+  // Función para deshabilitar fechas en el calendario
+  const isDateDisabled = (date: Date) => {
+    // 1. Deshabilitar fechas pasadas (ayer y anteriores)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (date < today) return true;
+
+    // 2. Si no hay datos de API cargados aún, no bloqueamos nada (o bloqueamos todo, depende UX)
+    if (days.length === 0) return false;
+
+    // 3. Deshabilitar según API
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return !isDateAvailable(dateStr);
+  };
 
   return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black opacity-40" onClick={onClose} />
-        <div className="relative bg-white rounded-lg p-6 w-full max-w-2xl shadow-lg">
-          <h3 className="text-lg font-semibold mb-4">Reservar</h3>
-          {fetching && <div className="mb-3">Cargando disponibilidad...</div>}
-          {error && <div className="mb-3 text-destructive">{error}</div>}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-2xl font-bold">Reservar Experiencia</h3>
+            <button onClick={onClose} className="text-gray-500 hover:text-black">✕</button>
+          </div>
 
-          <DaysPicker
-              days={days}
-              isRangeType={isRangeType}
-              startDate={startDate}
-              endDate={endDate}
-              selectedDate={selectedDate}
-              onPickDay={onPickDay}
-          />
+          {fetching && <div className="mb-3 text-sm text-muted-foreground animate-pulse">Cargando disponibilidad...</div>}
+          {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm font-medium border border-red-100">{error}</div>}
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {isRangeType && <div className="text-sm text-muted-foreground">{startDate ? `Inicio: ${startDate}` : 'Seleccioná inicio'}{endDate ? ` — Fin: ${endDate}` : ''}</div>}
+          <div className="grid md:grid-cols-2 gap-8 mb-6">
+            {/* --- SECCIÓN CALENDARIO --- */}
+            <div className="flex flex-col items-center border rounded-lg p-4 bg-slate-50">
+                <span className="text-sm font-semibold mb-2 text-muted-foreground">
+                    {isRangeType ? "Selecciona tus fechas" : "Selecciona una fecha"}
+                </span>
 
-            <QuantityAndNotes isHotel={isHotel} guests={guests} roomCount={roomCount} notes={notes}
-                              setGuests={setGuests} setRoomCount={setRoomCount} setNotes={setNotes} />
-
-            {isRestaurant && (
-                <DateTimeSelector label="Fecha" selectedDate={selectedDate} time={restaurantTime}
-                                  hours={hoursSlots.length ? hoursSlots : hours.map(t => ({ time: t, available: true, availableSeats: null }))}
-                                  onChangeTime={(t) => setRestaurantTime(t)}
-                                  guests={guests}
-                                  loading={hoursLoading}
-                />
-            )}
-
-            <div className="flex items-center gap-3 mt-2">
-              <button type="submit" disabled={creating} className="bg-primary text-white px-4 py-2 rounded">
-                {creating ? 'Procesando...' : 'Ir a la confirmación'}
-              </button>
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded border">Cancelar</button>
+              {isRangeType ? (
+                  <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={(range) => {
+                        setDateRange(range || { from: undefined, to: undefined });
+                        setStartDate(range?.from ? format(range.from, 'yyyy-MM-dd') : '');
+                        setEndDate(range?.to ? format(range.to, 'yyyy-MM-dd') : '');
+                        // Validación rápida de rango en UI
+                        if (range?.from && range?.to) {
+                          const start = format(range.from, 'yyyy-MM-dd');
+                          const end = format(range.to, 'yyyy-MM-dd');
+                          if (!areRangeAvailable(start, end)) {
+                            setError('El rango incluye fechas no disponibles');
+                          } else {
+                            setError(null);
+                          }
+                        }
+                      }}
+                      disabled={isDateDisabled}
+                      locale={es}
+                      className="rounded-md border bg-white"
+                  />
+              ) : (
+                  <Calendar
+                      mode="single"
+                      selected={singleDate}
+                      onSelect={(date) => {
+                        setSingleDate(date);
+                        const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+                        if (isRestaurant) setRestaurantDate(dateStr);
+                        if (isActivity) setActivityDate(dateStr);
+                        setError(null);
+                      }}
+                      disabled={isDateDisabled}
+                      locale={es}
+                      className="rounded-md border bg-white"
+                  />
+              )}
             </div>
-          </form>
+
+            {/* --- SECCIÓN DETALLES --- */}
+            <div className="space-y-6">
+              <form onSubmit={handleSubmit} className="flex flex-col h-full justify-between">
+                <div className="space-y-4">
+                  {isRangeType && (
+                      <div className="p-3 bg-blue-50 text-blue-800 rounded-md text-sm border border-blue-100">
+                        <p><strong>Entrada:</strong> {startDate ? format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy') : '...'}</p>
+                        <p><strong>Salida:</strong> {endDate ? format(new Date(endDate + 'T00:00:00'), 'dd/MM/yyyy') : '...'}</p>
+                      </div>
+                  )}
+                  {!isRangeType && singleDate && (
+                      <div className="p-3 bg-blue-50 text-blue-800 rounded-md text-sm border border-blue-100">
+                        <p><strong>Fecha:</strong> {format(singleDate, 'dd/MM/yyyy')}</p>
+                      </div>
+                  )}
+
+                  <QuantityAndNotes
+                      isHotel={isHotel}
+                      guests={guests}
+                      roomCount={roomCount}
+                      notes={notes}
+                      setGuests={setGuests}
+                      setRoomCount={setRoomCount}
+                      setNotes={setNotes}
+                  />
+
+                  {isRestaurant && (
+                      <DateTimeSelector
+                          label="Horario"
+                          selectedDate={restaurantDate}
+                          time={restaurantTime}
+                          hours={hoursSlots.length ? hoursSlots : hours.map(t => ({ time: t, available: true, availableSeats: null }))}
+                          onChangeTime={(t) => setRestaurantTime(t)}
+                          guests={guests}
+                          loading={hoursLoading}
+                      />
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 mt-6 pt-4 border-t">
+                  <button
+                      type="button"
+                      onClick={onClose}
+                      className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                      type="submit"
+                      disabled={creating}
+                      className="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm disabled:opacity-50"
+                  >
+                    {creating ? 'Procesando...' : 'Confirmar Reserva'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
   );

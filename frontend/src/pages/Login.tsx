@@ -23,51 +23,56 @@ const Login = () => {
         password: ""
     });
 
-    // --- Función handleSubmit (Reescrita) ---
+    // --- Función handleSubmit (Corregida) ---
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Prevenir recarga de página
+        e.preventDefault();
 
         try {
-            // 1. Usamos apiClient.post. Esto llamará a POST /sessions
-            //    y el proxy de Vite lo redirigirá a :8080
             const response = await apiClient.post("/sessions", formData);
 
-            // 2. Si la petición es exitosa:
             const data = response.data;
             console.log("Login exitoso:", data);
-            login(data); // Guardamos la sesión
-            navigate('/'); // Redirigimos al inicio
+            login(data);
+            navigate('/');
 
         } catch (err) {
-            // 3. Manejo de errores de Axios
             const error = err as Error | AxiosError;
-            console.error('Error en el login:', error.message);
+            console.error('Error en el login:', error);
 
             let title = "Error en el inicio de sesión";
             let description = "Ocurrió un error inesperado. Intenta de nuevo.";
 
             if (axios.isAxiosError(error)) {
                 if (error.response) {
-                    // El backend respondió con un error
-                    if (error.response.status === 401) { // 401 Unauthorized
+                    // El backend respondió con un error (ej: 401, 403, 404)
+                    const status = error.response.status;
+
+                    // Generalmente login fallido es 401, pero a veces APIs devuelven 400, 403 o 404
+                    if (status === 401 || status === 403 || status === 404) {
                         title = "Credenciales incorrectas";
-                        description = "El email o la contraseña no son válidos.";
+                        description = "El correo electrónico o la contraseña no son válidos.";
+                    } else if (status === 400) {
+                        title = "Datos inválidos";
+                        description = "Por favor revisá que el formato del email sea correcto.";
+                    } else if (status >= 500) {
+                        description = "Hubo un problema con el servidor. Intentá más tarde.";
                     }
                 } else if (error.request) {
-                    // No se pudo conectar (ej. backend caído)
-                    description = "No se pudo conectar con el servidor.";
+                    // No hubo respuesta (backend caído o sin internet)
+                    title = "Error de conexión";
+                    description = "No se pudo conectar con el servidor. Revisá tu conexión.";
                 }
+            } else {
+                // Error no relacionado con Axios
+                description = error.message;
             }
 
-            console.error(`HTTP error! Status: ${response.status}`);
-            console.error(`HTTP error! Status: ${response.body}`);
-            // Mostramos el error
+            // Mostramos el error visualmente
             toast({
                 title: title,
                 description: description,
                 variant: "destructive",
             });
-
         }
     };
 

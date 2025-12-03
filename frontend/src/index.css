@@ -128,3 +128,38 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+
+/* --- AGREGAR ESTO AL FINAL DEL ARCHIVO --- */
+
+@layer utilities {
+  .font-aileron {
+    /* Typekit suele usar "aileron" en minúsculas. */
+    font-family: "aileron", sans-serif;
+  }
+}
+
+/* Animaciones para la Gamificación */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 7s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
