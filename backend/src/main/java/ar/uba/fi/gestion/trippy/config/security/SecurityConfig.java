@@ -57,6 +57,12 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        
+                        // ✅ SHOP: Beneficios públicos, compras requieren autenticación
+                        .requestMatchers(HttpMethod.GET, "/api/shop/benefits").permitAll()
+                        .requestMatchers("/api/shop/**").hasAnyRole("TRAVELER", "USER")
+                        .requestMatchers("/api/shop/**").authenticated()  // Solo requiere estar autenticado
+                        
                         .requestMatchers(HttpMethod.GET, "/publications/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/publications/hotel").hasRole("HOST")
@@ -69,23 +75,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sessions").permitAll()
 
-                        // --- ¡CORREGIDO A hasAnyRole! ---
                         .requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.DELETE, "/reviews").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/reviews/**").permitAll()// borrar
+                        .requestMatchers(HttpMethod.POST, "/reviews/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/users/profile").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.GET, "/ia/reviews/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll() // Webhook es público
+                        .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
 
                         // --- ¡CORREGIDO A hasAnyRole! ---
                         .requestMatchers(HttpMethod.GET, "/reservations/me").hasAnyRole("TRAVELER", "USER", "HOST")
                         .requestMatchers(HttpMethod.GET, "/reservations/all").hasAnyRole("HOST")
+
                         .requestMatchers(HttpMethod.GET, "/reservations/{id}").hasAnyRole("TRAVELER", "USER", "HOST")
                         .requestMatchers(HttpMethod.POST, "/publications/{publicationId}/reservations").hasAnyRole("TRAVELER", "USER")
                         .requestMatchers(HttpMethod.POST, "/payments/create-preference").hasAnyRole("TRAVELER", "USER")
-                        // --- FIN DE LOS CAMBIOS ---
 
                         // Permitir públicamente acceso a archivos estáticos
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
@@ -94,7 +99,7 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
-                //
+                
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(
                         (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                                 "Unauthorized")))
@@ -108,9 +113,19 @@ public class SecurityConfig {
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        
+        // ✅ CRÍTICO: Especificar orígenes exactos (no *)
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173",   // Vite dev
+            "http://localhost:3000",   // React dev alternativo
+            "http://localhost:30003"   // Frontend en Docker
+        ));
+        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
+        
+        // ✅ CRÍTICO: Permitir credenciales
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

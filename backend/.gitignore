@@ -33,3 +33,5 @@ build/
 .vscode/*
 
 
+backend/uploads/
+backend/uploads/*

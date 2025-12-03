@@ -10,6 +10,7 @@ public record UserProfileDTO(
         String email,
         String photo,
         LevelInfoDTO levelInfo,
+        Integer trippyCoins,
         Integer reviewsCount,
         Integer placesVisited,
         Integer photosShared,
@@ -26,6 +27,7 @@ public record UserProfileDTO(
                 user.getEmail(),
                 photoUrl, // photo - implementar cuando tengas el campo
                 LevelInfoDTO.fromTraveler(traveler),
+                traveler.getTrippyCoins(),
                 0, // reviewsCount - obtener de repositorio de reviews
                 0, // placesVisited - obtener de repositorio
                 0, // photosShared - obtener de repositorio
@@ -41,6 +43,7 @@ public record UserProfileDTO(
             user.getEmail(),
             photoUrl,
             null,
+            0,
             0,
             0,
             0,

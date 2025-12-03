@@ -18,7 +18,7 @@ public class IAReviewService {
     private final ReviewQualificationService reviewQualificationService;
 
     private static final String GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-    private static final String GEMINI_API_KEY = "AIzaSyDQshZdvbiOK9-QZhOcM8nJ28ojrf1ojf4";
+    private static final String GEMINI_API_KEY = "AIzaSyA_LSW1Yd9y2PTBrfBoGrOFGL2iVIU9pME";
 
     public IAReviewService(ReviewRepository reviewRepository, ReviewQualificationService reviewQualificationService) {
         this.reviewRepository = reviewRepository;

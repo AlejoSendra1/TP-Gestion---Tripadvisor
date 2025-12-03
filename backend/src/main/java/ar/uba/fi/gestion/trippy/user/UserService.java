@@ -84,8 +84,7 @@ public class UserService {
 
     private TokenDTO generateTokens(User user) {
         String accessToken = jwtService.createToken(new JwtUserDetails(
-                user.getEmail(),
-                user.getRole()));
+            user.getId(), user.getEmail(), user.getRole()));
         RefreshToken refreshToken = refreshTokenService.createFor(user);
         return new TokenDTO(accessToken, refreshToken.value());
     }

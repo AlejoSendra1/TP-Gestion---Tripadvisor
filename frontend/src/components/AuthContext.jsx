@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
-import apiClient from '../lib/apiClient'; // Importamos el apiClient
+import apiClient from '../lib/apiClient';
 
 export const AuthContext = createContext(null);
 
@@ -11,17 +11,15 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        // const accessToken = sessionStorage.getItem("accessToken");
         const accessToken = localStorage.getItem("accessToken");
 
         if (accessToken) {
-          // Usamos apiClient en lugar de fetch
           const response = await apiClient.get("/sessions/profile");
-          const userData = response.data; // Con Axios, los datos están en response.data
-            console.log("📥 Datos del profile endpoint:", userData);
-            const normalizedUser = normalizeUserData(userData);
-            console.log("✅ Usuario normalizado:", normalizedUser);
-            setUser(normalizedUser);
+          const userData = response.data;
+          console.log("📥 Datos del profile endpoint:", userData);
+          const normalizedUser = normalizeUserData(userData);
+          console.log("✅ Usuario normalizado:", normalizedUser);
+          setUser(normalizedUser);
         }
       } catch (error) {
         console.error("Error restoring session:", error);
@@ -39,8 +37,6 @@ export function AuthProvider({ children }) {
     console.log("🔐 Login - usuario normalizado:", normalizedUser);
 
     if (userData.tokenDTO) {
-      // sessionStorage.setItem("accessToken", userData.tokenDTO.accessToken);
-      // sessionStorage.setItem("refreshToken", userData.tokenDTO.refreshToken);
       localStorage.setItem("accessToken", userData.tokenDTO.accessToken);
       localStorage.setItem("refreshToken", userData.tokenDTO.refreshToken);
     }
@@ -50,11 +46,6 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
-    // sessionStorage.removeItem("accessToken");
-    // sessionStorage.removeItem("refreshToken");
-    console.group("🚨 LOGOUT DETECTADO EN CONTEXTO");
-    console.trace("¿Quién llamó a logout?"); // <--- ESTO ES ORO
-    console.groupEnd();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
@@ -66,7 +57,6 @@ export function AuthProvider({ children }) {
 
   const refreshUser = async () => {
     try {
-      // const accessToken = sessionStorage.getItem("accessToken");
       const accessToken = localStorage.getItem("accessToken");
       
       if (!accessToken) {
@@ -74,11 +64,11 @@ export function AuthProvider({ children }) {
         return null;
       }
 
-      // Usamos apiClient también aquí
       const response = await apiClient.get("/sessions/profile");
       const userData = response.data;
       console.log("🔄 refreshUser - datos recibidos:", userData);
-      
+
+      console.log("entrando al normalizer");
       const normalizedUser = normalizeUserData(userData);
       setUser(normalizedUser);
       
@@ -90,7 +80,17 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ✅ FUNCIÓN CORREGIDA: Normaliza datos del backend
+  // ✅ NUEVO: Función para actualizar el usuario manualmente
+  const updateUser = (updates) => {
+    console.log("🔄 updateUser - actualizando con:", updates);
+    setUser(prevUser => {
+      const newUser = { ...prevUser, ...updates };
+      console.log("✅ Usuario actualizado:", newUser);
+      return newUser;
+    });
+  };
+
+  // Normaliza datos del backend
   const normalizeUserData = (userData) => {
     // CASO 1: Datos del LOGIN/SIGNUP (tienen tokenDTO)
     if (userData.tokenDTO) {
@@ -107,8 +107,8 @@ export function AuthProvider({ children }) {
           ...baseUser,
           firstName: userData.firstName,
           lastName: userData.lastName,
-          // Del login, pueden venir como userXP/userLevel o xp/level
           userXP: userData.userXP ?? userData.xp ?? 0,
+          userTrippyCoins: userData.userTrippyCoins ?? userData.trippyCoins ?? 0,
           userLevel: userData.userLevel ?? userData.level ?? 1,
           photo: userData.photo
         };
@@ -123,8 +123,7 @@ export function AuthProvider({ children }) {
       return baseUser;
     }
 
-    // CASO 2: Datos del endpoint /sessions/profile (estructura diferente)
-    // Tiene levelInfo como objeto anidado
+    // CASO 2: Datos del endpoint /sessions/profile
     const isTraveler = userData.levelInfo !== null && userData.levelInfo !== undefined;
     
     const baseUser = {
@@ -136,21 +135,21 @@ export function AuthProvider({ children }) {
     };
 
     if (isTraveler && userData.levelInfo) {
+      console.log("USERdata tiene estas coins:", userData.trippyCoins);
+
       return {
         ...baseUser,
         firstName: userData.firstName,
         lastName: userData.lastName,
         photo: userData.photo,
-        // ✅ EXTRAER DE levelInfo (campos del LevelInfoDTO.java)
         userXP: userData.levelInfo.currentXp,
         userLevel: userData.levelInfo.currentLevel,
-        // Campos adicionales útiles
+        userTrippyCoins: userData.TrippyCoins ?? userData.trippyCoins ?? 0,
         xpForNextLevel: userData.levelInfo.xpForNextLevel,
         xpRequiredForNextLevel: userData.levelInfo.xpRequiredForNextLevel,
         progressPercentage: userData.levelInfo.progressPercentage,
         discountPercentage: userData.levelInfo.discountPercentage,
         levelBenefits: userData.levelInfo.benefits,
-        // Stats del perfil
         reviewsCount: userData.reviewsCount ?? 0,
         placesVisited: userData.placesVisited ?? 0,
         photosShared: userData.photosShared ?? 0,
@@ -175,6 +174,8 @@ export function AuthProvider({ children }) {
     </div>;
   }
 
+  console.log("AuthContext value:", { user, login, logout, signup, refreshUser, updateUser, isTraveler, isBusinessOwner });
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -182,6 +183,7 @@ export function AuthProvider({ children }) {
       logout,
       signup,
       refreshUser,
+      updateUser,  // ← AÑADIDO
       isTraveler,
       isBusinessOwner
     }}>

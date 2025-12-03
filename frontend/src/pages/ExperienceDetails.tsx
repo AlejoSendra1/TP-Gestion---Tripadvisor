@@ -10,7 +10,8 @@ import {
 import { useDeletePublication } from "@/hooks/useDeletePublication";
 import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
-
+import { usePersonalizedPrice } from "@/hooks/usePersonalizedPrice";
+import { PriceDisplay } from "@/components/PriceDisplay";
 import ReservationList from "@/components/reservation/ReservationList";
 import ReservationCalendar from "@/components/reservation/ReservationCalendar";
 import { useUserReservations } from "@/hooks/useUserReservations";
@@ -63,7 +64,7 @@ type DisplayReview = {
 
 export default function ExperienceDetails() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, isTraveler } = useAuth();
   const navigate = useNavigate();
   const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
 
@@ -73,6 +74,15 @@ export default function ExperienceDetails() {
     isLoading,
     isError,
   } = usePublicationDetail(id);
+
+    const {
+        data: personalizedPrice,
+        isLoading: isLoadingPrice,
+      } = usePersonalizedPrice(
+        id,
+        !!user && !!id && isTraveler()// Only fetch if user is logged in and we have an ID
+      );
+
 
   // --- Hook para BORRAR publicación ---
   const { mutate: performDelete, isPending: isDeleting } =
@@ -359,17 +369,12 @@ export default function ExperienceDetails() {
               {/* Card de Reserva */}
               <Card className="sticky top-6">
                 <CardContent className="p-6">
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold text-primary mb-2">
-                      ${publication.price}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      por{" "}
-                      {publication.publicationType.toLowerCase() === "hotel"
-                          ? "noche"
-                          : "persona"}
-                    </div>
-                  </div>
+                  <PriceDisplay
+                    basePrice={publication.price}
+                    personalizedPrice={personalizedPrice}
+                    isLoading={isLoadingPrice}
+                    publicationType={publication.publicationType}
+                  />
 
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center justify-between">
@@ -383,7 +388,7 @@ export default function ExperienceDetails() {
                     </div>
                     <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
                       <Trophy className="h-4 w-4 mr-2 text-experience" />
-                      Ganá {xpReward} de XP al reseñar esta publicación!
+                      Ganá XP al reseñar esta publicación!
                     </div>
                   </div>
 

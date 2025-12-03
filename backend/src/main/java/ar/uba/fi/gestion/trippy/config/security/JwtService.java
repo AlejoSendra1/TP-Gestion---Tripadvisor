@@ -32,6 +32,7 @@ public class JwtService {
                 .subject(claims.username())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
+                .claim("userId", claims.userId())  // ✅ AÑADIDO: userId en el token
                 .claim("role", claims.role())
                 .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
@@ -44,14 +45,27 @@ public class JwtService {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
+            
+            // ✅ ACTUALIZADO: Verificar que el token tenga userId, username y role
             if (claims.containsKey("sub")
+                    && claims.containsKey("userId")  // ✅ AÑADIDO
                     && claims.containsKey("role")
+                    && claims.get("userId") instanceof Number  // ✅ AÑADIDO: Puede ser Integer o Long
                     && claims.get("role") instanceof String role
             ) {
-                return Optional.of(new JwtUserDetails(claims.getSubject(), role));
+                Long userId = ((Number) claims.get("userId")).longValue();  // ✅ AÑADIDO: Convertir a Long
+                String username = claims.getSubject();
+                
+                System.out.println("✅ JWT extracted - User: " + username + ", ID: " + userId + ", Role: " + role);
+                
+                return Optional.of(new JwtUserDetails(userId, username, role));  // ✅ ACTUALIZADO: Incluir userId
+            } else {
+                System.err.println("⚠️ JWT missing required fields - userId: " + claims.containsKey("userId") 
+                    + ", sub: " + claims.containsKey("sub") 
+                    + ", role: " + claims.containsKey("role"));
             }
         } catch (Exception e) {
-            // Some exception happened during jwt parse
+            System.err.println("❌ Error parsing JWT: " + e.getMessage());
         }
         return Optional.empty();
     }

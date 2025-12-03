@@ -24,6 +24,7 @@ type UserProfileResponse = {
     lastName: string;
     email: string;
     levelInfo: any; // Ajustar si es necesario
+    trippyCoins: number;
     // ...y todos los otros campos de UserProfileDTO
 };
 
