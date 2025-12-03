@@ -277,178 +277,202 @@ const Profile = () => {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Beneficios del Nivel Actual */}
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Gift className="h-5 w-5 text-primary" />
-                Beneficios Actuales
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <Award className={`h-6 w-6 ${getLevelColor(currentLevel)}`} />
-                  <span className="text-xl font-bold">Nivel {currentLevel}</span>
-                </div>
-                <div className="space-y-2">
-                  {levelBenefits
-                    .find(lb => lb.level === currentLevel)
-                    ?.benefits.map((benefit, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-sm">
-                        <span className="text-primary mt-0.5">✓</span>
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              {currentLevel < 10 && (
-                <div className="pt-4 border-t">
-                  <h4 className="font-semibold mb-3 text-sm">Próximos beneficios (Nivel {currentLevel + 1})</h4>
-                  <div className="space-y-2">
-                    {levelBenefits
-                      .find(lb => lb.level === currentLevel + 1)
-                      ?.benefits.map((benefit, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <span className="mt-0.5">→</span>
-                          <span>{benefit}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Logros */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                Logros
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {achievements.map((achievement, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                    achievement.earned
-                      ? 'bg-green-500/10 border-green-500/20 shadow-sm'
-                      : 'bg-muted/50 border-border opacity-60'
-                  }`}
-                >
-                  <div className="text-2xl">{achievement.icon}</div>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{achievement.name}</div>
-                    <div className="text-xs text-muted-foreground">{achievement.description}</div>
-                  </div>
-                  {achievement.earned && (
-                    <Badge variant="default" className="text-xs bg-green-500">Obtenido</Badge>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Reseñas Recientes - Ahora en columna completa después de las 3 anteriores */}
-        </div>
-
-        {/* Reseñas Recientes - Fuera del grid de 3 columnas */}
-        <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  Reseñas Recientes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {reviewsLoading && <p className="text-sm text-muted-foreground text-center py-4">Cargando reseñas...</p>}
-                {reviewsError && <p className="text-sm text-destructive text-center py-4">Error cargando reseñas: {String(reviewsError.message ?? reviewsError)}</p>}
-
-                {!reviewsLoading && !reviewsError && (recentReviews.length > 0 ? (
-                  recentReviews.map((review) => (
-                    <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/experience/${review.publicationId}#personal-review`)}>
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-sm">{review.placeName}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-muted-foreground">{review.date}</span>
+                    {/* Beneficios del Nivel Actual */}
+                    <Card className="border-primary/20">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Gift className="h-5 w-5 text-primary" />
+                          Beneficios Actuales
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Award className={`h-6 w-6 ${getLevelColor(currentLevel)}`} />
+                            <span className="text-xl font-bold">Nivel {currentLevel}</span>
+                          </div>
+                          <div className="space-y-2">
+                            {levelBenefits
+                                .find(lb => lb.level === currentLevel)
+                                ?.benefits.map((benefit, idx) => (
+                                    <div key={idx} className="flex items-start gap-2 text-sm">
+                                      <span className="text-primary mt-0.5">✓</span>
+                                      <span>{benefit}</span>
+                                    </div>
+                                ))}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 ${
-                                i < review.rating
-                                  ? 'text-yellow-500 fill-yellow-500'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <Badge className={`text-xs flex items-center gap-1 ${getQualificationColor(review.qualification ?? 0)}`}>
-                          {(review.qualification ?? 0) > 0 ? (
-                            <>
-                              <ThumbsUp className="h-3 w-3" />
-                              {(review.qualification ?? 0)}
-                            </>
-                          ) : (review.qualification ?? 0) < 0 ? (
-                            <>
-                              <ThumbsDown className="h-3 w-3" />
-                              {(review.qualification ?? 0)}
-                            </>
-                          ) : (
-                            <>
-                              {0}
-                              <ThumbsUp className="h-3 w-3" />
-                              <ThumbsDown className="h-3 w-3" />
-                            </>
-                          )}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {review.content.length > 50
-                          ? review.content.substring(0, 50) + '...'
-                          : review.content
-                        }
-                      </p>
+
+                        {currentLevel < 10 && (
+                            <div className="pt-4 border-t">
+                              <h4 className="font-semibold mb-3 text-sm">Próximos beneficios (Nivel {currentLevel + 1})</h4>
+                              <div className="space-y-2">
+                                {levelBenefits
+                                    .find(lb => lb.level === currentLevel + 1)
+                                    ?.benefits.map((benefit, idx) => (
+                                        <div key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                          <span className="mt-0.5">→</span>
+                                          <span>{benefit}</span>
+                                        </div>
+                                    ))}
+                              </div>
+                            </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Logros */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Trophy className="h-5 w-5 text-yellow-500" />
+                          Logros
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {achievements.map((achievement, index) => (
+                            <div
+                                key={index}
+                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                                    achievement.earned
+                                        ? 'bg-green-500/10 border-green-500/20 shadow-sm'
+                                        : 'bg-muted/50 border-border opacity-60'
+                                }`}
+                            >
+                              <div className="text-2xl">{achievement.icon}</div>
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">{achievement.name}</div>
+                                <div className="text-xs text-muted-foreground">{achievement.description}</div>
+                              </div>
+                              {achievement.earned && (
+                                  <Badge variant="default" className="text-xs bg-green-500">Obtenido</Badge>
+                              )}
+                            </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    {/* Reseñas Recientes (Hardcodeado) */}
+                    <div className="lg:col-span-1">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Star className="h-5 w-5 text-yellow-500" />
+                            Reseñas Recientes
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+
+          {/*{recentReviews.length > 0 ? (*/}
+          {/*                  recentReviews.map((review) => (*/}
+          {/*                       // ... lógica de renderizado de reseñas*/}
+          {/*                      <div key={review.id}></div>*/}
+          {/*                  ))*/}
+          {/*              ) : (*/}
+          {/*                   <p className="text-sm text-muted-foreground text-center py-4">*/}
+          {/*                   Aún no has escrito ninguna reseña*/}
+          {/*                 </p>*/}
+          {/*              )}*/}
+
+                            {reviewsLoading && <p className="text-sm text-muted-foreground text-center py-4">Cargando reseñas...</p>}
+                            {reviewsError && <p className="text-sm text-destructive text-center py-4">Error cargando reseñas: {String(reviewsError.message ?? reviewsError)}</p>}
+
+                            {!reviewsLoading && !reviewsError && (recentReviews.length > 0 ? (
+                                recentReviews.map((review) => (
+                                    <div key={review.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow" onClick={() => navigate(`/experience/${review.publicationId}#personal-review`)}>
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div className="flex-1">
+                                          <h3 className="font-medium text-sm">{review.placeName}</h3>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-xs text-muted-foreground">{review.date}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center justify-between mt-2">
+                                        <div className="flex items-center gap-1">
+                                          {Array.from({ length: 5 }).map((_, i) => (
+                                              <Star
+                                                  key={i}
+                                                  className={`h-3 w-3 ${
+                                                      i < review.rating
+                                                          ? 'text-yellow-500 fill-yellow-500'
+                                                          : 'text-gray-300'
+                                                  }`}
+                                              />
+                                          ))}
+                                        </div>
+                                        <Badge className={`text-xs flex items-center gap-1 ${getQualificationColor(review.qualification ?? 0)}`}>
+                                          {(review.qualification ?? 0) > 0 ? ( // Safely check qualification
+                                              <>
+                                                <ThumbsUp className="h-3 w-3" />
+                                                {(review.qualification ?? 0)}
+                                              </>
+                                            ) : (review.qualification ?? 0) < 0 ? ( // Safely check qualification
+                                              <>
+                                                <ThumbsDown className="h-3 w-3" />
+                                                {(review.qualification ?? 0)}
+                                              </>
+                                            ) : (
+                                              <>
+                                                {0}
+                                                <ThumbsUp className="h-3 w-3" />
+                                                <ThumbsDown className="h-3 w-3" />
+                                              </>
+                                            )}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground mt-2">
+                                        {review.content.length > 50
+                                          ? review.content.substring(0, 50) + '...'
+                                          : review.content
+                                        }
+                                      </p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-4">
+                                  Aún no has escrito ninguna reseña
+                                </p>
+                            ))}
+                            {userReviewsData && userReviewsData.totalPages > 1 && (
+                                <div className="flex items-center justify-between pt-4 border-t mt-4">
+                                    {/* Previous Button */}
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                                        disabled={userReviewsData.first || reviewsLoading}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+
+                                    {/* Page Status */}
+                                    <span className="text-sm text-muted-foreground">
+                                        Página {userReviewsData.number + 1} de {userReviewsData.totalPages}
+                                    </span>
+
+                                    {/* Next Button */}
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setPage(prev => prev + 1)}
+                                        disabled={userReviewsData.last || reviewsLoading}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
+
+                            {reviewsLoading && (
+                                <p className="text-sm text-muted-foreground text-center py-4 border-t mt-4">
+                                    Cargando reseñas...
+                                </p>
+                            )}
+
+                        </CardContent>
+                      </Card>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Aún no has escrito ninguna reseña
-                  </p>
-                ))}
-                {userReviewsData && userReviewsData.totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-4 border-t mt-4">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setPage(prev => Math.max(0, prev - 1))}
-                      disabled={userReviewsData.first || reviewsLoading}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Página {userReviewsData.number + 1} de {userReviewsData.totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setPage(prev => prev + 1)}
-                      disabled={userReviewsData.last || reviewsLoading}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
                   </div>
-                )}
-              </CardContent>
-        </Card>
 
         {/* Sección de Tienda de Trippy Coins con botón para abrir el diálogo */}
         <Card>
