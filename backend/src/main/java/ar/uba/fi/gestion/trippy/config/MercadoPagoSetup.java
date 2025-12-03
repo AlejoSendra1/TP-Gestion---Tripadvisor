@@ -9,7 +9,7 @@ import jakarta.annotation.PostConstruct;
 public class MercadoPagoSetup {
 
     // 1. Inyecta el valor desde application.properties
-    @Value("${mercadopago.access-token}")
+    @Value("${mercadopago.access-token:}")
     private String mercadoPagoAccessToken;
 
     // 2. Este método se ejecuta automáticamente DESPUÉS

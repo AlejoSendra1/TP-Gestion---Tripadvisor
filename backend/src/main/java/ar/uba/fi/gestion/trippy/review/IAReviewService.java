@@ -2,6 +2,7 @@ package ar.uba.fi.gestion.trippy.review;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import ar.uba.fi.gestion.trippy.reviewQualification.ReviewQualificationService;
@@ -18,7 +19,9 @@ public class IAReviewService {
     private final ReviewQualificationService reviewQualificationService;
 
     private static final String GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-    private static final String GEMINI_API_KEY = "AIzaSyA_LSW1Yd9y2PTBrfBoGrOFGL2iVIU9pME";
+
+    @Value("${gemini.api.key:}")
+    private String geminiApiKey;
 
     public IAReviewService(ReviewRepository reviewRepository, ReviewQualificationService reviewQualificationService) {
         this.reviewRepository = reviewRepository;
@@ -70,7 +73,7 @@ public class IAReviewService {
                     """.formatted(prompt.replace("\"", "\\\""));
 
             var request = HttpRequest.newBuilder()
-                    .uri(URI.create(GEMINI_ENDPOINT + "?key=" + GEMINI_API_KEY))
+                    .uri(URI.create(GEMINI_ENDPOINT + "?key=" + geminiApiKey))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();

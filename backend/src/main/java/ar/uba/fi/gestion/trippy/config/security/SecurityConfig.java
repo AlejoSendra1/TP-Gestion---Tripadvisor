@@ -118,7 +118,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
             "http://localhost:5173",   // Vite dev
             "http://localhost:3000",   // React dev alternativo
-            "http://localhost:30003"   // Frontend en Docker
+            "http://localhost:30003",   // Frontend en Docker
+            "http://localhost:8081"
         ));
         
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
