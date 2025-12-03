@@ -2,11 +2,13 @@ package ar.uba.fi.gestion.trippy.reservation;
 
 import ar.uba.fi.gestion.trippy.publication.Publication;
 import ar.uba.fi.gestion.trippy.publication.PublicationRepository;
+import ar.uba.fi.gestion.trippy.publication.PublicationService;
 import ar.uba.fi.gestion.trippy.reservation.dto.ReservationResponseDTO;
 import ar.uba.fi.gestion.trippy.user.Traveler;
 import ar.uba.fi.gestion.trippy.user.User;
 import ar.uba.fi.gestion.trippy.user.UserRepository;
 import ar.uba.fi.gestion.trippy.reservation.dto.ReservationCreateDTO;
+import ar.uba.fi.gestion.trippy.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +36,9 @@ public class ReservationService {
     private static final int XP_PER_10_DOLLARS = 1;  // 1 XP por cada $10
 
     @Autowired
+    private PublicationService publicationService;
+
+    @Autowired
     public ReservationService(ReservationRepository reservationRepository,
                               PublicationRepository publicationRepository,
                               UserRepository userRepository,
@@ -58,12 +63,17 @@ public class ReservationService {
         if (pub.getHost() != null && pub.getHost().getEmail().equals(userEmail))
             throw new IllegalStateException("No podés reservar tu propia publicación.");
 
+        double oldPrice = pub.getPrice();
+        double newPrice = publicationService.getPublicationPriceForActualUser(publicationId);
+        pub.setPrice(newPrice);
         Reservation reservation = reservationFactory.createForPublication(pub, user, dto);
 
         // Delegar validación a la instancia concreta antes de persistir
         reservation.validateCapacity(reservationRepository);
 
         Reservation savedReservation = reservationRepository.save(reservation);
+        pub.setPrice(oldPrice);
+        publicationRepository.save(pub);
 
         // ✅ NUEVO: Otorgar XP al Traveler por la reserva
         awardXpForReservation(traveler, savedReservation.getTotalPrice());

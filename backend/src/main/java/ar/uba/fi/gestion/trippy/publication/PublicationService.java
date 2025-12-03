@@ -4,8 +4,7 @@ package ar.uba.fi.gestion.trippy.publication;
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationDetailDTO;
 import ar.uba.fi.gestion.trippy.publication.dto.PublicationListDTO;
-import ar.uba.fi.gestion.trippy.user.BusinessOwner;
-import ar.uba.fi.gestion.trippy.user.User;
+import ar.uba.fi.gestion.trippy.user.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,7 +33,6 @@ import ar.uba.fi.gestion.trippy.publication.dto.PublicationUpdateDTO;
 
 
 import ar.uba.fi.gestion.trippy.user.User; // <-- Para la entidad User
-import ar.uba.fi.gestion.trippy.user.UserRepository; // <-- ¡NUEVA dependencia!
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.data.jpa.domain.Specification;
@@ -48,14 +46,17 @@ public class PublicationService {
 
     private final PublicationRepository publicationRepository;
     private final UserRepository userRepository; // <-- ¡NUEVO CAMPO!
+    private final UserService userService;
 
     @Autowired
     public PublicationService(
             PublicationRepository publicationRepository,
-            UserRepository userRepository // <-- ¡NUEVO en el constructor!
+            UserRepository userRepository,
+            UserService userService
     ) {
         this.publicationRepository = publicationRepository;
         this.userRepository = userRepository; // <-- ¡NUEVA asignación!
+        this.userService = userService;
     }
 
     /**
@@ -541,5 +542,18 @@ public class PublicationService {
         return pubs.stream()
                 .map(this::convertToListDTO)
                 .collect(Collectors.toList());
+    }
+
+
+    public double getPublicationPriceForActualUser(Long publicationId) {
+        Publication publication = publicationRepository.getReferenceById(publicationId);
+        User actualUser = userService.getCurrentAuthenticatedUser();
+
+        double actualPrice = publication.getPrice();
+        if (actualUser instanceof Traveler) {
+            actualPrice = actualPrice*(1 - (double) ((Traveler) actualUser).getDiscountPercentage() /100);
+        }
+        System.out.println("el precio con descuento es: " + actualPrice);
+        return actualPrice;
     }
 }
