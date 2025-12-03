@@ -10,7 +10,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/shop")
 @CrossOrigin(
-    origins = {"http://localhost:5173", "http://localhost:3000", "http://localhost:30003"},
+    origins = {"http://localhost:5173", "http://localhost:3000", "http://localhost:30003", "https://trippy-hazel.vercel.app"},
     allowedHeaders = "*",
     methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS},
     allowCredentials = "true"
