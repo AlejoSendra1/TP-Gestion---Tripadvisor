@@ -27,9 +27,10 @@ const SearchResults = () => {
       setLoading(true);
       setError(null);
       try {
+        const baseUrl = import.meta.env.VITE_BACKEND_API_URL
         // Hacemos la llamada al nuevo endpoint del backend
         const response = await fetch(
-          `http://localhost:8080/fields/search?name=${encodeURIComponent(query)}`
+            `${baseUrl}/fields/search?name=${encodeURIComponent(query)}`
         );
         if (!response.ok) {
           throw new Error("Error al obtener los resultados");
