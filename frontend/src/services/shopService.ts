@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { apiClient } from '@/lib/apiClient';
 
-const API_URL = import.meta.env.VITE_BASE_API_URL;
+const API_URL = 'https://nonthreatening-alison-ungeneralized.ngrok-free.dev';
 
 console.log('🔧 Shop Service initialized with API_URL:', API_URL);
 

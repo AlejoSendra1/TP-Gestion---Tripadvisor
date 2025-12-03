@@ -27,7 +27,7 @@ const SearchResults = () => {
       setLoading(true);
       setError(null);
       try {
-        const baseUrl = import.meta.env.VITE_BACKEND_API_URL
+        const baseUrl = 'https://nonthreatening-alison-ungeneralized.ngrok-free.dev'
         // Hacemos la llamada al nuevo endpoint del backend
         const response = await fetch(
             `${baseUrl}/fields/search?name=${encodeURIComponent(query)}`

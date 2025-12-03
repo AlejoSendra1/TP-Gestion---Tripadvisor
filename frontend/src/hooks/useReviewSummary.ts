@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from "@/lib/apiClient"; // Importamos tu cliente configurado
+import { AxiosError } from 'axios'; // Importamos el tipo de error para el catch
 
 interface UseReviewSummaryReturn {
   summaryText: string | null;
@@ -23,10 +24,17 @@ export function useReviewSummary(publicationId: string | undefined): UseReviewSu
     setError(null);
 
     try {
-      const response = await axios.get(`/ia/reviews/summary/${publicationId}`);
+      // Usamos apiClient en lugar de axios
+      const response = await apiClient.get(`/ia/reviews/summary/${publicationId}`);
+
+      // Ajustamos para tomar la data correctamente según venga del back
       setSummaryText(response.data.summary || response.data.summaryText || response.data);
+
     } catch (err) {
-      if (axios.isAxiosError(err)) {
+      console.error("Error fetching summary:", err); // Log para debug
+
+      if (err instanceof AxiosError) {
+        // Manejo de error específico de Axios
         setError(err.response?.data?.message || err.message || 'Failed to fetch summary');
       } else {
         setError('Failed to fetch summary');
