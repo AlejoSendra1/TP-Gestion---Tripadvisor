@@ -9,7 +9,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/images")
+@RequestMapping("/images")
 public class ImageRestController {
 
     @Autowired

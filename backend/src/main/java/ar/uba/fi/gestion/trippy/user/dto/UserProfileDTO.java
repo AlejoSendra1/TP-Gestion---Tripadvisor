@@ -18,13 +18,14 @@ public record UserProfileDTO(
 ) {
 
     public static UserProfileDTO fromUser(User user) {
+        String photoUrl = user.getPhoto();
         if (user instanceof Traveler traveler) {
             return new UserProfileDTO(
                 user.getId(),
                 traveler.getFirstName(),
                 traveler.getLastName(),
                 user.getEmail(),
-                null, // photo - implementar cuando tengas el campo
+                photoUrl, // photo - implementar cuando tengas el campo
                 LevelInfoDTO.fromTraveler(traveler),
                 traveler.getTrippyCoins(),
                 0, // reviewsCount - obtener de repositorio de reviews
@@ -40,7 +41,7 @@ public record UserProfileDTO(
             "User",
             "",
             user.getEmail(),
-            null,
+            photoUrl,
             null,
             0,
             0,

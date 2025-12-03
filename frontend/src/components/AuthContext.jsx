@@ -99,7 +99,7 @@ export function AuthProvider({ children }) {
         email: userData.email,
         userType: userData.userType,
         verified: userData.verified,
-        role: userData.role
+        role: userData.role,
       };
 
       if (userData.userType === "TRAVELER") {
@@ -110,11 +110,13 @@ export function AuthProvider({ children }) {
           userXP: userData.userXP ?? userData.xp ?? 0,
           userTrippyCoins: userData.userTrippyCoins ?? userData.trippyCoins ?? 0,
           userLevel: userData.userLevel ?? userData.level ?? 1,
+          photo: userData.photo
         };
       } else if (userData.userType === "OWNER") {
         return {
           ...baseUser,
           businessName: userData.businessName,
+          photo: userData.photo
         };
       }
 

@@ -9,5 +9,6 @@ public record TravelerDTO(
         Integer userLevel,
         Integer userTrippyCoins,
         String userType,
-        String role
+        String role,
+        String photo
 ) implements UserDTO {}

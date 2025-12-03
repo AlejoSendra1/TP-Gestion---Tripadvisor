@@ -148,6 +148,12 @@ VALUES
 SELECT setval('publication_id_seq', (SELECT MAX(id) FROM publication));
 SELECT setval('review_review_id_seq', (SELECT MAX(review_id) FROM review));
 
+-- ACTUALIZA EL CONTADOR DE IDS DE USUARIOS (ESTO FALTABA)
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
+-- $2a$10$ewqlk2zysNDd47IVB17TGe1fUqgS4yO7u/LpSG22V7UqrldUswOya	
+-- 3c34b596-aec0-4e1d-88f4-4e7618e3b89b
+
+
 -- ============================================================
 -- Script completo para crear e insertar beneficios
 -- Base de datos: PostgreSQL
@@ -236,3 +242,4 @@ SELECT COUNT(*) as total_benefits FROM benefits;
 
 -- Resultado esperado: 13 beneficios
 -- 5 DISCOUNT + 4 XP_BONUS + 2 PRIORITY_SUPPORT + 2 FREE_UPGRADE = 13
+

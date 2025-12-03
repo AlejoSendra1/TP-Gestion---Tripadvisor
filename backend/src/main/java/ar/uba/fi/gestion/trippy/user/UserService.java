@@ -139,9 +139,6 @@ public class UserService {
     }
 
 
-    /**
-     * Actualiza el perfil de un usuario (Traveler)
-     */
     public UserProfileDTO updateUserProfile(UpdateProfileRequestDTO data) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -154,9 +151,17 @@ public class UserService {
         if (user instanceof Traveler traveler) {
             traveler.setFirstName(data.firstName());
             traveler.setLastName(data.lastName());
+
+            // --- LÓGICA NUEVA PARA LA FOTO ---
+            if (data.photo() != null && !data.photo().isEmpty()) {
+                traveler.setPhoto(data.photo());
+            }
+            // ---------------------------------
+
             userRepository.save(traveler);
             return UserProfileDTO.fromUser(traveler);
         } else {
+            // Nota: Si quisieras que los Owners también editen perfil, lo agregarías aquí
             throw new IllegalStateException("El perfil solo puede ser actualizado por usuarios de tipo Traveler.");
         }
     }

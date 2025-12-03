@@ -30,14 +30,25 @@ public record RegistrationRequestDTO (
     Boolean agreeToTerms,
 
     // Business-specific fields (optional)
-    String businessName
-    ){
-    // TODO despues implementar polimorfismo y verificacion de campos
-    public User asUser(Function<String, String> encryptPassword){
-        if (this.userType.equals("TRAVELER")) {
-            return new Traveler(this.email, encryptPassword.apply(this.password),this.firstName,this.lastName);
+    String businessName,
+
+    String photo
+    ) {
+        // TODO despues implementar polimorfismo y verificacion de campos
+        public User asUser(Function<String, String> encryptPassword){
+            User newUser;
+            if (this.userType.equals("TRAVELER")) {
+                newUser = new Traveler(this.email, encryptPassword.apply(this.password), this.firstName, this.lastName);
+            } else {
+                newUser = new BusinessOwner(this.email, encryptPassword.apply(this.password), this.businessName);
+            }
+
+            // Asignamos la foto si viene en el request
+            if (this.photo != null && !this.photo.isEmpty()) {
+                newUser.setPhoto(this.photo);
+            }
+
+            return newUser;
         }
-        return new BusinessOwner(this.email,encryptPassword.apply(this.password),this.businessName);
     }
-}
 

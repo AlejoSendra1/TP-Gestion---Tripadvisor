@@ -170,7 +170,8 @@ public class ReservationService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + userEmail));
 
         if (!(user instanceof Traveler traveler))
-            throw new IllegalStateException("Solo los viajeros pueden tener reservas");
+            return List.of();
+//            throw new IllegalStateException("Solo los viajeros pueden tener reservas");
 
         return reservationRepository.findByTravelerIdWithAssociations(traveler.getId());
     }
