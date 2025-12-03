@@ -1,0 +1,147 @@
+{
+  "info": {
+    "_postman_id": "travelers-collection",
+    "name": "1. Create Travelers",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Traveler 1 - Agustin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userType\": \"TRAVELER\",\n  \"firstName\": \"Agustin\",\n  \"lastName\": \"Benito\",\n  \"email\": \"abenito@trippy.com\",\n  \"password\": \"123456789\",\n  \"confirmPassword\": \"123456789\",\n  \"agreeToTerms\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["users"]
+        }
+      }
+    },
+    {
+      "name": "Create Traveler 2 - Tomas",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userType\": \"TRAVELER\",\n  \"firstName\": \"Tomas\",\n  \"lastName\": \"Castro\",\n  \"email\": \"tcastro@trippy.com\",\n  \"password\": \"123456789\",\n  \"confirmPassword\": \"123456789\",\n  \"agreeToTerms\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["users"]
+        }
+      }
+    },
+    {
+      "name": "Create Traveler 3 - Agustina",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userType\": \"TRAVELER\",\n  \"firstName\": \"Agustina\",\n  \"lastName\": \"Thames\",\n  \"email\": \"athames@trippy.com\",\n  \"password\": \"123456789\",\n  \"confirmPassword\": \"123456789\",\n  \"agreeToTerms\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["users"]
+        }
+      }
+    },
+    {
+      "name": "Create Traveler 4 - Lucas",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userType\": \"TRAVELER\",\n  \"firstName\": \"Lucas\",\n  \"lastName\": \"Villarrubia\",\n  \"email\": \"lvillarrubia@trippy.com\",\n  \"password\": \"123456789\",\n  \"confirmPassword\": \"123456789\",\n  \"agreeToTerms\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["users"]
+        }
+      }
+    },
+    {
+      "name": "Create Traveler 5 - Kevin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userType\": \"TRAVELER\",\n  \"firstName\": \"Kevin\",\n  \"lastName\": \"Carbajal\",\n  \"email\": \"kcarbajal@trippy.com\",\n  \"password\": \"123456789\",\n  \"confirmPassword\": \"123456789\",\n  \"agreeToTerms\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["users"]
+        }
+      }
+    },
+    {
+      "name": "Create Traveler 6 - Ale",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userType\": \"TRAVELER\",\n  \"firstName\": \"Ale\",\n  \"lastName\": \"Sendra\",\n  \"email\": \"asendra@trippy.com\",\n  \"password\": \"123456789\",\n  \"confirmPassword\": \"123456789\",\n  \"agreeToTerms\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["users"]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,460 @@
+{
+  "info": {
+    "_postman_id": "user-reservations-collection",
+    "name": "5. User Reservations Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Setup - Get User Tokens",
+      "item": [
+        {
+          "name": "Login as Agustin (Traveler)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 201) {",
+                  "    var responseData = pm.response.json();",
+                  "    if (responseData.tokenDTO && responseData.tokenDTO.accessToken) {",
+                  "        pm.environment.set('agustin_token', responseData.tokenDTO.accessToken);",
+                  "        console.log('✅ Agustin token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"agustin@trippy.com\",\n  \"password\": \"123456789\"\n}"
+            },
+            "url": "{{base_url}}/sessions"
+          }
+        },
+        {
+          "name": "Login as Tomas (Traveler)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 201) {",
+                  "    var responseData = pm.response.json();",
+                  "    if (responseData.tokenDTO && responseData.tokenDTO.accessToken) {",
+                  "        pm.environment.set('tomas_token', responseData.tokenDTO.accessToken);",
+                  "        console.log('✅ Tomas token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tomas@trippy.com\",\n  \"password\": \"123456789\"\n}"
+            },
+            "url": "{{base_url}}/sessions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Hotel Reservations",
+      "item": [
+        {
+          "name": "POST Create Hotel Reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('=== Hotel Reservation Response ===');",
+                  "console.log('Status:', pm.response.status);",
+                  "if (pm.response.status === 201) {",
+                  "    var reservation = pm.response.json();",
+                  "    pm.environment.set('reservation_id', reservation.id);",
+                  "    console.log('✅ Hotel reservation created with ID:', reservation.id);",
+                  "    console.log('Check-in:', reservation.checkIn);",
+                  "    console.log('Check-out:', reservation.checkOut);",
+                  "    console.log('Total Price:', reservation.totalPrice);",
+                  "}",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agustin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2024-12-25\",\n  \"endDate\": \"2024-12-28\",\n  \"roomCount\": 1,\n  \"guests\": 2,\n  \"additionalInfo\": \"Quisiera una habitación con vista al estadio\"\n}"
+            },
+            "url": "{{base_url}}/publications/{{hotel_river_id}}/reservations"
+          }
+        },
+        {
+          "name": "GET My Hotel Reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agustin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/reservations/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('=== My Reservations ===');",
+                  "if (pm.response.status === 200) {",
+                  "    var reservations = pm.response.json();",
+                  "    console.log('Total reservations:', reservations.length);",
+                  "    reservations.forEach((res, idx) => {",
+                  "        console.log(`\\n[${idx}] ${res.publicationTitle}`);",
+                  "        console.log(`   Type: ${res.reservationType}`);",
+                  "        console.log(`   Status: ${res.status}`);",
+                  "        console.log(`   Price: $${res.totalPrice}`);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Hotel Reservation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agustin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/reservations/{{reservation_id}}"
+          }
+        },
+        {
+          "name": "DELETE Cancel Hotel Reservation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agustin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/publications/{{hotel_river_id}}/reservations/{{reservation_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('=== Cancel Reservation Response ===');",
+                  "if (pm.response.status === 200) {",
+                  "    console.log('✅ Reservation cancelled successfully');",
+                  "    var cancelled = pm.response.json();",
+                  "    console.log('New status:', cancelled.status);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Restaurant Reservations",
+      "item": [
+        {
+          "name": "POST Create Restaurant Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tomas_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateTime\": \"2024-12-25T20:00:00\",\n  \"guests\": 4,\n  \"additionalInfo\": \"Celebración de Navidad, mesa preferentemente cerca de la ventana\"\n}"
+            },
+            "url": "{{base_url}}/publications/{{test_restaurant_pub_id}}/reservations"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 201) {",
+                  "    var reservation = pm.response.json();",
+                  "    pm.environment.set('restaurant_reservation_id', reservation.id);",
+                  "    console.log('✅ Restaurant reservation created');",
+                  "    console.log('DateTime:', reservation.dateTime);",
+                  "    console.log('Guests:', reservation.guestCount);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Restaurant Reservations for Publication (Host only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{river_token}}"
+              }
+            ],
+            "url": "{{base_url}}/publications/{{test_restaurant_pub_id}}/reservations/all"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Activity Reservations",
+      "item": [
+        {
+          "name": "POST Create Activity Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agustin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateTime\": \"2024-12-26T10:00:00\",\n  \"guests\": 2,\n  \"additionalInfo\": \"Queremos el tour en inglés por favor\"\n}"
+            },
+            "url": "{{base_url}}/publications/{{test_activity_pub_id}}/reservations"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 201) {",
+                  "    var reservation = pm.response.json();",
+                  "    pm.environment.set('activity_reservation_id', reservation.id);",
+                  "    console.log('✅ Activity reservation created');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Specific Activity Reservation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agustin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/reservations/{{activity_reservation_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Coworking Reservations",
+      "item": [
+        {
+          "name": "POST Create Coworking Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tomas_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2024-12-27\",\n  \"endDate\": \"2024-12-29\",\n  \"guests\": 1,\n  \"additionalInfo\": \"Necesito espacio silencioso para trabajar\"\n}"
+            },
+            "url": "{{base_url}}/publications/{{test_coworking_pub_id}}/reservations"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 201) {",
+                  "    var reservation = pm.response.json();",
+                  "    pm.environment.set('coworking_reservation_id', reservation.id);",
+                  "    console.log('✅ Coworking reservation created');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Advanced Tests",
+      "item": [
+        {
+          "name": "TEST - Try to book own publication (should fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{river_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2024-12-25\",\n  \"endDate\": \"2024-12-28\",\n  \"roomCount\": 1\n}"
+            },
+            "url": "{{base_url}}/publications/{{test_hotel_pub_id}}/reservations"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Should fail with 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.response.to.have.body.that.includes('No podés reservar tu propia publicación');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TEST - Get all reservations for publication (as Host)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{river_token}}"
+              }
+            ],
+            "url": "{{base_url}}/publications/{{test_hotel_pub_id}}/reservations/all"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('=== Host View - All Reservations ===');",
+                  "if (pm.response.status === 200) {",
+                  "    var reservations = pm.response.json();",
+                  "    console.log(`Total reservations for this publication: ${reservations.length}`);",
+                  "    reservations.forEach(res => {",
+                  "        console.log(`\\n- ${res.travelerName} (${res.travelerEmail})`);",
+                  "        console.log(`  Dates: ${res.checkIn} to ${res.checkOut}`);",
+                  "        console.log(`  Status: ${res.status}`);",
+                  "        console.log(`  Price: $${res.totalPrice}`);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TEST - Verify XP gained after reservation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agustin_token}}"
+              }
+            ],
+            "url": "{{base_url}}/users/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.status === 200) {",
+                  "    var user = pm.response.json();",
+                  "    console.log('=== User XP/Level ===');",
+                  "    console.log(`XP: ${user.xp}`);",
+                  "    console.log(`Level: ${user.level}`);",
+                  "    console.log(`Next Level XP: ${user.xpForNextLevel}`);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

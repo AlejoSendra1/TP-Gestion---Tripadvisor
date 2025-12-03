@@ -1,0 +1,448 @@
+{
+  "info": {
+    "_postman_id": "River publications collection",
+    "name": "4. River publications collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login owner river",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Check login was successful",
+              "pm.test('Login status is 201', function() {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "// 2. Parse response",
+              "var responseData = pm.response.json();",
+              "console.log('Login Response Type:', typeof responseData);",
+              "console.log('Response keys:', Object.keys(responseData));",
+              "",
+              "// 3. IMPORTANT: The token is inside tokenDTO!",
+              "if (responseData.tokenDTO && responseData.tokenDTO.accessToken) {",
+              "    var accessToken = responseData.tokenDTO.accessToken;",
+              "    ",
+              "    // Save to Trippy Local environment",
+              "    pm.environment.set('river_token', accessToken);",
+              "    ",
+              "    // Verify it was saved",
+              "    var savedToken = pm.environment.get('river_token');",
+              "    console.log('✅ TOKEN SAVED SUCCESSFULLY');",
+              "    console.log('Token:', savedToken.substring(0, 30) + '...');",
+              "    console.log('Token length:', savedToken.length);",
+              "    ",
+              "    // Also save refresh token if needed",
+              "    if (responseData.tokenDTO.refreshToken) {",
+              "        pm.environment.set('river_refresh_token', responseData.tokenDTO.refreshToken);",
+              "    }",
+              "} else {",
+              "    console.error('❌ ERROR: Could not find tokenDTO.accessToken');",
+              "    console.log('Full response structure:');",
+              "    console.log(JSON.stringify(responseData, null, 2));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"river@trippy.com\",\n  \"password\": \"123456789\"\n}"
+        },
+        "url": "http://localhost:30002/sessions"
+      }
+    },
+    {
+      "name": "2. Upload Hotel Images (River)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_river_hotel_url', response.url);",
+              "    console.log('🏨 Imagen principal hotel:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3.  Crear hotel de river",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Get token from environment",
+              "var token = pm.environment.get('river_token');",
+              "console.log('=== DEBUG: Checking token ===');",
+              "console.log('Environment variable river_token:', token ? 'EXISTS' : 'MISSING');",
+              "if (token) {",
+              "    console.log('Token preview:', token.substring(0, 30) + '...');",
+              "    console.log('Will send Authorization: Bearer ' + token.substring(0, 20) + '...');",
+              "} else {",
+              "    console.error('❌ ERROR: river_token is empty or null');",
+              "    console.error('Make sure Step 1 executed successfully');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Check if hotel was created",
+              "console.log('=== Hotel Creation Response ===');",
+              "console.log('Status:', pm.response.status);",
+              "if (pm.response.status === 201) {",
+              "    console.log('✅ Hotel created successfully!');",
+              "    var hotelData = pm.response.json();",
+              "    if (hotelData.id) {",
+              "        pm.environment.set('hotel_river_id', hotelData.id);",
+              "        console.log('Hotel ID saved:', hotelData.id);",
+              "    }",
+              "} else {",
+              "    console.log('Response:', pm.response.text());",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Hotel Monumental River\",\n    \"description\": \"Hotel exclusivo para hinchas de River Plate. Ubicado frente al Monumental. Todas las habitaciones tienen vista al estadio.\",\n    \"price\": 300.00,\n    \"location\": {\n        \"streetAddress\": \"Av. Pres. Figueroa Alcorta 7597\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1428\"\n    },\n    \"mainImageUrl\": \"{{image_river_hotel_url}}\",\n    \"imageUrls\": [\n        \"{{image_river_hotel_url}}\"\n    ],\n    \"roomCount\": 50,\n    \"capacity\": 2\n}"
+        },
+        "url": "http://localhost:30002/publications/hotel"
+      }
+    },
+    {
+      "name": "4. Upload Restaurant Images (River)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_river_restaurant_url', response.url);",
+              "    console.log('🏨 Imagen principal restaurant:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Crear restaurante de river",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar ID del restaurant creado",
+              "if (pm.response.status === 201) {",
+              "    var responseData = pm.response.json();",
+              "    if (responseData.id) {",
+              "        pm.environment.set('restauranty_river_id', responseData.id);",
+              "        console.log('✅ River restaurant created with ID:', responseData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Restaurant El Monumental\",\n    \"description\": \"Restaurante temático de River Plate con la mejor carne y vinos argentinos. Menú especial 'Gallardo' los días de partido. Ambiente familiar con decoración de la historia del club.\",\n    \"price\": 120.00,\n    \"location\": {\n        \"streetAddress\": \"Av. Pres. Figueroa Alcorta 7600\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1428\"\n    },\n    \"mainImageUrl\": \"{{image_river_restaurant_url}}\",\n    \"imageUrls\": [\n        \"{{image_river_restaurant_url}}\"\n    ],\n    \"openingTime\": \"12:00\",\n    \"closingTime\": \"00:00\",\n    \"cuisineType\": \"ARGENTINE\"\n}"
+        },
+        "url": "{{base_url}}/publications/restaurant"
+      }
+    },
+    {
+      "name": "6. Upload Activity Images (River)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_river_activivty_url', response.url);",
+              "    console.log('🏨 Imagen principal activity:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Crear activity de river",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar ID de la actividad creada",
+              "if (pm.response.status === 201) {",
+              "    var responseData = pm.response.json();",
+              "    if (responseData.id) {",
+              "        pm.environment.set('activity_river_id', responseData.id);",
+              "        console.log('✅ River activity created with ID:', responseData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Tour Monumental + Museo River\",\n    \"description\": \"Tour guiado por el Estadio Monumental y Museo River Plate. Incluye acceso a vestuarios, tribuna preferencial, campo de juego y museo con todas las copas. Guía bilingüe español/inglés.\",\n    \"price\": 75.00,\n    \"location\": {\n        \"streetAddress\": \"Av. Pres. Figueroa Alcorta 7597\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1428\"\n    },\n    \"mainImageUrl\": \"{{image_river_activity_url}}\",\n    \"imageUrls\": [\n        \"{{image_river_activity_url}}\"\n    ],\n    \"durationInHours\": 3,\n    \"meetingPoint\": \"Puerta Principal del Monumental\",\n    \"whatIsIncluded\": \"Guía bilingüe, entrada al museo, fotos, souvenir\",\n    \"activityLevel\": \"LOW\",\n    \"language\": \"Spanish, English\",\n    \"maxGroupSize\": 20,\n    \"startTime\": \"10:00\",\n    \"endTime\": \"13:00\",\n    \"category\": \"TOUR\"\n}"
+        },
+        "url": "{{base_url}}/publications/activity"
+      }
+    },
+    {
+      "name": "8. Upload coworking Images (River)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_river_coworking_url', response.url);",
+              "    console.log('🏨 Imagen principal coworking:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Crear coworking de river",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar ID del coworking creado",
+              "if (pm.response.status === 201) {",
+              "    var responseData = pm.response.json();",
+              "    if (responseData.id) {",
+              "        pm.environment.set('coworking_river_id', responseData.id);",
+              "        console.log('✅ River coworking created with ID:', responseData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{river_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Coworking River Plate\",\n    \"description\": \"Espacio de coworking exclusivo para hinchas de River. Salas de reuniones 'Gallardo' y 'Labruna', internet de alta velocidad, café ilimitado y terraza con vista al Monumental. Eventos networking los viernes.\",\n    \"price\": 50.00,\n    \"location\": {\n        \"streetAddress\": \"Av. Pres. Figueroa Alcorta 7605\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1428\"\n    },\n    \"mainImageUrl\": \"{{image_river_coworking_url}}\",\n    \"imageUrls\": [\n        \"{{image_river_coworking_url}}\"\n    ],\n    \"openingTime\": \"08:00\",\n    \"closingTime\": \"20:00\",\n    \"capacity\": 100,\n    \"amenities\": [\"WIFI\", \"COFFEE\", \"PRINTER\", \"MEETING_ROOMS\", \"TERRACE\"]\n}"
+        },
+        "url": "{{base_url}}/publications/coworking"
+      }
+    }
+  ]
+}

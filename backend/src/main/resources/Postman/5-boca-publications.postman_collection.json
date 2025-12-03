@@ -1,0 +1,448 @@
+{
+  "info": {
+    "_postman_id": "Boca publications collection",
+    "name": "5. Boca publications collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login owner boca",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Check login was successful",
+              "pm.test('Login status is 201', function() {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "// 2. Parse response",
+              "var responseData = pm.response.json();",
+              "console.log('Login Response Type:', typeof responseData);",
+              "console.log('Response keys:', Object.keys(responseData));",
+              "",
+              "// 3. IMPORTANT: The token is inside tokenDTO!",
+              "if (responseData.tokenDTO && responseData.tokenDTO.accessToken) {",
+              "    var accessToken = responseData.tokenDTO.accessToken;",
+              "    ",
+              "    // Save to Trippy Local environment",
+              "    pm.environment.set('boca_token', accessToken);",
+              "    ",
+              "    // Verify it was saved",
+              "    var savedToken = pm.environment.get('boca_token');",
+              "    console.log('✅ TOKEN SAVED SUCCESSFULLY');",
+              "    console.log('Token:', savedToken.substring(0, 30) + '...');",
+              "    console.log('Token length:', savedToken.length);",
+              "    ",
+              "    // Also save refresh token if needed",
+              "    if (responseData.tokenDTO.refreshToken) {",
+              "        pm.environment.set('boca_refresh_token', responseData.tokenDTO.refreshToken);",
+              "    }",
+              "} else {",
+              "    console.error('❌ ERROR: Could not find tokenDTO.accessToken');",
+              "    console.log('Full response structure:');",
+              "    console.log(JSON.stringify(responseData, null, 2));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"boca@trippy.com\",\n  \"password\": \"123456789\"\n}"
+        },
+        "url": "http://localhost:30002/sessions"
+      }
+    },
+    {
+      "name": "2. Upload Hotel Images (Boca)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_boca_hotel_url', response.url);",
+              "    console.log('🏨 Imagen principal hotel:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3.  Crear hotel de boca",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Get token from environment",
+              "var token = pm.environment.get('boca_token');",
+              "console.log('=== DEBUG: Checking token ===');",
+              "console.log('Environment variable boca_token:', token ? 'EXISTS' : 'MISSING');",
+              "if (token) {",
+              "    console.log('Token preview:', token.substring(0, 30) + '...');",
+              "    console.log('Will send Authorization: Bearer ' + token.substring(0, 20) + '...');",
+              "} else {",
+              "    console.error('❌ ERROR: boca_token is empty or null');",
+              "    console.error('Make sure Step 1 executed successfully');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Check if hotel was created",
+              "console.log('=== Hotel Creation Response ===');",
+              "console.log('Status:', pm.response.status);",
+              "if (pm.response.status === 201) {",
+              "    console.log('✅ Hotel created successfully!');",
+              "    var hotelData = pm.response.json();",
+              "    if (hotelData.id) {",
+              "        pm.environment.set('hotel_boca_id', hotelData.id);",
+              "        console.log('Hotel ID saved:', hotelData.id);",
+              "    }",
+              "} else {",
+              "    console.log('Response:', pm.response.text());",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Hotel La Bombonera\",\n    \"description\": \"Hotel 4 estrellas temático de Boca Juniors. Ubicado a 50 metros de La Bombonera. Habitaciones decoradas con camisetas históricas. Desayuno 'Xeneize' incluido.\",\n    \"price\": 280.00,\n    \"location\": {\n        \"streetAddress\": \"Brandsen 805\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1161\"\n    },\n    \"mainImageUrl\": \"{{image_boca_hotel_url}}\",\n    \"imageUrls\": [\n        \"{{image_boca_hotel_url}}\"\n    ],\n    \"roomCount\": 40,\n    \"capacity\": 80\n}"
+        },
+        "url": "http://localhost:30002/publications/hotel"
+      }
+    },
+    {
+      "name": "4. Upload Restaurant Images (Boca)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_boca_restaurant_url', response.url);",
+              "    console.log('🏨 Imagen principal restaurant:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Crear restaurante de boca",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar ID del restaurant creado",
+              "if (pm.response.status === 201) {",
+              "    var responseData = pm.response.json();",
+              "    if (responseData.id) {",
+              "        pm.environment.set('restaurante_boca_id', responseData.id);",
+              "        console.log('✅ Boca restaurant created with ID:', responseData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Restaurante La Bombonera\",\n    \"description\": \"Parrilla y restaurante temático Boca Juniors. Especialidad en asado argentino y pastas. Pantallas gigantes para ver los partidos. Decoración con historia del club.\",\n    \"price\": 110.00,\n    \"location\": {\n        \"streetAddress\": \"Brandsen 810\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1161\"\n    },\n    \"mainImageUrl\": \"{{image_boca_restaurant_url}}\",\n    \"imageUrls\": [\n        \"{{image_boca_restaurant_url}}\"\n    ],\n    \"openingTime\": \"11:00\",\n    \"closingTime\": \"23:00\",\n    \"cuisineType\": \"ARGENTINE\"\n}"
+        },
+        "url": "{{base_url}}/publications/restaurant"
+      }
+    },
+    {
+      "name": "6. Upload Activity Images (Boca)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_boca_activivty_url', response.url);",
+              "    console.log('🏨 Imagen principal activity:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Crear activity de boca",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar ID de la actividad creada",
+              "if (pm.response.status === 201) {",
+              "    var responseData = pm.response.json();",
+              "    if (responseData.id) {",
+              "        pm.environment.set('activity_boca_id', responseData.id);",
+              "        console.log('✅ Boca activity created with ID:', responseData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Tour La Bombonera + Museo\",\n    \"description\": \"Recorrido por el mítico estadio de Boca Juniors y su museo. Incluye acceso a tribunas, vestuarios y campo de juego. Guía especializado en historia del club.\",\n    \"price\": 70.00,\n    \"location\": {\n        \"streetAddress\": \"Brandsen 805\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1161\"\n    },\n    \"mainImageUrl\": \"{{image_boca_activity_url}}\",\n    \"imageUrls\": [\n        \"{{image_boca_activity_url}}\"\n    ],\n    \"startTime\": \"14:00\",\n    \"endTime\": \"17:00\",\n    \"durationHours\": 3,\n    \"category\": \"TOUR\"\n}"
+        },
+        "url": "{{base_url}}/publications/activity"
+      }
+    },
+    {
+      "name": "8. Upload coworking Images (Boca)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "images",
+            "upload"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar URL de imagen principal",
+              "const response = pm.response.json();",
+              "if (response.url) {",
+              "    pm.environment.set('image_boca_coworking_url', response.url);",
+              "    console.log('🏨 Imagen principal coworking:', response.url);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Crear coworking de boca",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guardar ID del coworking creado",
+              "if (pm.response.status === 201) {",
+              "    var responseData = pm.response.json();",
+              "    if (responseData.id) {",
+              "        pm.environment.set('coworking_boca_id', responseData.id);",
+              "        console.log('✅ Boca coworking created with ID:', responseData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{boca_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Coworking Xeneize\",\n    \"description\": \"Espacio de trabajo para la comunidad de Boca. Salas de reuniones 'Maradona' y 'Riquelme', internet fibra óptica, café y snacks. Vista a La Bombonera desde la terraza.\",\n    \"price\": 45.00,\n    \"location\": {\n        \"streetAddress\": \"Brandsen 815\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"country\": \"Argentina\",\n        \"zipCode\": \"1161\"\n    },\n    \"mainImageUrl\": \"{{image_boca_coworking_url}}\",\n    \"imageUrls\": [\n        \"{{image_boca_coworking_url}}\"\n    ],\n    \"openingTime\": \"07:30\",\n    \"closingTime\": \"19:30\",\n    \"capacity\": 80,\n    \"amenities\": [\"WIFI\", \"COFFEE\", \"PRINTER\", \"KITCHEN\", \"PARKING\"]\n}"
+        },
+        "url": "{{base_url}}/publications/coworking"
+      }
+    }
+  ]
+}

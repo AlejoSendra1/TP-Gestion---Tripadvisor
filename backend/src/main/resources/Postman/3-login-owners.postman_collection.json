@@ -1,0 +1,124 @@
+{
+  "info": {
+    "_postman_id": "login-owners-collection",
+    "name": "3. Login Owners (Get Tokens)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login Owner 1 - River",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"river@trippy.com\",\n  \"password\": \"123456789\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/sessions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["sessions"]
+        }
+      }
+    },
+    {
+      "name": "Login Owner 2 - Boca",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"boca@trippy.com\",\n  \"password\": \"123456789\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/sessions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["sessions"]
+        }
+      }
+    },
+    {
+      "name": "Login Owner 3 - Racing",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"racing@trippy.com\",\n  \"password\": \"123456789\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/sessions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["sessions"]
+        }
+      }
+    },
+    {
+      "name": "Login Owner 4 - Independiente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"independiente@trippy.com\",\n  \"password\": \"123456789\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/sessions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["sessions"]
+        }
+      }
+    },
+    {
+      "name": "Login Owner 5 - SanLorenzo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"sanlorenzo@trippy.com\",\n  \"password\": \"123456789\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:30002/sessions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "30002",
+          "path": ["sessions"]
+        }
+      }
+    }
+  ]
+}
