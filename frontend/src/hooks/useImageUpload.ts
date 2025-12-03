@@ -13,7 +13,7 @@ export const useImageUpload = () => {
         formData.append("file", file);
 
         try {
-            const response = await apiClient.post("/api/images/upload", formData, {
+            const response = await apiClient.post("/images/upload", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             // Asumiendo que el back devuelve { "url": "..." }
