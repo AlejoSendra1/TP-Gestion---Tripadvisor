@@ -1,6 +1,7 @@
 // Contenido de: PublicationServiceTest.java
 package ar.uba.fi.gestion.trippy.publication;
 import ar.uba.fi.gestion.trippy.user.BusinessOwner;
+import ar.uba.fi.gestion.trippy.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +49,9 @@ public class PublicationServiceTest {
     @Mock
     private UserRepository userRepositoryMock; // <-- Mock para el repo de User
 
+    @Mock
+    private UserService userServiceMock;
+
     @InjectMocks
     private PublicationService publicationService;
 
@@ -71,7 +75,7 @@ public class PublicationServiceTest {
     void setUp() {
         // Instanciamos el servicio manualmente con sus mocks
         // (El @InjectMocks no funciona bien con constructores manuales a veces)
-        publicationService = new PublicationService(publicationRepositoryMock, userRepositoryMock);
+        publicationService = new PublicationService(publicationRepositoryMock, userRepositoryMock, userServiceMock);
 
         // --- Host Mock ---
         mockHost = org.mockito.Mockito.mock(BusinessOwner.class);

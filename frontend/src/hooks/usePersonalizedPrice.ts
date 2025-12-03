@@ -1,39 +1,30 @@
-
+// hooks/usePersonalizedPrice.ts
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { apiClient } from '@/lib/apiClient';
 
-interface PersonalizedPriceResponse {
-  personalizedPrice: number;
-  originalPrice: number;
-}
 
 const fetchPersonalizedPrice = async (
-  publicationId: string | undefined,
-  userEmail: string | undefined
-): Promise<PersonalizedPriceResponse> => {
-  if (!publicationId || !userEmail) {
+  publicationId: string | undefined
+): Promise<number> => {
+  if (!publicationId) {
     throw new Error("Missing required parameters");
   }
 
-  const response = await fetch(
-    `/api/publications/${publicationId}/personalized-price?userEmail=${encodeURIComponent(userEmail)}`
+  const { data } = await apiClient.get<number>(
+    `/publications/${publicationId}/personalized-price`
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch personalized price");
-  }
-
-  return response.json();
+  return data;
 };
 
 export const usePersonalizedPrice = (
   publicationId: string | undefined,
-  userEmail: string | undefined,
   enabled: boolean = true
 ) => {
   return useQuery({
-    queryKey: ["personalizedPrice", publicationId, userEmail],
-    queryFn: () => fetchPersonalizedPrice(publicationId, userEmail),
-    enabled: enabled && !!publicationId && !!userEmail,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ["personalizedPrice", publicationId],
+    queryFn: () => fetchPersonalizedPrice(publicationId),
+    enabled: enabled && !!publicationId ,
   });
 };

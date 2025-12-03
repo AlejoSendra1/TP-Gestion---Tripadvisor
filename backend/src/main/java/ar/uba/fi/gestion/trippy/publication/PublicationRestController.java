@@ -244,4 +244,15 @@ public class PublicationRestController {
         List<PublicationListDTO> publications = publicationService.getPublicationsByHostEmail(hostEmail);
         return ResponseEntity.ok(publications);
     }
+
+    @GetMapping("/{publicationId}/personalized-price")
+    public ResponseEntity<Double> getPublicationPriceForActualUser(
+            @PathVariable Long publicationId
+    ) {
+        System.out.println("recibido 2.0 ");
+        double price = publicationService.getPublicationPriceForActualUser(publicationId);
+        return ResponseEntity.ok(price);
+    }
+
+
 }

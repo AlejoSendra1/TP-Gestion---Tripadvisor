@@ -3,7 +3,8 @@ package ar.uba.fi.gestion.trippy.reservation;
 
 import ar.uba.fi.gestion.trippy.config.security.JwtUserDetails;
 import ar.uba.fi.gestion.trippy.reservation.dto.ReservationResponseDTO;
-// Quitamos los imports de User y UserRepository
+import ar.uba.fi.gestion.trippy.user.User;
+import ar.uba.fi.gestion.trippy.user.UserRepository;
 import ar.uba.fi.gestion.trippy.reservation.ReservationService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
@@ -19,18 +20,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
-// Quitamos el import de Collectors
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/reservations")
 public class ReservationUserController {
 
-    // --- ¡SOLO NECESITAMOS EL SERVICIO! ---
+    private final UserRepository userRepository;
     private final ReservationService reservationService;
 
     @Autowired
-    public ReservationUserController(ReservationService reservationService) {
+    public ReservationUserController(ReservationService reservationService,
+                                     UserRepository userRepository) {
         this.reservationService = reservationService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -45,8 +48,15 @@ public class ReservationUserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // --- ¡LÓGICA SIMPLIFICADA! ---
-        List<ReservationResponseDTO> dto = reservationService.getMyReservations(me.username());
+        User user = userRepository.findByEmail(me.username()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Reservation> reservations = reservationService.getReservationsForTraveler(me.username());
+        List<ReservationResponseDTO> dto = reservations.stream()
+                .map(ReservationResponseDTO::from)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(dto);
     }
 

@@ -27,6 +27,8 @@ services:
       TRIPPY_API_BASE_URL: "${TRIPPY_API_BASE_URL}"
     ports:
       - "${BACKEND_EXTERNAL_PORT}:8080"
+    volumes:
+      - ./backend/uploads:/home/app/uploads
 
   frontend:
     build: "./frontend"

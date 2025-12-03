@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCreateReview } from "@/hooks/useCreateReview";
 import { ReviewsSection } from "@/components/ReviewsSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // --- Hooks de datos ---
 import {
   usePublicationDetail,
@@ -9,13 +10,16 @@ import {
 import { useDeletePublication } from "@/hooks/useDeletePublication";
 import { useDeleteReview } from "@/hooks/useDeleteReview"; // <-- NUEVO HOOK
 import { useReviews, type ReviewDTO } from "@/hooks/useReviews";
-
+import { usePersonalizedPrice } from "@/hooks/usePersonalizedPrice";
+import { PriceDisplay } from "@/components/PriceDisplay";
+import ReservationList from "@/components/reservation/ReservationList";
+import ReservationCalendar from "@/components/reservation/ReservationCalendar";
+import { useUserReservations } from "@/hooks/useUserReservations";
 // --- Hooks de UI y Auth ---
 import { useAuth } from "@/hooks/use-auth";
 
 // --- Componentes de UI (shadcn/ui) ---
 import { Header } from "@/components/Header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,7 +52,7 @@ import BookingModal from "@/components/BookingModal"; // <-- nuevo
 
 // --- Tipo local para la UI ---
 type DisplayReview = {
-  id: string;
+  //id: string;
   username: string;
   userLastname: string;
   reviewerEmail: string;
@@ -60,8 +64,9 @@ type DisplayReview = {
 
 export default function ExperienceDetails() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, isTraveler } = useAuth();
   const navigate = useNavigate();
+  const { reservations, isLoading: reservationsLoading, error: reservationsError, fetchReservations } = useUserReservations();
 
   // --- Hook para OBTENER datos de la publicación ---
   const {
@@ -69,6 +74,15 @@ export default function ExperienceDetails() {
     isLoading,
     isError,
   } = usePublicationDetail(id);
+
+    const {
+        data: personalizedPrice,
+        isLoading: isLoadingPrice,
+      } = usePersonalizedPrice(
+        id,
+        !!user && !!id && isTraveler()// Only fetch if user is logged in and we have an ID
+      );
+
 
   // --- Hook para BORRAR publicación ---
   const { mutate: performDelete, isPending: isDeleting } =
@@ -105,7 +119,7 @@ export default function ExperienceDetails() {
 
   const reviewsArray = reviewPage?.content || [];
   const displayReviews: DisplayReview[] = reviewsArray.map((review: ReviewDTO) => ({
-    id: review.id,
+    //id: review.id,
     username: review.username,
     userLastname: review.userLastname,
     reviewerEmail: review.reviewerEmail,
@@ -135,7 +149,7 @@ export default function ExperienceDetails() {
 
   const handleSubmitComment = (rating: number, content: string) => {
     createReview({
-      publicationId: id,
+      publicationId: publication.id,
       reviewerEmail: user.email,
       rating: rating,
       reviewContent: content,
@@ -145,7 +159,7 @@ export default function ExperienceDetails() {
   const handleDeleteReview = (userEmail: string) => {
     setDeletingReviewId(userEmail);
     deleteReview(
-      { reviewerEmail: userEmail, publicationId: id },
+      { reviewerEmail: userEmail, publicationId: publication.id },
       {
         onSettled: () => {
           setDeletingReviewId(null);
@@ -323,6 +337,21 @@ export default function ExperienceDetails() {
                 </CardContent>
               </Card>
 
+              {/* Reservas de la publicaion */}
+              {canEdit && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      Reservas de esta publicación
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ReservationCalendar isOwner={true} publicationId={publication.id} />
+                  </CardContent>
+                </Card>
+              )}
+
               <ReviewsSection
                 reviews={displayReviews}
                 currentUserEmail={user?.email}
@@ -340,17 +369,12 @@ export default function ExperienceDetails() {
               {/* Card de Reserva */}
               <Card className="sticky top-6">
                 <CardContent className="p-6">
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold text-primary mb-2">
-                      ${publication.price}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      por{" "}
-                      {publication.publicationType.toLowerCase() === "hotel"
-                          ? "noche"
-                          : "persona"}
-                    </div>
-                  </div>
+                  <PriceDisplay
+                    basePrice={publication.price}
+                    personalizedPrice={personalizedPrice}
+                    isLoading={isLoadingPrice}
+                    publicationType={publication.publicationType}
+                  />
 
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center justify-between">
@@ -364,7 +388,7 @@ export default function ExperienceDetails() {
                     </div>
                     <div className="flex items-center text-sm bg-gradient-experience bg-clip-text text-transparent font-medium">
                       <Trophy className="h-4 w-4 mr-2 text-experience" />
-                      Ganá {xpReward} de XP al reseñar esta publicación!
+                      Ganá XP al reseñar esta publicación!
                     </div>
                   </div>
 
@@ -376,14 +400,6 @@ export default function ExperienceDetails() {
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Reservá Ahora
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Guardar en Favoritos
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Users className="h-4 w-4 mr-2" />
-                      Contactar a {publication.host?.name || "Host"}
                     </Button>
                   </div>
                 </CardContent>

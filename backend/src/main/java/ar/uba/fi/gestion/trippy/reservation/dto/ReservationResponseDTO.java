@@ -1,6 +1,8 @@
 package ar.uba.fi.gestion.trippy.reservation.dto;
 
 import ar.uba.fi.gestion.trippy.reservation.*;
+import ar.uba.fi.gestion.trippy.user.Traveler;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -8,7 +10,9 @@ import java.time.LocalDateTime;
 public record ReservationResponseDTO(
         Long id,
         Long publicationId,
+        String pubName,
         Long travelerId,
+        String travelerName,
         LocalDateTime reservationDate,
         BigDecimal totalPrice,
         String status,
@@ -38,7 +42,12 @@ public record ReservationResponseDTO(
     public static ReservationResponseDTO from(Reservation r) {
         Long id = r.getId();
         Long pubId = r.getPublication() != null ? r.getPublication().getId() : null;
+        String pubName = r.getPublication() != null ? r.getPublication().getTitle() : null;
         Long travelerId = r.getTraveler() != null ? r.getTraveler().getId() : null;
+        String travelerName = null;
+        if (r.getTraveler() != null && r.getTraveler() instanceof Traveler traveler) {
+            travelerName = traveler.getFirstName() + " " + traveler.getLastName();
+        }
         LocalDateTime reservationDate = r.getReservationDate();
         BigDecimal totalPrice = r.getTotalPrice();
         String status = r.getStatus() != null ? r.getStatus().name() : null;
@@ -82,7 +91,9 @@ public record ReservationResponseDTO(
         return new ReservationResponseDTO(
                 id,
                 pubId,
+                pubName,
                 travelerId,
+                travelerName, 
                 reservationDate,
                 totalPrice,
                 status,

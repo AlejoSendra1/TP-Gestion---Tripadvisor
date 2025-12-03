@@ -16,6 +16,7 @@ import ReservationList from "@/components/ReservationList";
 import { useNavigate } from "react-router-dom";
 import { ActiveBenefitsCard } from '@/components/ActiveBenefitsCard';
 import { PointShopDialog } from "@/components/PointShopDialog";
+import ReservationCalendar from "@/components/reservation/ReservationCalendar";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -257,24 +258,17 @@ const Profile = () => {
 
         {/* Reservas del Usuario */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Mis reservas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {reservationsLoading && <div className="text-sm text-muted-foreground">Cargando reservas...</div>}
-            {reservationsError && <div className="text-sm text-destructive">Error cargando reservas: {String(reservationsError.message ?? reservationsError)}</div>}
-            {!reservationsLoading && !reservationsError && (
-              <ReservationList 
-                reservations={reservations} 
-                onDeleteReservation={handleDeleteReservation}
-                deletingReservationId={deletingReservationId}
-              />
-            )}
-          </CardContent>
-        </Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Mis reservas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReservationCalendar isOwner={false} />
+            </CardContent>
+          </Card>
+          {/* --- FIN DE LA SECCIÓN CLAVE --- */}
 
         <div className="grid lg:grid-cols-3 gap-8">
                     {/* Beneficios del Nivel Actual */}
